@@ -122,6 +122,9 @@ class NavBar extends Component {
             <Route path="/controltower">
               <ControlTower setSelectedDate={this.getSelectedDate} />
             </Route>
+            <Route path="/routesplan">
+              <ControlTower setSelectedDate={this.getSelectedDate} />
+            </Route>
             <Route>
               <NotFound />
             </Route>
