@@ -1,0 +1,9 @@
+.summary-div .card {
+  max-width: 250px;
+  border-radius: 0px !important;
+  box-shadow: 1px 6px 10px 6px rgba(0, 0, 0, 0.49) !important;
+}
+
+small {
+  font-size: 63%;
+}

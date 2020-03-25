@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {Navbar, Nav, Dropdown} from 'react-bootstrap';
+import {Navbar, Nav, Dropdown, NavDropdown} from 'react-bootstrap';
 import {LoadFadeLoader, LoadClipLoader} from '../Loaders/Loaders';
 import {
   BrowserRouter as Router,
@@ -8,10 +8,13 @@ import {
   Link,
   useLocation,
 } from 'react-router-dom';
-import App from '../container/old_App';
+// import App from '../container/old_App';
 import NotFound from '../Exceptions/NotFound';
 import Live from '../Live/Live';
 import ControlTower from '../ControlTower/Controltower';
+import RoutePlan from '../RoutesPlan/RoutesPlan';
+import RouteSummary from '../RoutesPlan/RouteSummary';
+
 import '../../css/NavBar.css';
 class NavBar extends Component {
   constructor(props) {
@@ -81,7 +84,7 @@ class NavBar extends Component {
     this.setState({storeList: childData});
   };
   getSelectedDate = date => {
-    this.setState({selectedDate:date});
+    this.setState({selectedDate: date});
   };
   render() {
     return (
@@ -95,15 +98,34 @@ class NavBar extends Component {
               <Navbar.Brand href="#home">Control Tower</Navbar.Brand>
               <Navbar.Toggle aria-controls="basic-navbar-nav" />
               <Navbar.Collapse id="basic-navbar-nav">
+                <Link to="/" className="nav-link" style={null}>
+                  Live
+                </Link>
+                <Link className="nav-link" to="/controltower">
+                  Control Tower
+                </Link>
+                <Nav.Item className="pr-2">
+                  <NavDropdown
+                    title="Routes and Capacity"
+                    id="basic-nav-dropdown"
+                  >
+                    <Link
+                      to="/routessummary"
+                      className="dropdown-item"
+                      style={null}
+                    >
+                      Routes Summary
+                    </Link>
+                    <Link
+                      to="/routesplan"
+                      className="dropdown-item"
+                      style={null}
+                    >
+                      Routes Plan
+                    </Link>
+                  </NavDropdown>
+                </Nav.Item>
                 <Nav className="m-auto">
-                  <Link className="pr-3" to="/">
-                    Live
-                  </Link>
-                  <Link className="pr-3" to="/controltower">
-                    Control Tower
-                  </Link>
-                </Nav>
-                <Nav className="mr-auto">
                   {this.renderStoreList(this.state.storeList)}
                   {/*this.props.location.pathname.match('/')
                     ? this.renderStoreList(this.state.storeList)
@@ -123,7 +145,10 @@ class NavBar extends Component {
               <ControlTower setSelectedDate={this.getSelectedDate} />
             </Route>
             <Route path="/routesplan">
-              <ControlTower setSelectedDate={this.getSelectedDate} />
+              <RoutePlan />
+            </Route>
+            <Route path="/routessummary">
+              <RouteSummary />
             </Route>
             <Route>
               <NotFound />

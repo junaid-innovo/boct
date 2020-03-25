@@ -239,7 +239,7 @@ class Controltower extends Component {
             <b>Fleet Availability</b>
           </div>
         </div>
-        <div class="row mt-3">
+        <div className="row mt-3">
           <div className="col-lg-4 col-md-4 col-sm-4 col-xs-4">
             <Card>
               <div className="row mt-1">
@@ -298,7 +298,7 @@ class Controltower extends Component {
               </div>
             </div>
             <div className="row">
-              <div class="col-md-12 col-sm-12 col-xs-12 pl-0">
+              <div className="col-md-12 col-sm-12 col-xs-12 pl-0">
                 <Map
                   routelist={this.state.vehicleRoutes}
                   googleMapURL={`https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing,places&key=${process.env.REACT_APP_GOOGLE_KEY}`}

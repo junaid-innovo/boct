@@ -9,7 +9,8 @@ import {
     useLocation,
   } from 'react-router-dom';
 // import App from './components/NavBar/NavBar';
-import Login from './components/container/Login';
+// import Login from './components/Containers/Login';
+import Login from './components/Containers/App';
 import * as serviceWorker from './serviceWorker';
 
 ReactDOM.render(<Login />, document.getElementById('root'));
