@@ -46,7 +46,7 @@ a:focus {
 
 #sidebar {
   /* don't forget to add all the previously mentioned styles here too */
-  background: #7386d5;
+  background:white;
   color: #fff;
   transition: all 0.3s;
   height: '597px';
