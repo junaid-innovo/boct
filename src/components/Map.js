@@ -453,12 +453,14 @@ class Map extends Component {
     return (
       <React.Fragment>
         {' '}
-        <GoogleMap
+        <GoogleMap style={{position:'absolute',top:'0',left:'0',right:'0',bottom:'0'}}
           key={this.state.routes ? this.state.routes : null}
           defaultZoom={11}
-          style={{
-            height: '100vh',
+          mapContainerStyle={{
+            height: "100vh",
+            width: "100%"
           }}
+         
           defaultCenter={
             this.state.routes
               ? new this.google.maps.LatLng(

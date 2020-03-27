@@ -47,6 +47,7 @@ class Live extends Component {
       reasonmodal: false,
       timeSlotModel: false,
       selectedOrder: null,
+      selectedStoreId: null,
       dateFormat: 'yyyy-MM-dd',
     };
   }
@@ -60,8 +61,8 @@ class Live extends Component {
       });
       this.getStoreByCurDate();
     }
-    if (this.props.storeid !== prevProps.storeid) {
-      this.getVehiclesByStoreId(this.props.storeid);
+    if (this.state.selectedStoreId !== prevState.selectedStoreId) {
+      this.getVehiclesByStoreId(this.state.selectedStoreId);
     }
   };
   renderStoreList = data => {
@@ -103,7 +104,7 @@ class Live extends Component {
         </Dropdown.Menu>
       </Dropdown>
     ) : (
-      <LoadFadeLoader></LoadFadeLoader>
+      <LoadFadeLoader height={2} size="5"></LoadFadeLoader>
     );
   };
 
@@ -320,7 +321,7 @@ class Live extends Component {
     let selectedorderIndex = allorders.findIndex(
       ({order}) => order.order_id === order_id
     );
-    console.log("check index",  allorders[selectedorderIndex].order)
+    console.log('check index', allorders[selectedorderIndex].order);
     // allorders[selectedorderIndex].order.delivery_slot_id=slotid
     // console.log("updated order", allorders)
     // this.setState({
@@ -426,6 +427,11 @@ class Live extends Component {
   renderRightSideBar = () => {
     return (
       <div className="col-sm-2 col-md-2" id="sidebar">
+        <div className="row">
+          <div className="mb-1 col-sm-12 col-md-12">
+            {this.renderStoreList(this.state.storeList)}
+          </div>
+        </div>
         <div className="row">
           <div className="text-center text-light bg-dark shadow p-3 mb-1 col-md-12 col-md-12">
             All Orders

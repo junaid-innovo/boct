@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
 import {Navbar, Nav, Dropdown, NavDropdown} from 'react-bootstrap';
 import {LoadFadeLoader, LoadClipLoader} from '../Loaders/Loaders';
+import Logo from '../../images/controltower.png';
 import {
   BrowserRouter as Router,
   Switch,
@@ -34,52 +35,6 @@ class NavBar extends Component {
     }
     return state;
   }
-  renderStoreList = data => {
-    // const location = useLocation();
-    // console.log(location);
-    // return location.pathname == '/login' ? <YourNavBarComponents /> : null
-    return this.state.storeList.length > 0 ? (
-      <Dropdown key={data} disabled={this.state.disablebtn}>
-        <Dropdown.Toggle id="dropdown-basic" variant="success">
-          Select Store
-        </Dropdown.Toggle>
-        <Dropdown.Menu
-          style={{
-            overflowY: 'scroll',
-            maxHeight:
-              window.innerHeight -
-              (this.myRef
-                ? this.myRef.getBoundingClientRect().top +
-                  this.myRef.getBoundingClientRect().height +
-                  100
-                : 200),
-          }}
-        >
-          {data.map((store, key) => (
-            <Dropdown.Item key={store.store_id}>
-              <div>
-                <b
-                  key={store.store_id}
-                  id={store.store_id}
-                  onClick={() =>
-                    this.setState({selectedStoreId: store.store_id})
-                  }
-                >
-                  {store.store_name.en}
-                </b>
-                <span>
-                  <i className="glyphicon glyphicon-triangle-bottom"></i>
-                </span>
-              </div>
-            </Dropdown.Item>
-          ))}
-        </Dropdown.Menu>
-      </Dropdown>
-    ) : (
-      <LoadClipLoader size="20" />
-      // <LoadFadeLoader></LoadFadeLoader>
-    );
-  };
   callbackFunction = childData => {
     this.setState({storeList: childData});
   };
@@ -95,7 +50,14 @@ class NavBar extends Component {
               expand="xl"
               className="col-md-12 col-sm-12 col-xs-12 color-navbar"
             >
-              <Navbar.Brand href="#home">Control Tower</Navbar.Brand>
+              <Navbar.Brand>
+                <img
+                  style={{maxWidth: '40px', maxHeight: '40px'}}
+                  src={Logo}
+                  alt="controltowerlogo"
+                />
+                Control Tower
+              </Navbar.Brand>
               <Navbar.Toggle aria-controls="basic-navbar-nav" />
               <Navbar.Collapse id="basic-navbar-nav">
                 <Link to="/" className="nav-link" style={null}>
@@ -105,17 +67,13 @@ class NavBar extends Component {
                   Control Tower
                 </Link>
                 <Nav.Item className="pr-2">
-                  <NavDropdown
+                  <Link className="nav-link" to="/routesplan">
+                    Routes Plan and Capacity
+                  </Link>
+                  {/*<NavDropdown
                     title="Routes and Capacity"
                     id="basic-nav-dropdown"
                   >
-                    <Link
-                      to="/routessummary"
-                      className="dropdown-item"
-                      style={null}
-                    >
-                      Routes Summary
-                    </Link>
                     <Link
                       to="/routesplan"
                       className="dropdown-item"
@@ -123,14 +81,15 @@ class NavBar extends Component {
                     >
                       Routes Plan
                     </Link>
-                  </NavDropdown>
+                    <Link
+                      to="/routessummary"
+                      className="dropdown-item"
+                      style={null}
+                    >
+                      Routes Summary
+                    </Link>
+                  </NavDropdown>*/}
                 </Nav.Item>
-                <Nav className="m-auto">
-                  {this.renderStoreList(this.state.storeList)}
-                  {/*this.props.location.pathname.match('/')
-                    ? this.renderStoreList(this.state.storeList)
-                  : null*/}
-                </Nav>
               </Navbar.Collapse>
             </Navbar>
           </div>
@@ -146,9 +105,6 @@ class NavBar extends Component {
             </Route>
             <Route path="/routesplan">
               <RoutePlan />
-            </Route>
-            <Route path="/routessummary">
-              <RouteSummary />
             </Route>
             <Route>
               <NotFound />
