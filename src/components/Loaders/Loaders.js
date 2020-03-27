@@ -7,13 +7,14 @@ export const LoadFadeLoader = props => (
       margin: 0 auto;
       border-color: red;
     `}
-    height={5}
+    size={props.size}
+    height={props.height ? props.height : 5}
     color={'#123abc'}
     loading={props.sideloading}
   />
 );
 
-export  const LoadClipLoader =props=>(
+export  const LoadClipLoader = props =>(
   <ClipLoader
   size={props.size}
   ></ClipLoader>

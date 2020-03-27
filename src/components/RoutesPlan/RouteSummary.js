@@ -1,6 +1,8 @@
 import React, {Component} from 'react';
 import {Card} from 'react-bootstrap';
 import '../../css/RouteSummary.css';
+import {col12} from "../Constants/Classes/BoostrapClassses";
+import DatePicker from "react-datepicker";
 class RoutesSummary extends Component {
   constructor(props) {
     super(props);
@@ -8,21 +10,24 @@ class RoutesSummary extends Component {
       routes: null,
     };
   }
+  // static getDerivedStateFromProps=(props,state)=>{
+  //   if(props.)
+  // }
   render() {
     return (
       <React.Fragment>
         <div className="summary-div">
-          <div className="row mt-3">
-            <div className="col-md-10 col-sm-10 col-xs-10 offset-1">
+          <div className="row mt-n1">
+            <div className={col12}>
               <b>Summary</b>
             </div>
           </div>
-          <div className="row mt-3">
-            <div className="col-md-10 col-sm-10 col-xs-10 offset-1">
+          <div className="row mt-2">
+            <div className={col12}>
               <div className="row">
                 <div className="col-3">
                   <Card>
-                    <Card.Header>
+                    <Card.Header className="h-50">
                       <div className="row">
                         <div className="col-md-12 col-sm-12 col-xs-12 text-center">
                           <i className="fa fa-calendar-check-o fa-3x"></i>
@@ -47,7 +52,7 @@ class RoutesSummary extends Component {
                 </div>
                 <div className="col-3">
                   <Card>
-                    <Card.Header>
+                    <Card.Header className="h-50">
                       <div className="row">
                         <div className="col-md-12 col-sm-12 col-xs-12 text-center">
                           <i className="fas fa-clipboard-list fa-3x"></i>
@@ -70,7 +75,7 @@ class RoutesSummary extends Component {
                 </div>
                 <div className="col-3">
                   <Card>
-                    <Card.Header>
+                    <Card.Header className="h-50">
                       <div className="row">
                         <div className="col-md-12 col-sm-12 col-xs-12 text-center">
                           <i className="fa fa-archive  fa-3x"></i>
@@ -93,7 +98,7 @@ class RoutesSummary extends Component {
                 </div>
                 <div className="col-3">
                   <Card>
-                    <Card.Header>
+                   <Card.Header className="h-50">
                       <div className="row">
                         <div className="col-md-12 col-sm-12 col-xs-12 text-center">
                           <i className="fa fa-truck fa-3x"></i>
@@ -118,11 +123,11 @@ class RoutesSummary extends Component {
             </div>
           </div>
           <div className="row mt-3">
-            <div className="col-md-10 col-sm-10 col-xs-10 offset-1">
+            <div className={col12}>
               <div className="row">
                 <div className="col-3">
                   <Card>
-                    <Card.Header>
+                   <Card.Header className="h-50">
                       <div className="row">
                         <div className="col-md-12 col-sm-12 col-xs-12 text-center">
                           <i className="fas fa-warehouse fa-3x"></i>
@@ -145,7 +150,7 @@ class RoutesSummary extends Component {
                 </div>
                 <div className="col-3">
                   <Card>
-                    <Card.Header>
+                   <Card.Header className="h-50">
                       <div className="row">
                         <div className="col-md-12 col-sm-12 col-xs-12 text-center">
                           <i className="fa fa-map-marker fa-3x"></i>
@@ -168,7 +173,7 @@ class RoutesSummary extends Component {
                 </div>
                 <div className="col-3">
                   <Card>
-                    <Card.Header>
+                   <Card.Header className="h-50">
                       <div className="row">
                         <div className="col-md-12 col-sm-12 col-xs-12 text-center">
                           <i className="fa fa-calendar-check-o fa-3x"></i>
@@ -191,7 +196,7 @@ class RoutesSummary extends Component {
                 </div>
                 <div className="col-3">
                   <Card>
-                    <Card.Header>
+                   <Card.Header className="h-50">
                       <div className="row">
                         <div className="col-md-12 col-sm-12 col-xs-12 text-center">
                           <i className="fa fa-clock-o  fa-3x"></i>
@@ -216,11 +221,11 @@ class RoutesSummary extends Component {
             </div>
           </div>
           <div className="row mt-3">
-            <div className="col-md-10 col-sm-10 col-xs-10 offset-1">
+            <div className={col12}>
               <div className="row">
                 <div className="col-3">
                   <Card>
-                    <Card.Header>
+                   <Card.Header className="h-50">
                       <div className="row">
                         <div className="col-md-12 col-sm-12 col-xs-12 text-center">
                           <i className="fa fa-cogs fa-3x"></i>
