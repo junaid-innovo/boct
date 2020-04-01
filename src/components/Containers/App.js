@@ -5,6 +5,7 @@ import {useLocation} from 'react-router-dom';
 import NotFound from '../Exceptions/NotFound';
 import Live from '../Live/Live';
 import ControlTower from '../ControlTower/Controltower';
+// import 'bootstrap/dist/css/bootstrap.min.css';
 class App extends Component {
   constructor(props) {
     super(props);

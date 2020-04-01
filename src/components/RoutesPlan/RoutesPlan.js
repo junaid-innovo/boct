@@ -26,8 +26,8 @@ import paginationFactory from 'react-bootstrap-table2-paginator';
 import {col12, col6} from '../Constants/Classes/BoostrapClassses';
 import RouteSummary from '../RoutesPlan/RouteSummary';
 import _ from 'lodash';
-import DateRangePicker from '@wojtekmaj/react-daterange-picker';
 import DatePicker from 'react-datepicker';
+import DateRangePicker from '@wojtekmaj/react-daterange-picker';
 class RoutesPlan extends Component {
   constructor(props) {
     super(props);
@@ -42,15 +42,18 @@ class RoutesPlan extends Component {
       selectedConstraints: null,
       selectedConstraintName: {type: '', names: []},
       advancemenu: false,
+      date: [new Date(), new Date()],
       plannow: false,
       startDate: new Date(),
       endDate: new Date(),
       rangedate: [new Date(), new Date()],
+      summarystats: null,
     };
   }
 
-  componentWillMount() {
-    this.getRoutesandCapacity();
+  onChange = date => this.setState({date});
+ async componentDidMount(){
+    await this.getRoutesandCapacity();
   }
   getRoutesandCapacity = () => {
     axios
@@ -62,6 +65,7 @@ class RoutesPlan extends Component {
           this.setState({
             orders: response.data.orders,
             constraints: _.sortBy(response.data.constraints, 'constraint_id'),
+            summarystats: response.data.counters,
           });
         }
       })
@@ -156,29 +160,31 @@ class RoutesPlan extends Component {
   };
 
   onConstraintClick = constraint => {
-    if (constraint.constraint_type === 'Advance') {
-      this.setState({
-        advancemenu: true,
-        plannow: false,
-      });
-    } else {
-      let type = '';
-      if (constraint.multival) {
-        type = 'checkbox';
-      } else {
-        type = 'radio';
-      }
-      let altconstraint = {
-        type: type,
-        names: JSON.parse(constraint.constraint_name),
-      };
-      this.setState({
-        selectedConstraintName: altconstraint,
-        advancemenu: false,
-        plannow: false,
-      });
-    }
-  };
+    console.log("Check constraint",constraint)
+  //   if (constraint.constraint_type === 'Advance') {
+  //     this.setState({
+  //       advancemenu: true,
+  //       plannow: false,
+  //     });
+  //   } else {
+  //     let type = '';
+  //     if (constraint.multival) {
+  //       type = 'checkbox';
+  //     } else {
+  //       type = 'radio';
+  //     }
+  //     let altconstraint = {
+  //       type: type,
+  //       names: JSON.parse(constraint.constraint_name),
+  //     };
+  //     this.setState({
+  //       selectedConstraintName: altconstraint,
+  //       advancemenu: false,
+  //       plannow: false,
+  //     });
+  //   }
+  // };
+  }
   setStartDate = date => {
     this.setState({
       startDate: date,
@@ -237,7 +243,7 @@ class RoutesPlan extends Component {
                 </div>
                 <div className="col-md-5 ml-n3">
                   <Form.Control
-                    className="rounded-0"
+                    className="rounded-0 inputshadow"
                     type="text"
                     name="firstName"
                     value={this.state.plandate}
@@ -250,7 +256,10 @@ class RoutesPlan extends Component {
             <div className="col-md-7 offset-1">
               <div className="row">
                 <div className="col-md-3">
-                  <Form.Control as="select" className="rounded-0 up-select">
+                  <Form.Control
+                    as="select"
+                    className="rounded-0 up-select inputshadow"
+                  >
                     <option data-content="<i class='fa fa-cutlery'></i> Cutlery">
                       Select Branches
                     </option>
@@ -263,33 +272,31 @@ class RoutesPlan extends Component {
                 </div>
                 <div className="col-md-3">
                   <InputGroup>
-                    <Form.Control
-                      className="rounded-0"
-                      type="text"
-                      name="firstName"
-                      value="04/15/2020-04/22/2020"
-                      isValid={false}
-                      readOnly
+                    <DateRangePicker
+                      className="inputshadow"
+                      onChange={this.onChange}
+                      value={this.state.date}
+                      format="MM/dd/y"
                     />
-                    <InputGroup.Prepend>
+                    {/*<InputGroup.Prepend>
                       <InputGroup.Text
                         id="inputGroup-sizing-default"
                         className="bg-primary text-white"
                       >
                         <i className="fa fa-calendar  fa-3x"></i>
                       </InputGroup.Text>
-                      {/*<InputGroup.Text>
+                      <InputGroup.Text>
                         <DateRangePicker
                           onChange={this.onDateRangeChange}
                           value={this.state.rangedate}
                           calendarIcon="fa fa-calendar"
                         ></DateRangePicker>
-                      </InputGroup.Text>*/}
-                    </InputGroup.Prepend>
+                      </InputGroup.Text>
+                    </InputGroup.Prepend>*/}
                   </InputGroup>
                 </div>
                 <div className="col-md-3">
-                  <Button className="btn btn-primary btn-xs">
+                  <Button className="btn btn-primary btn-xsc buttonshadow">
                     <i className="fa fa-search" style={{fontSize: '10px'}}></i>{' '}
                     Search Orders
                   </Button>
@@ -298,12 +305,14 @@ class RoutesPlan extends Component {
                   <ButtonGroup aria-label="Basic example">
                     <Button
                       variant="secondary"
+                      className="buttonshadow"
                       onClick={() => this.setState({listview: true})}
                     >
                       <i className="fa fa-list" style={{fontSize: '12px'}} />{' '}
                       List
                     </Button>
                     <Button
+                      className="buttonshadow"
                       variant="primary"
                       onClick={() => this.setState({listview: false})}
                     >
@@ -432,7 +441,7 @@ class RoutesPlan extends Component {
               </div>
             )}
             <div className={col6}>
-              <RouteSummary />
+              <RouteSummary summary={this.state.summarystats} />
             </div>
           </div>
         </div>

@@ -88,6 +88,12 @@ a:focus {
   background: #7386d5;
 }
 
+#sidebar .up-select {
+  font-size: 56%;
+  font-weight: bold;
+  box-shadow: 3px 15px 14px -11px rgba(0, 0, 0, 0.49) !important;
+}
+
 /* #sidebar ul li button:hover {
     color: #7386D5;
     background: #fff;

@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {Navbar, Nav, Dropdown, NavDropdown} from 'react-bootstrap';
+import {Navbar, Nav, Dropdown, NavDropdown, Form} from 'react-bootstrap';
 import {LoadFadeLoader, LoadClipLoader} from '../Loaders/Loaders';
 import Logo from '../../images/controltower.png';
 import {
@@ -7,6 +7,7 @@ import {
   Switch,
   Route,
   Link,
+  NavLink,
   useLocation,
 } from 'react-router-dom';
 // import App from '../container/old_App';
@@ -48,7 +49,7 @@ class NavBar extends Component {
           <div className="row">
             <Navbar
               expand="xl"
-              className="col-md-12 col-sm-12 col-xs-12 color-navbar"
+              className="col-md-12 col-sm-12 col-xs-12 color-navbar align-items-center"
             >
               <Navbar.Brand>
                 <img
@@ -60,35 +61,37 @@ class NavBar extends Component {
               </Navbar.Brand>
               <Navbar.Toggle aria-controls="basic-navbar-nav" />
               <Navbar.Collapse id="basic-navbar-nav">
-                <Link to="/" className="nav-link" style={null}>
-                  Live
-                </Link>
-                <Link className="nav-link" to="/controltower">
-                  Control Tower
-                </Link>
-                <Nav.Item className="pr-2">
-                  <Link className="nav-link" to="/routesplan">
+                <Nav>
+                  <NavLink exact className="nav-link" to="/">
+                    Live
+                  </NavLink>
+                  <NavLink exact className="nav-link" to="/controltower">
+                    Control Tower
+                  </NavLink>
+                  <NavLink exact className="nav-link" to="/routesplan">
                     Routes Plan and Capacity
+                  </NavLink>
+                </Nav>
+                <Form.Control
+                  as="select"
+                  className="up-select col-md-2 col-sm-2 col-xs-2 col-lg-2 m-auto"
+                >
+                  <option>Select Branches</option>
+                  <option>1</option>
+                  <option>2</option>
+                  <option>3</option>
+                  <option>4</option>
+                  <option>5</option>
+                  <option>6</option>
+                  <option>7</option>
+                  <option>8</option>
+                  <option>9</option>
+                  <option>10</option>
+                </Form.Control>
+                <Nav.Item className="text-right ml-auto">
+                  <Link className="nav-link" to="/logout">
+                    <i className="fa fa-sign-out-alt"> Logout</i>
                   </Link>
-                  {/*<NavDropdown
-                    title="Routes and Capacity"
-                    id="basic-nav-dropdown"
-                  >
-                    <Link
-                      to="/routesplan"
-                      className="dropdown-item"
-                      style={null}
-                    >
-                      Routes Plan
-                    </Link>
-                    <Link
-                      to="/routessummary"
-                      className="dropdown-item"
-                      style={null}
-                    >
-                      Routes Summary
-                    </Link>
-                  </NavDropdown>*/}
                 </Nav.Item>
               </Navbar.Collapse>
             </Navbar>
