@@ -10,10 +10,10 @@ import {
   } from 'react-router-dom';
 // import App from './components/NavBar/NavBar';
 // import Login from './components/Containers/Login';
-import Login from './components/Containers/App';
+import App from './components/Containers/App';
 import * as serviceWorker from './serviceWorker';
 
-ReactDOM.render(<Login />, document.getElementById('root'));
+ReactDOM.render(<App />, document.getElementById('root'));
 
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.

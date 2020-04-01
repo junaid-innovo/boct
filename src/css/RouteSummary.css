@@ -9,12 +9,11 @@
   font-size: 63%;
 }
 
-.routeplan-div .up-select {
+.color-navbar .up-select {
   font-size: 56%;
   font-weight: bold;
-  box-shadow: 3px 15px 14px -11px rgba(0, 0, 0, 0.49) !important;
 }
-.routeplan-div button {
+.routeplan-div .buttonshadow {
   font-size: 56%;
   font-weight: bold;
   box-shadow: 3px 15px 14px -11px rgba(0, 0, 0, 0.49) !important;
@@ -25,11 +24,11 @@
   font-weight: bold;
   box-shadow: 3px 15px 14px -11px rgba(0, 0, 0, 0.49) !important;
 }
-.routeplan-div .input-group-prepend {
+.routeplan-div .inputshadow {
   box-shadow: 3px 15px 14px -11px rgba(0, 0, 0, 0.49) !important;
 }
 
-.routeplan-div input[type='text'] {
+.routeplan-div .inputshadow {
   box-shadow: 3px 15px 14px -11px rgba(0, 0, 0, 0.49) !important;
   font-size: 56%;
   font-weight: bold;
@@ -67,5 +66,30 @@
   box-shadow: none;
 }
 input[readonly] {
-  background-color:white !important;
+  background-color: white !important;
+}
+
+.routeplan-div .react-daterange-picker__button svg {
+  height: 16px !important;
+  width: 15px !important;
+}
+.routeplan-div .react-daterange-picker__wrapper {
+  max-width: 190px;
+  font-size: 10px;
+  background-color: white;
+  border: 1px solid #ced4da !important;
+}
+.routeplan-div .react-daterange-picker__range-divider {
+  font-size: 17px;
+}
+
+.routeplan-div .react-calendar {
+  font-size: 15px;
+}
+
+.routeplan-div .react-daterange-picker__inputGroup__input {
+  min-width: 4px !important;
+}
+.react-daterange-picker__button {
+  padding: 5px 3px !important;
 }

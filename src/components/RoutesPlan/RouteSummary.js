@@ -1,18 +1,24 @@
 import React, {Component} from 'react';
 import {Card} from 'react-bootstrap';
 import '../../css/RouteSummary.css';
-import {col12} from "../Constants/Classes/BoostrapClassses";
-import DatePicker from "react-datepicker";
+import {col12} from '../Constants/Classes/BoostrapClassses';
+import DatePicker from 'react-datepicker';
 class RoutesSummary extends Component {
   constructor(props) {
     super(props);
     this.state = {
       routes: null,
+      summarystats: null,
     };
   }
-  // static getDerivedStateFromProps=(props,state)=>{
-  //   if(props.)
-  // }
+  static getDerivedStateFromProps = (props, state) => {
+    if (props.summary) {
+      return {
+        summarystats: props.summary,
+      };
+    }
+    return state;
+  };
   render() {
     return (
       <React.Fragment>
@@ -90,7 +96,9 @@ class RoutesSummary extends Component {
                     <Card.Body>
                       <div className="row">
                         <div className="col-12 text-center">
-                          <small>100%</small>
+                          {this.state.summarystats && (
+                            <small>{`${this.state.summarystats.geoEncodedOrdersPercentage}%`}</small>
+                          )}
                         </div>
                       </div>
                     </Card.Body>
@@ -98,7 +106,7 @@ class RoutesSummary extends Component {
                 </div>
                 <div className="col-3">
                   <Card>
-                   <Card.Header className="h-50">
+                    <Card.Header className="h-50">
                       <div className="row">
                         <div className="col-md-12 col-sm-12 col-xs-12 text-center">
                           <i className="fa fa-truck fa-3x"></i>
@@ -113,7 +121,11 @@ class RoutesSummary extends Component {
                     <Card.Body>
                       <div className="row">
                         <div className="col-12 text-center">
-                          <small>5</small>
+                          {this.state.summarystats && (
+                            <small>
+                              {this.state.summarystats.numberOfOutSourcedFleet}
+                            </small>
+                          )}
                         </div>
                       </div>
                     </Card.Body>
@@ -127,7 +139,7 @@ class RoutesSummary extends Component {
               <div className="row">
                 <div className="col-3">
                   <Card>
-                   <Card.Header className="h-50">
+                    <Card.Header className="h-50">
                       <div className="row">
                         <div className="col-md-12 col-sm-12 col-xs-12 text-center">
                           <i className="fas fa-warehouse fa-3x"></i>
@@ -142,7 +154,9 @@ class RoutesSummary extends Component {
                     <Card.Body>
                       <div className="row">
                         <div className="col-12 text-center">
-                          <small>1</small>
+                          {this.state.summarystats && (
+                            <small>{this.state.summarystats.branches}</small>
+                          )}
                         </div>
                       </div>
                     </Card.Body>
@@ -150,7 +164,7 @@ class RoutesSummary extends Component {
                 </div>
                 <div className="col-3">
                   <Card>
-                   <Card.Header className="h-50">
+                    <Card.Header className="h-50">
                       <div className="row">
                         <div className="col-md-12 col-sm-12 col-xs-12 text-center">
                           <i className="fa fa-map-marker fa-3x"></i>
@@ -165,7 +179,10 @@ class RoutesSummary extends Component {
                     <Card.Body>
                       <div className="row">
                         <div className="col-12 text-center">
-                          <small>3</small>
+                          
+                          {this.state.summarystats && (
+                            <small>{this.state.summarystats.territories}</small>
+                          )}
                         </div>
                       </div>
                     </Card.Body>
@@ -173,7 +190,7 @@ class RoutesSummary extends Component {
                 </div>
                 <div className="col-3">
                   <Card>
-                   <Card.Header className="h-50">
+                    <Card.Header className="h-50">
                       <div className="row">
                         <div className="col-md-12 col-sm-12 col-xs-12 text-center">
                           <i className="fa fa-calendar-check-o fa-3x"></i>
@@ -188,7 +205,9 @@ class RoutesSummary extends Component {
                     <Card.Body>
                       <div className="row">
                         <div className="col-12 text-center">
-                          <small>4</small>
+                        {this.state.summarystats && (
+                          <small>{this.state.summarystats.customers}</small>
+                        )}
                         </div>
                       </div>
                     </Card.Body>
@@ -196,7 +215,7 @@ class RoutesSummary extends Component {
                 </div>
                 <div className="col-3">
                   <Card>
-                   <Card.Header className="h-50">
+                    <Card.Header className="h-50">
                       <div className="row">
                         <div className="col-md-12 col-sm-12 col-xs-12 text-center">
                           <i className="fa fa-clock-o  fa-3x"></i>
@@ -225,7 +244,7 @@ class RoutesSummary extends Component {
               <div className="row">
                 <div className="col-3">
                   <Card>
-                   <Card.Header className="h-50">
+                    <Card.Header className="h-50">
                       <div className="row">
                         <div className="col-md-12 col-sm-12 col-xs-12 text-center">
                           <i className="fa fa-cogs fa-3x"></i>
