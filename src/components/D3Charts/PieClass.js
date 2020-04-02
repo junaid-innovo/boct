@@ -54,7 +54,7 @@ class PieClass extends Component {
     //   .text(d => this.format(d.value));
   }
 
-  componentWillUpdate(nextProps, nextState) {
+  UNSAFE_componentWillUpdate(nextProps, nextState) {
     const svg = d3.select(this.ref.current);
     const data = this.createPie(nextProps.data);
 

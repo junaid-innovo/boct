@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, {Component, useEffect} from 'react';
 import {
   Form,
   Navbar,
@@ -10,6 +10,7 @@ import {
   Button,
   ButtonGroup,
 } from 'react-bootstrap';
+import DateTimeRangePicker from '@wojtekmaj/react-datetimerange-picker';
 import Map from '../Map';
 import {
   BrowserRouter as Router,
@@ -28,9 +29,12 @@ import RouteSummary from '../RoutesPlan/RouteSummary';
 import _ from 'lodash';
 import DatePicker from 'react-datepicker';
 import DateRangePicker from '@wojtekmaj/react-daterange-picker';
+import {ToastContainer, toast} from 'react-toastify';
+import {LoadPropagateLoader} from '../Loaders/Loaders';
 class RoutesPlan extends Component {
   constructor(props) {
     super(props);
+    this._isMounted = false;
     this.state = {
       routes: null,
       vehicleRoutes: null,
@@ -43,7 +47,9 @@ class RoutesPlan extends Component {
       selectedConstraintName: {type: '', names: []},
       advancemenu: false,
       date: [new Date(), new Date()],
+      DateTimeRange: [new Date(), new Date()],
       plannow: false,
+      planlater: false,
       startDate: new Date(),
       endDate: new Date(),
       rangedate: [new Date(), new Date()],
@@ -52,8 +58,16 @@ class RoutesPlan extends Component {
   }
 
   onChange = date => this.setState({date});
- async componentDidMount(){
-    await this.getRoutesandCapacity();
+  componentDidMount() {
+    this._isMounted = true;
+    this.getRoutesandCapacity();
+  }
+  // componentDidUpdate(prevProps, prevState) {
+  //   console.log('test update');
+  //   this.getRoutesandCapacity();
+  // }
+  componentWillUnmount() {
+    this._isMounted = false;
   }
   getRoutesandCapacity = () => {
     axios
@@ -61,15 +75,43 @@ class RoutesPlan extends Component {
       .then(res => {
         let response = res.data;
         if (response.code === 200) {
-          console.log(response);
-          this.setState({
-            orders: response.data.orders,
-            constraints: _.sortBy(response.data.constraints, 'constraint_id'),
-            summarystats: response.data.counters,
-          });
+          if (this._isMounted) {
+            this.showMessage(
+              'Route Data Retrieved Successfully',
+              'success',
+              1500
+            );
+            let data = response.data;
+            let orders = data.orders;
+            let constraints = data.constraints;
+            let summarystats = data.counters;
+            // if (orders.length === 0) {
+            //   this.showMessage('No Data Available', 'error');
+            // }
+            // if (constraints.length === 0) {
+            //   this.showMessage('No Data Available', 'error');
+            // }
+            // if (summarystats.length === 0) {
+            //   this.showMessage('No Data Available', 'error');
+            // }
+            // if (
+            //   orders.length > 0 &&
+            //   constraints.length > 0 &&
+            //   summarystats.length > 0
+            // ) {
+            //   this.showMessage('Route Data Retrieved Successfully', 'success');
+            // }
+            this.setState({
+              orders: orders,
+              constraints: _.sortBy(constraints, 'constraint_id'),
+              summarystats: summarystats,
+            });
+          }
         }
       })
-      .catch(error => console.log(error));
+      .catch(error => {
+        this.showMessage(error.toString(), 'error', false);
+      });
   };
   renderDataTable = () => {
     if (this.state.orders.length > 0) {
@@ -160,31 +202,33 @@ class RoutesPlan extends Component {
   };
 
   onConstraintClick = constraint => {
-    console.log("Check constraint",constraint)
-  //   if (constraint.constraint_type === 'Advance') {
-  //     this.setState({
-  //       advancemenu: true,
-  //       plannow: false,
-  //     });
-  //   } else {
-  //     let type = '';
-  //     if (constraint.multival) {
-  //       type = 'checkbox';
-  //     } else {
-  //       type = 'radio';
-  //     }
-  //     let altconstraint = {
-  //       type: type,
-  //       names: JSON.parse(constraint.constraint_name),
-  //     };
-  //     this.setState({
-  //       selectedConstraintName: altconstraint,
-  //       advancemenu: false,
-  //       plannow: false,
-  //     });
-  //   }
+    console.log('Check constraint', constraint);
+    if (constraint.constraint_type === 'Advance') {
+      this.setState({
+        advancemenu: true,
+        plannow: false,
+        planlater:false
+      });
+    } else {
+      let type = '';
+      if (constraint.multival) {
+        type = 'checkbox';
+      } else {
+        type = 'radio';
+      }
+      let altconstraint = {
+        type: type,
+        // names: JSON.parse(constraint.constraint_name),
+        names: constraint.constraint_name,
+      };
+      this.setState({
+        selectedConstraintName: altconstraint,
+        advancemenu: false,
+        plannow: false,
+      });
+    }
+  };
   // };
-  }
   setStartDate = date => {
     this.setState({
       startDate: date,
@@ -195,10 +239,27 @@ class RoutesPlan extends Component {
       endDate: date,
     });
   };
-  renderDateRangePicker = () => {
+  renderDateRangePicker = minDate => {
     return (
       <React.Fragment>
-        <DatePicker
+        <DateTimeRangePicker
+          disableClock={true}
+          // minDate={new Date().getDate()+7}
+          // minDate={new Date(Date.now() + 1*24*60*60*1000)}
+          minDate={
+            new Date(
+              new Date().getFullYear(),
+              new Date().getMonth(),
+              new Date().getDate() + 7,
+              0,
+              0,
+              0
+            )
+          }
+          onChange={this.onDateTimeRangeChange}
+          value={this.state.DateTimeRange}
+        />
+        {/*<DatePicker
           selected={this.state.startDate}
           onChange={this.setStartDate}
           selectsEnd
@@ -212,18 +273,22 @@ class RoutesPlan extends Component {
           startDate={this.state.startDate}
           endDate={this.state.endDate}
           minDate={this.state.endDate}
-        />
+        />*/}
       </React.Fragment>
     );
   };
+  onDateTimeRangeChange = date => this.setState({DateTimeRange: date});
+
   advanceRadioClick = e => {
     this.setState({
       plannow: true,
+      planlater: false,
     });
   };
   planlaterRadioClick = e => {
     this.setState({
       plannow: false,
+      planlater: true,
     });
   };
   onDateRangeChange = date => {
@@ -231,9 +296,28 @@ class RoutesPlan extends Component {
       rangedate: date,
     });
   };
+  showMessage = (message, type, autoClose = 2000) =>
+    toast(message, {
+      type: type,
+      // autoClose: false,
+      autoClose: autoClose,
+      className: 'toastContainer',
+    });
+  handleRecurringOptions = () => {};
   render() {
     return (
       <div className="row routeplan-div">
+        <ToastContainer
+          position="top-center"
+          // autoClose={1500}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnVisibilityChange
+          draggable
+          pauseOnHover
+        />
         <div className="col-md-12 col-sm-12 col-xs-12">
           <div className="row mt-3 no-gutters">
             <div className="col-md-4">
@@ -255,7 +339,7 @@ class RoutesPlan extends Component {
             </div>
             <div className="col-md-7 offset-1">
               <div className="row">
-                <div className="col-md-3">
+                {/*<div className="col-md-3">
                   <Form.Control
                     as="select"
                     className="rounded-0 up-select inputshadow"
@@ -269,8 +353,8 @@ class RoutesPlan extends Component {
                     <option>4</option>
                     <option>5</option>
                   </Form.Control>
-                </div>
-                <div className="col-md-3">
+    </div>*/}
+                <div className="col-md-3 offset-3">
                   <InputGroup>
                     <DateRangePicker
                       className="inputshadow"
@@ -344,7 +428,7 @@ class RoutesPlan extends Component {
                     >
                       <div className="row align-items-center">
                         <div className="offset-1 col-md-5 text-right">
-                          <Form.Control as="select" className="rounded-0">
+                          {/*<Form.Control as="select" className="rounded-0">
                             <option data-content="<i class='fa fa-cutlery'></i> Cutlery">
                               Default
                             </option>
@@ -353,7 +437,7 @@ class RoutesPlan extends Component {
                             <option>3</option>
                             <option>4</option>
                             <option>5</option>
-                          </Form.Control>
+                  </Form.Control>*/}
                         </div>
                         <Link
                           role="button"
@@ -417,11 +501,54 @@ class RoutesPlan extends Component {
                       </React.Fragment>
                     )}
                     {this.state.plannow && (
-                      <div className="col-md-6">
+                      <div className="col-md-4">
                         {this.renderDateRangePicker()}
                       </div>
                     )}
                   </FormGroup>
+
+                  {!this.state.plannow && this.state.planlater && (
+                    <div className="col-md-4">
+                      <FormGroup className="mt-2 ml-3 p-2" as={Row}>
+                        <Form.Check
+                          className="pr-3"
+                          column="true"
+                          md={4}
+                          onClick={this.handleRecurringOptions}
+                          type="radio"
+                          ref="recurringoption"
+                          value="recurringoption"
+                          name="recurringoption"
+                          id={`default2`}
+                          label={'Daily'}
+                        />
+                        <Form.Check
+                          className="pr-3"
+                          column="true"
+                          md={4}
+                          onClick={this.handleRecurringOptions}
+                          type="radio"
+                          ref="recurringoption"
+                          value="recurringoption"
+                          name="recurringoption"
+                          id={`default2`}
+                          label={'Weekly'}
+                        />
+                        <Form.Check
+                          className="pr-3"
+                          column="true"
+                          md={4}
+                          onClick={this.handleRecurringOptions}
+                          type="radio"
+                          ref="recurringoption"
+                          value="recurringoption"
+                          name="recurringoption"
+                          id={`default2`}
+                          label={'Monthly'}
+                        />
+                      </FormGroup>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -441,7 +568,11 @@ class RoutesPlan extends Component {
               </div>
             )}
             <div className={col6}>
-              <RouteSummary summary={this.state.summarystats} />
+              {this.state.summarystats ? (
+                <RouteSummary summary={this.state.summarystats}></RouteSummary>
+              ) : (
+                <LoadPropagateLoader size={15}></LoadPropagateLoader>
+              )}
             </div>
           </div>
         </div>

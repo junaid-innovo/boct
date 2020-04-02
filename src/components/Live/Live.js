@@ -10,6 +10,8 @@ import ChangeDeliveryTimeModal from '../Modal/ChangeDeliveryTime';
 import {LOCAL_API_URL} from '../Constants/Enviroment/Enviroment';
 import {ORDER_DELIVERED} from '../Constants/Order/Constants';
 import {LoadFadeLoader} from '../Loaders/Loaders';
+import {ToastContainer, toast} from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import {
   Dropdown,
   Collapse,
@@ -58,6 +60,7 @@ class Live extends Component {
         vehicleRoutes: null,
         allorders: null,
         vehicles: null,
+        routeloading: false,
       });
       this.getStoreByCurDate();
     }
@@ -115,7 +118,6 @@ class Live extends Component {
       .then(res => {
         let response = res.data;
         if (response.code === 200) {
-          console.log(response);
           this.setState({
             cancalReasons: response.data,
             reasonmodal: true,
@@ -123,7 +125,9 @@ class Live extends Component {
           });
         }
       })
-      .catch(error => console.log(error));
+      .catch(error => {
+        this.showMessage(error.toString(), 'error', false);
+      });
   };
 
   // get delivery time slots
@@ -134,7 +138,6 @@ class Live extends Component {
       .then(res => {
         let response = res.data;
         if (response.code === 200) {
-          console.log(response);
           this.setState({
             timeSlots: response.data.slots,
             timeSlotModel: true,
@@ -142,7 +145,9 @@ class Live extends Component {
           });
         }
       })
-      .catch(error => console.log(error));
+      .catch(error => {
+        this.showMessage(error.toString(), 'error', false);
+      });
   };
   //get store by date
   getStoreByCurDate = () => {
@@ -152,13 +157,25 @@ class Live extends Component {
       .then(res => {
         let response = res.data;
         if (response.code === 200) {
+          let data = response.data;
           this.props.parentCallback(response.data);
+          if (data.length < 1) {
+            this.showMessage(
+              'No Store Available For Selected Data',
+              'error',
+              2000
+            );
+          } else {
+            this.showMessage('Store Listed Successfully', 'success', 1500);
+          }
           this.setState({
             storeList: response.data,
           });
         }
       })
-      .catch(error => console.log(error));
+      .catch(error => {
+        this.showMessage(error.toString(), 'error', false);
+      });
   };
 
   getVehRoutesById = (e, veh_id) => {
@@ -183,15 +200,23 @@ class Live extends Component {
       .then(res => {
         let response = res.data;
         if (response.code === 200) {
+          let data = response.data;
+          if (response.message) {
+            this.showMessage(response.message, 'error');
+          } else {
+            this.showMessage('Vehicle Route Mapping Successfully ', 'success');
+          }
           this.setState({
-            vehicleRoutes: response.data,
+            vehicleRoutes: data,
             routeloading: false,
             disableall: {},
-            allorders: response.data,
+            allorders: data,
           });
         }
       })
-      .catch(error => console.log(error));
+      .catch(error => {
+        this.showMessage(error.toString(), 'error', false);
+      });
   };
 
   getVehiclesByStoreId = id => {
@@ -206,13 +231,22 @@ class Live extends Component {
       .then(res => {
         let response = res.data;
         if (response.code === 200) {
+          let data = response.data;
+          if (response.message) {
+            this.showMessage(response.message, 'error');
+          }
+          if (data.length > 0) {
+            this.showMessage('Vehicle Listed Successfully', 'success');
+          }
           this.setState({
-            vehicles: response.data,
+            vehicles: data,
             disablebtn: false,
           });
         }
       })
-      .catch(error => console.log(error));
+      .catch(error => {
+        this.showMessage(error.toString(), 'error', false);
+      });
   };
 
   renderProductPopUp = (items, key) => {
@@ -242,9 +276,21 @@ class Live extends Component {
       </div>
     );
   };
+
   renderLeftSideBar = () => {
     return (
       <div className="col-sm-2 col-md-2" id="sidebar">
+        <ToastContainer
+          position="top-center"
+          // autoClose={1500}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnVisibilityChange
+          draggable
+          pauseOnHover
+        />
         <div className="row">
           <div className="mb-1 col-sm-12 col-md-12">
             <DatePicker
@@ -261,53 +307,75 @@ class Live extends Component {
             All Vehicles
           </div>
         </div>
-        <div className="row">
-          <div
-            className="main-content col-sm-12 col-md-12"
-            style={{
-              height: '597px',
-              overflowY: 'scroll',
-              overflowX: 'hidden',
-              marginRight: '-14px',
-            }}
-          >
-            {this.state.vehicles ? (
-              this.state.vehicles.map((data, key) => (
-                <div
-                  style={this.state.disableall}
-                  key={data.vehicle_id + data.driver.user_id}
-                  id={data.vehicle_id + data.driver.user_id}
-                  onClick={e => this.getVehRoutesById(e, data.delivery_trip_id)}
-                  className="ml-1 pb-2 card-div"
-                >
-                  <Card className="text-center text-dark small">
-                    <div className="bg-dark text-light font-weight-bold">
-                      Vehicle No {key + 1}
-                    </div>
-                    <div>
-                      <span className="font-weight-bold pr-1">
-                        Driver Name:
-                      </span>
-                      <span>
-                        {data.driver.name ? data.driver.name.en : 'Unknown'}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="font-weight-bold pr-1"> Plate No:</span>
-                      <span>{data.vehicle_plate_number}</span>
-                    </div>
-                    <div>
-                      <span className="font-weight-bold pr-1"> Code:</span>
-                      <span>{data.barcode}</span>
-                    </div>
-                  </Card>
+        <div className="row">{this.renderVehicles()}</div>
+      </div>
+    );
+  };
+
+  renderVehicles = () => {
+    return (
+      <div
+        className="main-content col-sm-12 col-md-12 col-lg-12 col-xs-12"
+        style={{
+          height: '597px',
+          overflowY: 'scroll',
+          overflowX: 'hidden',
+          marginRight: '-14px',
+        }}
+      >
+        {this.state.vehicles ? (
+          this.state.vehicles.map((data, key) => (
+            <div
+              style={this.state.disableall}
+              key={data.vehicle_id + data.driver.user_id}
+              id={data.vehicle_id + data.driver.user_id}
+              onClick={
+                Array.isArray(data.delivery_trip_id) &&
+                data.delivery_trip_id.length > 1
+                  ? null
+                  : e => this.getVehRoutesById(e, data.delivery_trip_id)
+              }
+              className="ml-1 pb-2 card-div row"
+            >
+              <Card className="text-center text-dark small col-sm-12 col-md-12 col-lg-12 col-xs-12">
+                <div className="bg-dark text-light font-weight-bold">
+                  Vehicle No {key + 1}
                 </div>
-              ))
-            ) : (
-              <LoadFadeLoader />
-            )}
-          </div>
-        </div>
+                <div>
+                  <span className="font-weight-bold pr-1">Driver Name:</span>
+                  <span>
+                    {data.driver.name ? data.driver.name.en : 'Unknown'}
+                  </span>
+                </div>
+                <div>
+                  <span className="font-weight-bold pr-1"> Plate No:</span>
+                  <span>{data.vehicle_plate_number}</span>
+                </div>
+                {Array.isArray(data.delivery_trip_id) &&
+                data.delivery_trip_id.length > 1
+                  ? data.delivery_trip_id
+                      .filter(
+                        (item, index) =>
+                          data.delivery_trip_id.indexOf(item) === index
+                      )
+                      .map((value, key) => (
+                        <div>
+                          <button
+                            onClick={e =>
+                              this.getVehRoutesById(e, data.delivery_trip_id)
+                            }
+                          >
+                            Route {key + 1}
+                          </button>{' '}
+                        </div>
+                      ))
+                  : null}
+              </Card>
+            </div>
+          ))
+        ) : (
+          <LoadFadeLoader />
+        )}
       </div>
     );
   };
@@ -322,34 +390,11 @@ class Live extends Component {
       ({order}) => order.order_id === order_id
     );
     console.log('check index', allorders[selectedorderIndex].order);
-    // allorders[selectedorderIndex].order.delivery_slot_id=slotid
-    // console.log("updated order", allorders)
-    // this.setState({
-    //     allorders:allorders
-    // })
   };
 
   renderMainContent = () => {
     return (
       <div className="col-sm-8 col-md-8">
-        {/*<BounceLoader
-          css={`
-            position: absolute;
-            top: 150px;
-            left: 400px;
-            width: 100%;
-            height: 100%;
-            opacity: 0.5;
-            z-index: 999999;
-          `}
-          size={'300px'}
-          this
-          also
-          works
-          color={'#f30707'}
-          height={100}
-          loading={this.state.routeloading}
-        />*/}
         <BounceLoader
           css={`
             position: fixed;
@@ -502,6 +547,13 @@ class Live extends Component {
       </div>
     );
   };
+  showMessage = (message, type, autoClose = 2000) =>
+    toast(message, {
+      type: type,
+      // autoClose: false,
+      autoClose: autoClose,
+      className: 'toastContainer',
+    });
   render() {
     const open = this.state.open;
     const test = (

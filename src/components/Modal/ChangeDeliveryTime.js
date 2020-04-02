@@ -12,6 +12,7 @@ import {FadeLoader} from 'react-spinners';
 import axios from 'axios';
 import DatePicker from '../DatePicker/Simple';
 import moment from 'moment';
+import {LOCAL_API_URL} from '../Constants/Enviroment/Enviroment';
 class ChangeDeliveryTime extends Component {
   constructor(props) {
     super(props);
@@ -71,7 +72,7 @@ class ChangeDeliveryTime extends Component {
     };
     axios
       .post(
-        `http://192.168.18.12/backoffice/public/api/tower/updateOrderDelivery`,
+        `${LOCAL_API_URL}updateOrderDelivery`,
         JSON.stringify(data)
       )
       .then(res => {

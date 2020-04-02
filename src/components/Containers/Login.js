@@ -1,8 +1,9 @@
 import React, {Component} from 'react';
 import {Button, FormGroup, FormControl, FormLabel} from 'react-bootstrap';
 import '../../css/Login.css';
-import App from './App';
+import {Redirect} from 'react-router-dom';
 import Logo from '../../images/controltower.png';
+import App from "./App"
 class Login extends Component {
   constructor(props) {
     super(props);
@@ -17,9 +18,11 @@ class Login extends Component {
   };
 
   handleSubmit = event => {
+    this.props.logincallback(true);
     this.setState({
       loggedin: true,
     });
+
     event.preventDefault();
   };
   rednerLoginDesign = () => {
@@ -80,11 +83,7 @@ class Login extends Component {
     );
   };
   render() {
-    if (this.state.loggedin) {
-      return <App></App>;
-    } else {
-      return this.rednerLoginDesign();
-    }
+    return this.state.loggedin ? <App></App> : this.rednerLoginDesign();
   }
 }
 export default Login;
