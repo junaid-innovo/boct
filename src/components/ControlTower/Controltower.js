@@ -9,7 +9,6 @@ import {
   ProgressBar,
   Button,
   FormControl,
-  Form,
   InputGroup,
 } from 'react-bootstrap';
 import '../../css/ControlTower.css';

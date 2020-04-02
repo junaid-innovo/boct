@@ -20,7 +20,9 @@ import {data as devliveriesdata} from '../data/deliveries';
 import markerimg from '../components/marker.svg';
 import HomeIcon from '../components/Homeicon.svg';
 import {ORDER_DELIVERED} from './Constants/Order/Constants';
-const { SearchBox } = require("react-google-maps/lib/components/places/SearchBox");
+const {
+  SearchBox,
+} = require('react-google-maps/lib/components/places/SearchBox');
 
 class Map extends Component {
   constructor(props) {
@@ -119,7 +121,7 @@ class Map extends Component {
         origin: this.origin,
         destination: this.destination,
         provideRouteAlternatives: false,
-        // waypoints: wayPoints,
+        waypoints: wayPoints,
         // optimizeWaypoints: true,
         avoidHighways: false,
         travelMode: this.google.maps.TravelMode.DRIVING,
@@ -233,10 +235,10 @@ class Map extends Component {
         // let wayPointsmax = 25;
         routelist = this.props.routelist.deliveries;
         let store_address = this.props.routelist.store_address;
-        this.getCalcultedTimeOfWaypoints(
-          this.props.routelist.deliveries,
-          this.props.routelist.store_address
-        );
+        // this.getCalcultedTimeOfWaypoints(
+        //   this.props.routelist.deliveries,
+        //   this.props.routelist.store_address
+        // );
         let chunkarray = _.chunk(routelist, 24);
         for (let i = 0; i < chunkarray.length; i++) {
           if (i !== 0) {
@@ -284,12 +286,18 @@ class Map extends Component {
           );
           this.setDirections(wayPoints);
         }
-        console.log('check new state');
-        console.log(this.state);
         // this.sendOrderRouteDistanceAndTime(this.state.ordercaltime);
       }
     }
   }
+
+  // shouldComponentUpdate(nextProps, nextState) {
+  //   // if (nextProps.routelist !== this.props.routelist) {
+  //   //   return true;
+  //   // } else {
+  //   //   return false;
+  //   // }
+  // }
 
   showDirectionRendrer = () => {
     const alternatingColor = ['#FFFF00', '#0000fd'];
@@ -450,17 +458,24 @@ class Map extends Component {
     );
   };
   render() {
+    console.log('[Map.js rendering]');
     return (
       <React.Fragment>
         {' '}
-        <GoogleMap style={{position:'absolute',top:'0',left:'0',right:'0',bottom:'0'}}
+        <GoogleMap
+          style={{
+            position: 'absolute',
+            top: '0',
+            left: '0',
+            right: '0',
+            bottom: '0',
+          }}
           key={this.state.routes ? this.state.routes : null}
           defaultZoom={11}
           mapContainerStyle={{
-            height: "100vh",
-            width: "100%"
+            height: '100vh',
+            width: '100%',
           }}
-         
           defaultCenter={
             this.state.routes
               ? new this.google.maps.LatLng(

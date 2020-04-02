@@ -93,3 +93,18 @@ input[readonly] {
 .react-daterange-picker__button {
   padding: 5px 3px !important;
 }
+
+
+/* datetimerangepicker */
+.routeplan-div .react-datetimerange-picker__wrapper {
+  max-width: 450px;
+  font-size: 15px;
+  background-color: white;
+  border: 1px solid #ced4da !important;
+}
+.routeplan-div .react-datetimerange-picker__inputGroup__input {
+  min-width: 4px !important;
+}
+.routeplan-div  .react-datetimerange-picker__range-divider{
+  font-size: 19px !important;
+}

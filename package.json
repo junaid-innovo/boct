@@ -8,10 +8,12 @@
     "@testing-library/react": "^9.4.0",
     "@testing-library/user-event": "^7.2.1",
     "@wojtekmaj/react-daterange-picker": "^2.5.0",
+    "@wojtekmaj/react-datetimerange-picker": "^2.4.0",
     "axios": "^0.19.2",
     "bootstrap": "^4.4.1",
     "cors": "^2.8.5",
     "d3": "^5.15.0",
+    "glamor": "^2.20.40",
     "google-map-react": "^1.1.5",
     "jquery": "^3.4.1",
     "lodash": "^4.17.15",
@@ -32,6 +34,7 @@
     "react-scroll": "^1.7.16",
     "react-sidemenu": "^1.1.0",
     "react-spinners": "^0.8.0",
+    "react-toastify": "^5.5.0",
     "semantic-ui-react": "^0.88.2"
   },
   "scripts": {
@@ -54,6 +57,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "homepage": "http://localhost/backoffice/"
+  }
 }
