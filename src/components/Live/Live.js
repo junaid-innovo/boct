@@ -12,7 +12,6 @@ import {ORDER_DELIVERED} from '../Constants/Order/Constants';
 import {LoadFadeLoader} from '../Loaders/Loaders';
 import {ToastContainer, toast} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import style from '../App.module.css';
 import {
   Dropdown,
   Collapse,
@@ -22,10 +21,11 @@ import {
   Popover,
 } from 'react-bootstrap';
 // import from 'react-bootstrap/'
-import '../../css/sideBar.css';
+// import '../../css/sideBar.css';
 import 'react-datepicker/dist/react-datepicker.css';
 import DatePicker from '../DatePicker/Simple';
 import NavBar from '../NavBar/NavBar';
+import style from './Live.module.css';
 // import {Button} from 'semantic-ui-react';
 class Live extends Component {
   constructor(props) {
@@ -72,7 +72,7 @@ class Live extends Component {
   renderStoreList = data => {
     return this.state.storeList.length > 0 ? (
       <Dropdown key={data} disabled={this.state.disablebtn}>
-        <Dropdown.Toggle id="dropdown-basic" variant="success">
+        <Dropdown.Toggle id="dropdown-basic" className={style.upSelect} variant="success">
           Select Store
         </Dropdown.Toggle>
         <Dropdown.Menu
@@ -188,12 +188,12 @@ class Live extends Component {
       },
     });
     let maindiv = e.currentTarget.parentElement;
-    let element = maindiv.querySelector('.active');
+    let element = maindiv.querySelector(`.${style.active}`);
     if (element) {
       element.classList.remove('active', 'text-light');
       element.classList.add('text-dark');
     }
-    e.currentTarget.classList.add('active', 'text-light');
+    e.currentTarget.classList.add(style.active, 'text-light');
     e.currentTarget.firstChild.classList.remove('text-dark');
     let formattedDate = moment(this.state.currentDate).format('YYYY-MM-DD');
     axios
@@ -280,7 +280,7 @@ class Live extends Component {
 
   renderLeftSideBar = () => {
     return (
-      <div className="col-sm-2 col-md-2" id="sidebar">
+      <div className={`col-sm-2 col-md-2 ${style.sideBar}`}>
         <ToastContainer
           position="top-center"
           // autoClose={1500}
@@ -292,7 +292,7 @@ class Live extends Component {
           draggable
           pauseOnHover
         />
-        <div className={`row ${style.stringcheck}`}>
+        <div className={`row`}>
           <div className="mb-1 col-sm-12 col-md-12">
             <DatePicker
               showTimeSelect={false}
@@ -338,7 +338,7 @@ class Live extends Component {
               }
               className="ml-1 pb-2 card-div row"
             >
-              <Card className="text-center text-dark small col-sm-12 col-md-12 col-lg-12 col-xs-12">
+              <Card className={`text-center text-dark small col-sm-12 col-md-12 col-lg-12 col-xs-12 ${style.card}`}>
                 <div className="bg-dark text-light font-weight-bold">
                   Vehicle No {key + 1}
                 </div>
@@ -472,7 +472,7 @@ class Live extends Component {
   };
   renderRightSideBar = () => {
     return (
-      <div className="col-sm-2 col-md-2" id="sidebar">
+      <div className={`col-sm-2 col-md-2 ${style.navBar}`}>
         <div className="row">
           <div className="mb-1 col-sm-12 col-md-12">
             {this.renderStoreList(this.state.storeList)}
@@ -496,7 +496,7 @@ class Live extends Component {
               this.state.allorders.deliveries.map(({order}, key) => (
                 <div
                   key={order.order_id + order.order_number + key}
-                  className="mr-2 pb-2 card-div"
+                  className="mr-2 pb-2"
                 >
                   <Card className="text-center text-dark small">
                     <div className="bg-dark text-light font-weight-bold">
@@ -553,7 +553,7 @@ class Live extends Component {
       type: type,
       // autoClose: false,
       autoClose: autoClose,
-      className: 'toastContainer',
+      className: style.toastContainer,
     });
   render() {
     const open = this.state.open;

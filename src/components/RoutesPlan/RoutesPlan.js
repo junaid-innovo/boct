@@ -1,36 +1,28 @@
-import React, {Component, useEffect} from 'react';
+import React, {Component} from 'react';
 import {
   Form,
-  Navbar,
   Nav,
   FormGroup,
   Row,
-  Col,
   InputGroup,
   Button,
   ButtonGroup,
 } from 'react-bootstrap';
+import {Link} from 'react-router-dom';
 import DateTimeRangePicker from '@wojtekmaj/react-datetimerange-picker';
 import Map from '../Map';
-import {
-  BrowserRouter as Router,
-  Switch,
-  Route,
-  Link,
-  useLocation,
-} from 'react-router-dom';
 import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
 import BootstrapTable from 'react-bootstrap-table-next';
 import axios from 'axios';
 import {LOCAL_API_URL} from '../Constants/Enviroment/Enviroment';
 import paginationFactory from 'react-bootstrap-table2-paginator';
-import {col12, col6} from '../Constants/Classes/BoostrapClassses';
+import {col6} from '../Constants/Classes/BoostrapClassses';
 import RouteSummary from '../RoutesPlan/RouteSummary';
-import _ from 'lodash';
-import DatePicker from 'react-datepicker';
 import DateRangePicker from '@wojtekmaj/react-daterange-picker';
 import {ToastContainer, toast} from 'react-toastify';
 import {LoadPropagateLoader} from '../Loaders/Loaders';
+import style from './RoutesPlan.module.css';
+import _ from 'lodash';
 class RoutesPlan extends Component {
   constructor(props) {
     super(props);
@@ -191,6 +183,7 @@ class RoutesPlan extends Component {
       this.state.constraints.map(constraint => (
         <React.Fragment key={constraint.constraint_id}>
           <Nav.Link
+            className={style.navLink}
             variant="button"
             onClick={() => this.onConstraintClick(constraint)}
           >
@@ -207,7 +200,7 @@ class RoutesPlan extends Component {
       this.setState({
         advancemenu: true,
         plannow: false,
-        planlater:false
+        planlater: false,
       });
     } else {
       let type = '';
@@ -243,6 +236,7 @@ class RoutesPlan extends Component {
     return (
       <React.Fragment>
         <DateTimeRangePicker
+          style={style}
           disableClock={true}
           // minDate={new Date().getDate()+7}
           // minDate={new Date(Date.now() + 1*24*60*60*1000)}
@@ -306,7 +300,7 @@ class RoutesPlan extends Component {
   handleRecurringOptions = () => {};
   render() {
     return (
-      <div className="row routeplan-div">
+      <div className={`row ${style.routeplanDiv}`}>
         <ToastContainer
           position="top-center"
           // autoClose={1500}
@@ -327,7 +321,7 @@ class RoutesPlan extends Component {
                 </div>
                 <div className="col-md-5 ml-n3">
                   <Form.Control
-                    className="rounded-0 inputshadow"
+                    className={`rounded-0 ${style.inputShadow}`}
                     type="text"
                     name="firstName"
                     value={this.state.plandate}
@@ -357,7 +351,7 @@ class RoutesPlan extends Component {
                 <div className="col-md-3 offset-3">
                   <InputGroup>
                     <DateRangePicker
-                      className="inputshadow"
+                      className={style.inputShadow}
                       onChange={this.onChange}
                       value={this.state.date}
                       format="MM/dd/y"
@@ -380,7 +374,9 @@ class RoutesPlan extends Component {
                   </InputGroup>
                 </div>
                 <div className="col-md-3">
-                  <Button className="btn btn-primary btn-xsc buttonshadow">
+                  <Button
+                    className={`btn btn-primary btn-xs ${style.buttonShadow}`}
+                  >
                     <i className="fa fa-search" style={{fontSize: '10px'}}></i>{' '}
                     Search Orders
                   </Button>
@@ -389,14 +385,14 @@ class RoutesPlan extends Component {
                   <ButtonGroup aria-label="Basic example">
                     <Button
                       variant="secondary"
-                      className="buttonshadow"
+                      className={style.buttonShadow}
                       onClick={() => this.setState({listview: true})}
                     >
                       <i className="fa fa-list" style={{fontSize: '12px'}} />{' '}
                       List
                     </Button>
                     <Button
-                      className="buttonshadow"
+                      className={style.buttonShadow}
                       variant="primary"
                       onClick={() => this.setState({listview: false})}
                     >
@@ -414,7 +410,9 @@ class RoutesPlan extends Component {
           <div className="row mt-4 align-items-center">
             <div className="col-md-12">
               <div className="row">
-                <div className="col-md-12 col-sm-12 col-xs-12 routeplannav ml-2 align-items-center">
+                <div
+                  className={`col-md-12 col-sm-12 col-xs-12 ${style.routePlanNav} ml-2 align-items-center`}
+                >
                   <div className="row">
                     <div
                       className="col-md-5 col-sm-5 col-xs-5"
@@ -442,7 +440,7 @@ class RoutesPlan extends Component {
                         <Link
                           role="button"
                           to="/"
-                          className="nav-link col-md-6 text-center"
+                          className={`${style.navLink} nav-link  col-md-6 text-center`}
                           style={null}
                         >
                           <i className="fa fa-eye"> Show Profile</i>
@@ -452,7 +450,7 @@ class RoutesPlan extends Component {
                   </div>
                 </div>
 
-                <div className="col-md-12 set-shadow1 ml-2">
+                <div className={`col-md-12 ml-2 ${style.setShadow1}`}>
                   <FormGroup className="mt-2 ml-3 p-2" as={Row}>
                     {this.state.selectedConstraintName.names &&
                       !this.state.advancemenu &&

@@ -1,10 +1,8 @@
 import React, {Component} from 'react';
-import {Navbar, Nav, Dropdown, NavDropdown, Form} from 'react-bootstrap';
-import {LoadFadeLoader, LoadClipLoader} from '../Loaders/Loaders';
+import {Navbar, Nav, Form} from 'react-bootstrap';
 import Logo from '../../images/controltower.png';
-import {BrowserRouter as Router, Link, NavLink} from 'react-router-dom';
-
-import '../../css/NavBar.css';
+import {Link, NavLink} from 'react-router-dom';
+import style from './NavBar.module.css';
 class NavBar extends Component {
   constructor(props) {
     super(props);
@@ -34,9 +32,9 @@ class NavBar extends Component {
       <div className="row">
         <Navbar
           expand="xl"
-          className="col-md-12 col-sm-12 col-xs-12 color-navbar align-items-center"
+          className={`col-md-12 col-sm-12 col-xs-12 ${style.colorNavbar} align-items-center`}
         >
-          <Navbar.Brand>
+          <Navbar.Brand className={style.navbarBrand}>
             <img
               style={{maxWidth: '40px', maxHeight: '40px'}}
               src={Logo}
@@ -45,21 +43,36 @@ class NavBar extends Component {
             Control Tower
           </Navbar.Brand>
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
-          <Navbar.Collapse id="basic-navbar-nav">
-            <Nav>
-              <NavLink exact className="nav-link" to="/">
+          <Navbar.Collapse id="basic-navbar-nav" className={style.basicNavBar}>
+            <Nav className={style.navbarNav}>
+              <NavLink
+                activeClassName={style.active}
+                exact
+                className={`${style.navLink} nav-link`}
+                to="/"
+              >
                 Live
               </NavLink>
-              <NavLink exact className="nav-link" to="/controltower">
+              <NavLink
+                exact
+                activeClassName={style.active}
+                className={`${style.navLink} nav-link`}
+                to="/controltower"
+              >
                 Control Tower
               </NavLink>
-              <NavLink exact className="nav-link" to="/routesplan">
+              <NavLink
+                exact
+                activeClassName={style.active}
+                className={`${style.navLink} nav-link`}
+                to="/routesplan"
+              >
                 Routes Plan and Capacity
               </NavLink>
             </Nav>
             <Form.Control
               as="select"
-              className="up-select col-md-2 col-sm-2 col-xs-2 col-lg-2 m-auto"
+              className={`${style.upSelect} col-md-2 col-sm-2 col-xs-2 col-lg-2 m-auto`}
             >
               <option>Select Branches</option>
               <option>1</option>
@@ -74,7 +87,7 @@ class NavBar extends Component {
               <option>10</option>
             </Form.Control>
             <Nav.Item className="text-right ml-auto">
-              <Link className="nav-link" to="/logout">
+              <Link className={`${style.navLink} nav-link`} to="/logout">
                 <i className="fa fa-sign-out-alt"> Logout</i>
               </Link>
             </Nav.Item>

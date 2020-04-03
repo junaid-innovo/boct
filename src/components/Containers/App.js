@@ -58,6 +58,9 @@ class App extends Component {
       <div className="container-fluid">
         <Router>
           <Switch>
+            <Route exact path="/login">
+              <Login/>
+            </Route>
             <Route exact path="/">
               <NavBar></NavBar>
               <Live parentCallback={this.callbackFunction} />
