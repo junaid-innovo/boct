@@ -12,6 +12,7 @@ import {ORDER_DELIVERED} from '../Constants/Order/Constants';
 import {LoadFadeLoader} from '../Loaders/Loaders';
 import {ToastContainer, toast} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import style from '../App.module.css';
 import {
   Dropdown,
   Collapse,
@@ -291,7 +292,7 @@ class Live extends Component {
           draggable
           pauseOnHover
         />
-        <div className="row">
+        <div className={`row ${style.stringcheck}`}>
           <div className="mb-1 col-sm-12 col-md-12">
             <DatePicker
               showTimeSelect={false}
