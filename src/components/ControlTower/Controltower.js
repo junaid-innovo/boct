@@ -11,7 +11,8 @@ import {
   FormControl,
   InputGroup,
 } from 'react-bootstrap';
-import '../../css/ControlTower.css';
+// import '../../css/ControlTower.css';
+import style from "./ControlTower.module.css"
 class Controltower extends Component {
   constructor(props) {
     super(props);
@@ -71,7 +72,7 @@ class Controltower extends Component {
                     </div>
                   </div>
                   <div className="row">
-                    <div className="col-12 custom-text-font">
+                    <div className={`col-12 ${style.customTextFont}`}>
                       <div className="row mt-1">
                         <div className="col-md-8 col-sm-8 col-xs-8 ml-2 pr-0">
                           <small className="font-weight-normal">
@@ -80,7 +81,7 @@ class Controltower extends Component {
                         </div>
                         <div className="col-md-3 col-sm-3 col-xs-3">
                           <ProgressBar
-                            className="ml-3n"
+                            className={`ml-3n ${style.progress}`}
                             now={this.now[0]}
                             label={`${this.now[0]}%`}
                           />
@@ -124,7 +125,7 @@ class Controltower extends Component {
                         </div>
                         <div className="col-md-3 col-sm-3 col-xs-3">
                           <ProgressBar
-                            className="ml-3n"
+                            className={`ml-3n ${style.progress}`}
                             now={this.now[1]}
                             label={`${this.now[1]}%`}
                           />
@@ -168,7 +169,7 @@ class Controltower extends Component {
                         </div>
                         <div className="col-md-3 col-sm-3 col-xs-3">
                           <ProgressBar
-                            className="ml-3n"
+                            className={`ml-3n ${style.progress}`}
                             now={this.now[2]}
                             label={`${this.now[2]}%`}
                           />
@@ -212,7 +213,7 @@ class Controltower extends Component {
                         </div>
                         <div className="col-md-3 col-sm-3 col-xs-3">
                           <ProgressBar
-                            className="ml-3n"
+                            className={`ml-3n ${style.progress}`}
                             now={this.now[3]}
                             label={`${this.now[3]}%`}
                           />

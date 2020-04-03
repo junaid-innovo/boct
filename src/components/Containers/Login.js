@@ -1,9 +1,8 @@
 import React, {Component} from 'react';
 import {Button, FormGroup, FormControl, FormLabel} from 'react-bootstrap';
-import '../../css/Login.css';
-import {Redirect} from 'react-router-dom';
 import Logo from '../../images/controltower.png';
-import App from "./App"
+import App from './App';
+import styles from './Login.module.css';
 class Login extends Component {
   constructor(props) {
     super(props);
@@ -48,7 +47,7 @@ class Login extends Component {
         </div>
         <div className="row m-auto">
           <div className="col-12">
-            <div className="Login">
+            <div className={styles.Login}>
               <form onSubmit={this.handleSubmit}>
                 <FormGroup controlid="email" bssize="large">
                   <FormLabel>Email</FormLabel>

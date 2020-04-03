@@ -1,0 +1,9 @@
+.progress {
+  height: 5px !important;
+  margin-left: -75px;
+  margin-right: -5px;
+  margin-top: 10px;
+}
+.customTextFont {
+  font-size: 15px;
+}

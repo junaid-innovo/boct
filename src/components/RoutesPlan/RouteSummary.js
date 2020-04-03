@@ -1,7 +1,8 @@
 import React, {Component} from 'react';
 import {Card} from 'react-bootstrap';
-import '../../css/RouteSummary.css';
+// import '../../css/RouteSummary.css';
 import {col12} from '../Constants/Classes/BoostrapClassses';
+import style from './RoutesPlan.module.css';
 import DatePicker from 'react-datepicker';
 class RoutesSummary extends Component {
   constructor(props) {
@@ -22,7 +23,7 @@ class RoutesSummary extends Component {
   render() {
     return (
       <React.Fragment>
-        <div className="summary-div">
+        <div className={style.summaryDiv}>
           <div className="row mt-n1">
             <div className={col12}>
               <b>Summary</b>
@@ -32,7 +33,7 @@ class RoutesSummary extends Component {
             <div className={col12}>
               <div className="row">
                 <div className="col-3">
-                  <Card>
+                  <Card className={style.card}>
                     <Card.Header className="h-50">
                       <div className="row">
                         <div className="col-md-12 col-sm-12 col-xs-12 text-center">
@@ -57,7 +58,7 @@ class RoutesSummary extends Component {
                   </Card>
                 </div>
                 <div className="col-3">
-                  <Card>
+                  <Card className={style.card}>
                     <Card.Header className="h-50">
                       <div className="row">
                         <div className="col-md-12 col-sm-12 col-xs-12 text-center">
@@ -80,7 +81,7 @@ class RoutesSummary extends Component {
                   </Card>
                 </div>
                 <div className="col-3">
-                  <Card>
+                  <Card className={style.card}>
                     <Card.Header className="h-50">
                       <div className="row">
                         <div className="col-md-12 col-sm-12 col-xs-12 text-center">
@@ -105,7 +106,7 @@ class RoutesSummary extends Component {
                   </Card>
                 </div>
                 <div className="col-3">
-                  <Card>
+                  <Card className={style.card}>
                     <Card.Header className="h-50">
                       <div className="row">
                         <div className="col-md-12 col-sm-12 col-xs-12 text-center">
@@ -138,7 +139,7 @@ class RoutesSummary extends Component {
             <div className={col12}>
               <div className="row">
                 <div className="col-3">
-                  <Card>
+                  <Card className={style.card}>
                     <Card.Header className="h-50">
                       <div className="row">
                         <div className="col-md-12 col-sm-12 col-xs-12 text-center">
@@ -163,7 +164,7 @@ class RoutesSummary extends Component {
                   </Card>
                 </div>
                 <div className="col-3">
-                  <Card>
+                  <Card className={style.card}>
                     <Card.Header className="h-50">
                       <div className="row">
                         <div className="col-md-12 col-sm-12 col-xs-12 text-center">
@@ -189,7 +190,7 @@ class RoutesSummary extends Component {
                   </Card>
                 </div>
                 <div className="col-3">
-                  <Card>
+                  <Card className={style.card}>
                     <Card.Header className="h-50">
                       <div className="row">
                         <div className="col-md-12 col-sm-12 col-xs-12 text-center">
@@ -214,7 +215,7 @@ class RoutesSummary extends Component {
                   </Card>
                 </div>
                 <div className="col-3">
-                  <Card>
+                  <Card className={style.card}>
                     <Card.Header className="h-50">
                       <div className="row">
                         <div className="col-md-12 col-sm-12 col-xs-12 text-center">
@@ -243,7 +244,7 @@ class RoutesSummary extends Component {
             <div className={col12}>
               <div className="row">
                 <div className="col-3">
-                  <Card>
+                  <Card className={style.card}>
                     <Card.Header className="h-50">
                       <div className="row">
                         <div className="col-md-12 col-sm-12 col-xs-12 text-center">

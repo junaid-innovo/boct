@@ -17,6 +17,7 @@ import {
 } from 'react-router-dom';
 import Login from './Login';
 // import 'bootstrap/dist/css/bootstrap.min.css';
+import '../../App.css'
 class App extends Component {
   constructor(props) {
     super(props);
@@ -58,6 +59,9 @@ class App extends Component {
       <div className="container-fluid">
         <Router>
           <Switch>
+            <Route exact path="/login">
+              <Login/>
+            </Route>
             <Route exact path="/">
               <NavBar></NavBar>
               <Live parentCallback={this.callbackFunction} />
