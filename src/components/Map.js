@@ -1,6 +1,6 @@
 import React, {
   // useState,4
-  Component,
+  Component,PureComponent
 } from 'react';
 import {compose} from 'recompose';
 import _ from 'lodash';
@@ -24,7 +24,7 @@ const {
   SearchBox,
 } = require('react-google-maps/lib/components/places/SearchBox');
 
-class Map extends Component {
+class Map extends PureComponent {
   constructor(props) {
     super(props);
     this.origin = null;
@@ -205,7 +205,7 @@ class Map extends Component {
     return wayPoints;
   }
   static getDerivedStateFromProps(props, state) {
-    if (props.routelist) {
+    if (props.routelist !== null) {
       if (props.routelist.deliveries.length > 0) {
         if (state.ordercaltime.length > 0) {
           if (state.ordercaltime.length === props.routelist.deliveries.length) {
@@ -213,6 +213,12 @@ class Map extends Component {
           }
         }
       }
+    } else {
+      return {
+        directions: [],
+        markerPositions: [],
+        routes: null,
+      };
     }
     return state;
   }
@@ -337,6 +343,7 @@ class Map extends Component {
     const markerColors = {green: '#008000', red: '#FF0000'};
     return (
       this.markerPositions &&
+      this.state.directions &&
       [].concat.apply([], this.markerPositions).map(({order}, i) => (
         <Marker
           animation={`BOUNCE`}
@@ -458,7 +465,6 @@ class Map extends Component {
     );
   };
   render() {
-    console.log('[Map.js rendering]');
     return (
       <React.Fragment>
         {' '}

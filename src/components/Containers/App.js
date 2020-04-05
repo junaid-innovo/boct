@@ -6,7 +6,7 @@ import NotFound from '../Exceptions/NotFound';
 import Live from '../Live/Live';
 import ControlTower from '../ControlTower/Controltower';
 import RoutePlan from '../RoutesPlan/RoutesPlan';
-
+import {withRouter} from 'react-router-dom';
 import {
   BrowserRouter as Router,
   Switch,
@@ -17,7 +17,7 @@ import {
 } from 'react-router-dom';
 import Login from './Login';
 // import 'bootstrap/dist/css/bootstrap.min.css';
-import '../../App.css'
+import '../../App.css';
 class App extends Component {
   constructor(props) {
     super(props);
@@ -27,62 +27,90 @@ class App extends Component {
       vehicles: null,
       vehiclesdata: null,
       vehicleRoutes: null,
-      vehiclesdescription: null,
-      sideloading: true,
-      routeloading: false,
-      currentDate: new Date(),
-      disableall: {},
       storeList: [],
-      routesarr: null,
-      currentdiv: false,
-      disablebtn: false,
-      allorders: null,
-      open: false,
-      reasonmodal: false,
-      timeSlotModel: false,
-      selectedOrder: null,
-      dateFormat: 'yyyy-MM-dd',
-      isLoggedIn: false,
+      currentlocation: null,
     };
   }
   renderNavBar = () => {
     return <NavBar></NavBar>;
   };
-  callbackFunction = childData => {
-    this.setState({storeList: childData});
+  callbackFunction = (childData, date) => {
+    this.setState({storeList: childData, currentDate: date});
   };
-  checkLogin = isLoggedIn => {
-    this.setState({isLoggedIn: isLoggedIn});
+  // checkLogin = (isLoggedIn) => {
+  //   this.setState({isLoggedIn: isLoggedIn});
+  // };
+  getCurrentDate = (date) => {
+    this.setState({
+      currentDate: date,
+      vehicles: null,
+    });
   };
+  getVehiclesList = (vehicles) => {
+    console.log('[app.js] vehciles', vehicles);
+    this.setState({
+      vehicles: vehicles,
+    });
+  };
+  componentDidUpdate(prevProps, prevState) {
+    if (prevState.storeList !== this.state.storeList) {
+        this.setState({
+          vehiclesdata:null
+        })
+    }
+    if (prevState.vehicles !== this.state.vehicles) {
+      this.setState({vehiclesdata: this.state.vehicles});
+    }
+  }
+  static getDerivedStateFromProps(props, state) {
+    console.log('getDerived app.js props', props);
+    let location = props.location.pathname;
+    return {
+      currentlocation: location,
+    };
+  }
+  // componentWillReceiveProps(props) {
+  //   console.log("location",props.location.pathname)
+  //   // var newLang = props.location.pathname.split('/').shift();
+  //   // if(this.state.lang !== newLang) {
+  //   //     // this.setState({lang: newLang});
+  //   // }
+  // }
   render() {
     return (
       <div className="container-fluid">
-        <Router>
-          <Switch>
-            <Route exact path="/login">
-              <Login/>
-            </Route>
-            <Route exact path="/">
-              <NavBar></NavBar>
-              <Live parentCallback={this.callbackFunction} />
-            </Route>
+        <Switch>
+          <Route exact path="/login">
+            <Login />
+          </Route>
+          <Route exact path="/">
+            <NavBar
+              storeList={this.state.storeList}
+              currentDate={this.state.currentDate}
+              vehiclesList={this.getVehiclesList}
+            ></NavBar>
+            <Live
+              vehicles={this.state.vehiclesdata}
+              parentCallback={this.callbackFunction}
+              // currentDateCallBack={this.getCurrentDate}
+            />
+          </Route>
 
-            <Route path="/controltower">
-              <NavBar></NavBar>
-              <ControlTower setSelectedDate={this.getSelectedDate} />
-            </Route>
-            <Route path="/routesplan">
-              <NavBar></NavBar>
-              <RoutePlan />
-            </Route>
-            <Route>
-              <NotFound />
-            </Route>
-          </Switch>
-        </Router>
+          <Route path="/controltower">
+            <NavBar></NavBar>
+            <ControlTower setSelectedDate={this.getSelectedDate} />
+          </Route>
+          <Route path="/routesplan">
+            <NavBar></NavBar>
+            <RoutePlan />
+          </Route>
+          <Route>
+            <NotFound />
+          </Route>
+        </Switch>
       </div>
     );
   }
 }
 
-export default App;
+export default withRouter(App);

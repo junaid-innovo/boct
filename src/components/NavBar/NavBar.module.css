@@ -14,11 +14,14 @@
   font-size: 12px;
 }
 .upSelect {
-  font-size: 56%;
+  font-size: 70%;
   font-weight: bold;
 }
 .basicNavBar .navLink.active {
   -webkit-box-shadow: 0 5px 0 darkred; /* Safari 3-4, iOS 4.0.2 - 4.2, Android 2.3+ */
   -moz-box-shadow: 0 5px 0 darkred; /* Firefox 3.5 - 3.6 */
   box-shadow: 0 5px 0 darkred !important;
+}
+.toastContainer {
+  min-height: 37px !important;
 }
