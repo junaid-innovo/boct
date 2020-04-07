@@ -49,6 +49,7 @@ a:focus {
   color: #fff;
   transition: all 0.3s;
   height: '597px';
+  /* height: '100%; */
 }
 
 .sideBar .sidebarHeader {

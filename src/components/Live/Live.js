@@ -10,7 +10,7 @@ import ChangeDeliveryTimeModal from '../Modal/ChangeDeliveryTime';
 import {LOCAL_API_URL} from '../Constants/Enviroment/Enviroment';
 import {ORDER_DELIVERED} from '../Constants/Order/Constants';
 import {LoadFadeLoader} from '../Loaders/Loaders';
-import {ToastContainer, toast} from 'react-toastify';
+import {ToastContainer, toast, Zoom} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import {withRouter} from 'react-router-dom';
 import {
@@ -59,9 +59,9 @@ class Live extends PureComponent {
     };
   }
   static contextType = selectedStoreContext;
-  componentWillUnmount(){
-    this.props.parentCallback(null,null)
-    console.log("test unmpount")
+  componentWillUnmount() {
+    this.props.parentCallback(null, null);
+    console.log('test unmpount');
     // this.setState({
     //   vehicles:null
     // })
@@ -76,7 +76,7 @@ class Live extends PureComponent {
         routeloading: false,
       });
       this.getStoreByCurDate();
-      // this.props.currentDateCallBack(this.state.currentDate);
+      this.props.currentDateCallBack(this.state.currentDate);
     }
     if (this.state.selectedStoreId !== prevState.selectedStoreId) {
       this.getVehiclesByStoreId(this.state.selectedStoreId);
@@ -189,13 +189,13 @@ class Live extends PureComponent {
   //get store by date
   getStoreByCurDate = () => {
     let formattedDate = moment(this.state.currentDate).format('YYYY-MM-DD');
-       axios
+    axios
       .get(`${LOCAL_API_URL}${formattedDate}/warehouses`)
       .then((res) => {
         let response = res.data;
         if (response.code === 200) {
           let data = response.data;
-          this.props.parentCallback(response.data,this.state.currentDate);
+          this.props.parentCallback(response.data, this.state.currentDate);
           if (data.length < 1) {
             this.showMessage(
               'No Store Available For Selected Data',
@@ -319,17 +319,20 @@ class Live extends PureComponent {
   renderLeftSideBar = () => {
     return (
       <div className={`col-sm-2 col-md-2 ${style.sideBar}`}>
-        <ToastContainer
-          position="top-center"
-          // autoClose={1500}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnVisibilityChange
-          draggable
-          pauseOnHover
-        />
+        {this.state.vehicles && (
+          <ToastContainer
+            position="top-center"
+            transition={Zoom}
+            // autoClose={1500}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnVisibilityChange
+            draggable
+            pauseOnHover
+          />
+        )}
         <div className={`row`}>
           <div className="mb-1 col-sm-12 col-md-12">
             <DatePicker
@@ -455,7 +458,7 @@ class Live extends PureComponent {
           height={100}
           loading={this.state.routeloading}
         />
-        <div style={{width: 'auto', height: '100vh', paddingBottom: '10px'}}>
+        <div style={{width: 'auto', height: 'auto'}}>
           {this.state.cancalReasons && this.state.selectedOrder && (
             <CancelReasonsModal
               show={this.state.reasonmodal}
@@ -474,13 +477,17 @@ class Live extends PureComponent {
               orderid={this.state.selectedOrder.order_id}
             ></ChangeDeliveryTimeModal>
           )}
-          <WrappedMap
-            routelist={this.state.vehicleRoutes}
-            googleMapURL={`https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing,places&key=${process.env.REACT_APP_GOOGLE_KEY}`}
-            loadingElement={<div style={{height: '100vh'}} />}
-            containerElement={<div style={{height: '100vh'}} />}
-            mapElement={<div style={{height: '100vh'}} />}
-          />
+          {navigator.onLine ? (
+            <WrappedMap
+              routelist={this.state.vehicleRoutes}
+              googleMapURL={`https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing,places&key=${process.env.REACT_APP_GOOGLE_KEY}`}
+              loadingElement={<div style={{height: '100vh'}} />}
+              containerElement={<div style={{height: '100vh'}} />}
+              mapElement={<div style={{height: '100vh'}} />}
+            />
+          ) : (
+            <h1 style={{margin:'25%'}}>No Internet Connection</h1>
+          )}
         </div>
       </div>
     );
@@ -512,7 +519,7 @@ class Live extends PureComponent {
   };
   renderRightSideBar = () => {
     return (
-      <div className={`col-sm-2 col-md-2 ${style.navBar}`}>
+      <div className={`col-sm-2 col-md-2 ${style.sideBar}`}>
         <div className="row">
           {/*// <div className="mb-1 col-sm-12 col-md-12">
           //   {this.renderStoreList(this.state.storeList)}

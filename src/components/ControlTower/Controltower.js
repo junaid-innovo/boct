@@ -21,7 +21,7 @@ class Controltower extends Component {
       chartData: null,
       vehicleRoutes: null,
     };
-    this.data = [10, 10, 10, 10, 10];
+    this.data = [10, 20, 30, 40, 50];
     this.now = [27,0,0,0]
   }
   getData = () => {

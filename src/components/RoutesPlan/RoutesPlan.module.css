@@ -68,4 +68,20 @@
 .routeplanDiv input[readonly] {
   background-color: white !important;
 }
+
+.toastContainer {
+  min-height: 37px !important;
+}
+
+.breadcrumbItem + .breadcrumbItem::before {
+  content: "> ";
+  font-size: bold;
+  
+  /* justify-content: center; */
+}
+.breadCrumb{
+  font-size: 14px;
+  padding: 0px;
+  background-color:inherit  !important;
+}
 /* .routeplanDiv  */

@@ -77,4 +77,11 @@
 .RoutesPlan_routeplanDiv__31IDI  .react-datetimerange-picker__range-divider {
   font-size: 19px !important;
 } 
-
+.legends {
+  font-size: 12px;
+  font-family: sans-serif;
+  
+}
+rect {
+  stroke-width: 2;
+}

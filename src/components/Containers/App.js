@@ -7,6 +7,7 @@ import Live from '../Live/Live';
 import ControlTower from '../ControlTower/Controltower';
 import RoutePlan from '../RoutesPlan/RoutesPlan';
 import {withRouter} from 'react-router-dom';
+import BarChart from '../D3Charts/TestSample';
 import {
   BrowserRouter as Router,
   Switch,
@@ -35,7 +36,7 @@ class App extends Component {
     return <NavBar></NavBar>;
   };
   callbackFunction = (childData, date) => {
-    this.setState({storeList: childData, currentDate: date});
+    this.setState({storeList: childData});
   };
   // checkLogin = (isLoggedIn) => {
   //   this.setState({isLoggedIn: isLoggedIn});
@@ -54,9 +55,9 @@ class App extends Component {
   };
   componentDidUpdate(prevProps, prevState) {
     if (prevState.storeList !== this.state.storeList) {
-        this.setState({
-          vehiclesdata:null
-        })
+      this.setState({
+        vehiclesdata: null,
+      });
     }
     if (prevState.vehicles !== this.state.vehicles) {
       this.setState({vehiclesdata: this.state.vehicles});
@@ -83,6 +84,11 @@ class App extends Component {
           <Route exact path="/login">
             <Login />
           </Route>
+          <Route exact path="/test">
+            <div className="mt-4">
+              <BarChart />
+            </div>
+          </Route>
           <Route exact path="/">
             <NavBar
               storeList={this.state.storeList}
@@ -92,7 +98,7 @@ class App extends Component {
             <Live
               vehicles={this.state.vehiclesdata}
               parentCallback={this.callbackFunction}
-              // currentDateCallBack={this.getCurrentDate}
+              currentDateCallBack={this.getCurrentDate}
             />
           </Route>
 
