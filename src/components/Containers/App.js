@@ -7,7 +7,7 @@ import Live from '../Live/Live';
 import ControlTower from '../ControlTower/Controltower';
 import RoutePlan from '../RoutesPlan/RoutesPlan';
 import {withRouter} from 'react-router-dom';
-import PieceSign from '../D3Charts/piece-sign';
+import PieceSign from '../D3Charts/pie-sign2';
 import {
   BrowserRouter as Router,
   Switch,
@@ -22,6 +22,7 @@ import '../../App.css';
 class App extends Component {
   constructor(props) {
     super(props);
+    this.myRef=React.createRef();
     this.state = {
       timeSlots: null,
       cancalReasons: null,
@@ -76,7 +77,14 @@ class App extends Component {
   //   // if(this.state.lang !== newLang) {
   //   //     // this.setState({lang: newLang});
   //   // }
-  // }
+  // 
+  //<Route exact path="/test">
+//   <div className="mt-4">
+//     <PieceSign {...this.props} legref={this.myRef} />
+//   </div>
+ 
+// </Route>
+// }
   render() {
     return (
       <div className="container-fluid">
@@ -84,11 +92,7 @@ class App extends Component {
           <Route exact path="/login">
             <Login />
           </Route>
-          <Route exact path="/test">
-            <div className="mt-4">
-              <PieceSign />
-            </div>
-          </Route>
+         
           <Route exact path="/">
             <NavBar
               storeList={this.state.storeList}
