@@ -7,6 +7,7 @@ import Live from '../Live/Live';
 import ControlTower from '../ControlTower/Controltower';
 import RoutePlan from '../RoutesPlan/RoutesPlan';
 import {withRouter} from 'react-router-dom';
+import PieceSign from '../D3Charts/pie-sign2';
 import {
   BrowserRouter as Router,
   Switch,
@@ -21,6 +22,7 @@ import '../../App.css';
 class App extends Component {
   constructor(props) {
     super(props);
+    this.myRef=React.createRef();
     this.state = {
       timeSlots: null,
       cancalReasons: null,
@@ -35,7 +37,7 @@ class App extends Component {
     return <NavBar></NavBar>;
   };
   callbackFunction = (childData, date) => {
-    this.setState({storeList: childData, currentDate: date});
+    this.setState({storeList: childData});
   };
   // checkLogin = (isLoggedIn) => {
   //   this.setState({isLoggedIn: isLoggedIn});
@@ -54,9 +56,9 @@ class App extends Component {
   };
   componentDidUpdate(prevProps, prevState) {
     if (prevState.storeList !== this.state.storeList) {
-        this.setState({
-          vehiclesdata:null
-        })
+      this.setState({
+        vehiclesdata: null,
+      });
     }
     if (prevState.vehicles !== this.state.vehicles) {
       this.setState({vehiclesdata: this.state.vehicles});
@@ -75,7 +77,14 @@ class App extends Component {
   //   // if(this.state.lang !== newLang) {
   //   //     // this.setState({lang: newLang});
   //   // }
-  // }
+  // 
+  //<Route exact path="/test">
+//   <div className="mt-4">
+//     <PieceSign {...this.props} legref={this.myRef} />
+//   </div>
+ 
+// </Route>
+// }
   render() {
     return (
       <div className="container-fluid">
@@ -83,6 +92,7 @@ class App extends Component {
           <Route exact path="/login">
             <Login />
           </Route>
+         
           <Route exact path="/">
             <NavBar
               storeList={this.state.storeList}
@@ -92,7 +102,7 @@ class App extends Component {
             <Live
               vehicles={this.state.vehiclesdata}
               parentCallback={this.callbackFunction}
-              // currentDateCallBack={this.getCurrentDate}
+              currentDateCallBack={this.getCurrentDate}
             />
           </Route>
 

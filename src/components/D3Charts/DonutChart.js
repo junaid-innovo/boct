@@ -2,30 +2,19 @@ import React, {useState, useEffect} from 'react';
 import ReactDOM from 'react-dom';
 import * as d3 from 'd3';
 import PieClass from './PieClass';
+import { Ref } from 'semantic-ui-react';
 const DonutChart = (props) => {
-  const generateData = (value, length = 5) =>
-    d3.range(length).map((item, index) => ({
-      date: index,
-      value:
-        value === null || value === undefined ? Math.random() * 100 : value,
-    }));
-
-  const [data, setData] = useState(props.data);
-
-  useEffect(() => {
-    setData(generateData());
-  }, [!data]);
+  const data=[10,20,30,40,50]
 
   return (
     <div>
-      <PieClass
-        data={data}
-        width={150}
-        height={100}
-        innerRadius={40}
-        outerRadius={50}
-      />
+      
     </div>
   );
 };
-export default DonutChart;
+const Chart=()=>{
+  return React.forwardRef((props,ref)=>
+  <DonutChart {...props} ref={ref}></DonutChart>
+  )
+}
+export default Chart

@@ -7,7 +7,7 @@ import style from './NavBar.module.css';
 import axios from 'axios';
 import moment from 'moment';
 import {LOCAL_API_URL} from '../Constants/Enviroment/Enviroment';
-import {ToastContainer, toast} from 'react-toastify';
+import {ToastContainer, toast,Zoom} from 'react-toastify';
 import SelectedStoreContext from '../../context/selected-store';
 import _ from 'lodash';
 class NavBar extends Component {
@@ -119,24 +119,28 @@ class NavBar extends Component {
     });
 
   render() {
+    console.log(!this.state.selectedStoreId)
     return (
       <div className="row">
-        <ToastContainer
-          position="top-center"
-          // autoClose={1500}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnVisibilityChange
-          draggable
-          pauseOnHover
-        />
+        {this.props.storeList && !this.state.selectedStoreId && (
+          <ToastContainer
+            transition={Zoom}
+            position="top-center"
+            // autoClose={1500}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnVisibilityChange
+            draggable
+            pauseOnHover
+          />
+        )}
         <Navbar
           expand="xl"
-          className={`col-md-12 col-sm-12 col-xs-12 ${style.colorNavbar} align-items-center`}
+          className={`col-md-12 col-sm-12 col-xs-12 ${style.colorNavbar}  align-items-center`}
         >
-          <Navbar.Brand className={style.navbarBrand}>
+          <Navbar.Brand className={`${style.navbarBrand}`}>
             <img
               style={{maxWidth: '40px', maxHeight: '40px'}}
               src={Logo}
@@ -180,6 +184,7 @@ class NavBar extends Component {
             </Nav.Item>
           </Navbar.Collapse>
         </Navbar>
+
       </div>
     );
   }

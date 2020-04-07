@@ -1,18 +1,13 @@
 import React, {Component} from 'react';
 import {Card} from 'react-bootstrap';
 import axios from 'axios';
-import DonutChart from '../D3Charts/DonutChart';
+import PieClass from '../D3Charts/PieClass';
 import Map from '../Map';
 // import Test from "../D3Charts/Test"
 import {LOCAL_API_URL} from '../Constants/Enviroment/Enviroment';
-import {
-  ProgressBar,
-  Button,
-  FormControl,
-  InputGroup,
-} from 'react-bootstrap';
+import {ProgressBar, Button, FormControl, InputGroup} from 'react-bootstrap';
 // import '../../css/ControlTower.css';
-import style from "./ControlTower.module.css"
+import style from './ControlTower.module.css';
 class Controltower extends Component {
   constructor(props) {
     super(props);
@@ -21,8 +16,12 @@ class Controltower extends Component {
       chartData: null,
       vehicleRoutes: null,
     };
-    this.data = [10, 10, 10, 10, 10];
-    this.now = [27,0,0,0]
+    this.tdRef = React.createRef();
+    this.oncRef = React.createRef();
+    this.doRef = React.createRef();
+    this.osRef = React.createRef();
+    this.data = [10, 20, 30, 40, 50];
+    this.now = [27, 0, 0, 0];
   }
   getData = () => {
     const data = {
@@ -30,7 +29,7 @@ class Controltower extends Component {
     };
     axios
       .post(`${LOCAL_API_URL}controlTower`, JSON.stringify(data))
-      .then(res => {
+      .then((res) => {
         let response = res.data;
         if (response.code === 200) {
           // alert(response.message);
@@ -38,7 +37,7 @@ class Controltower extends Component {
           // alert(response.message);
         }
       })
-      .catch(error => console.log(error));
+      .catch((error) => console.log(error));
   };
 
   componentDidMount() {
@@ -92,9 +91,7 @@ class Controltower extends Component {
                   <hr></hr>
                   <Card.Body>
                     <div className="row">
-                      <div className="offset-4 col-4">
-                        <DonutChart data={this.data} />
-                      </div>
+                      <PieClass data={this.data} legendRef={this.tdRef} />
                     </div>
                   </Card.Body>
                 </Card>
@@ -136,9 +133,7 @@ class Controltower extends Component {
                   <hr></hr>
                   <Card.Body>
                     <div className="row">
-                      <div className="offset-4 col-4">
-                        <DonutChart data={this.data} />
-                      </div>
+                      <PieClass data={this.data} legendRef={this.tdRef} />
                     </div>
                   </Card.Body>
                 </Card>
@@ -180,9 +175,7 @@ class Controltower extends Component {
                   <hr></hr>
                   <Card.Body>
                     <div className="row">
-                      <div className="offset-4 col-4">
-                        <DonutChart data={this.data} />
-                      </div>
+                      <PieClass data={this.data} legendRef={this.tdRef} />
                     </div>
                   </Card.Body>
                 </Card>
@@ -224,9 +217,7 @@ class Controltower extends Component {
                   <hr></hr>
                   <Card.Body>
                     <div className="row">
-                      <div className="offset-4 col-4">
-                        <DonutChart data={this.data} />
-                      </div>
+                      <PieClass data={this.data} legendRef={this.tdRef} />
                     </div>
                   </Card.Body>
                 </Card>
@@ -252,9 +243,7 @@ class Controltower extends Component {
               <hr></hr>
               <Card.Body>
                 <div className="row">
-                  <div className="offset-4 col-4">
-                    <DonutChart data={this.data} />
-                  </div>
+                  <PieClass data={this.data} legendRef={this.tdRef} />
                 </div>
               </Card.Body>
             </Card>
@@ -267,9 +256,7 @@ class Controltower extends Component {
               <hr></hr>
               <Card.Body>
                 <div className="row">
-                  <div className="offset-4 col-4">
-                    <DonutChart data={this.data} />
-                  </div>
+                  <PieClass data={this.data} legendRef={this.tdRef} />
                 </div>
               </Card.Body>
             </Card>

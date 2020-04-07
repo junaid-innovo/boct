@@ -19,7 +19,7 @@ import paginationFactory from 'react-bootstrap-table2-paginator';
 import {col6} from '../Constants/Classes/BoostrapClassses';
 import RouteSummary from '../RoutesPlan/RouteSummary';
 import DateRangePicker from '@wojtekmaj/react-daterange-picker';
-import {ToastContainer, toast} from 'react-toastify';
+import {ToastContainer, toast, Zoom} from 'react-toastify';
 import {LoadPropagateLoader} from '../Loaders/Loaders';
 import style from './RoutesPlan.module.css';
 import _ from 'lodash';
@@ -50,7 +50,7 @@ class RoutesPlan extends Component {
     };
   }
 
-  onChange = date => this.setState({date});
+  onChange = (date) => this.setState({date});
   componentDidMount() {
     this._isMounted = true;
     this.getRoutesandCapacity();
@@ -65,7 +65,7 @@ class RoutesPlan extends Component {
   getRoutesandCapacity = () => {
     axios
       .get(`${LOCAL_API_URL}2020-02-01/2020-03-01/routingAndCapacity`)
-      .then(res => {
+      .then((res) => {
         let response = res.data;
         if (response.code === 200) {
           if (this._isMounted) {
@@ -102,7 +102,7 @@ class RoutesPlan extends Component {
           }
         }
       })
-      .catch(error => {
+      .catch((error) => {
         this.showMessage(error.toString(), 'error', false);
       });
   };
@@ -181,12 +181,12 @@ class RoutesPlan extends Component {
   renderConstraints = () => {
     return (
       this.state.constraints &&
-      this.state.constraints.map(constraint => (
+      this.state.constraints.map((constraint) => (
         <React.Fragment key={constraint.constraint_id}>
           <Nav.Link
             className={`${style.navLink}`}
             variant="button"
-            onClick={e => this.onConstraintClick(e, constraint)}
+            onClick={(e) => this.onConstraintClick(e, constraint)}
           >
             {constraint.constraint_type}
           </Nav.Link>
@@ -227,17 +227,17 @@ class RoutesPlan extends Component {
     }
   };
   // };
-  setStartDate = date => {
+  setStartDate = (date) => {
     this.setState({
       startDate: date,
     });
   };
-  setEndDate = date => {
+  setEndDate = (date) => {
     this.setState({
       endDate: date,
     });
   };
-  renderDateRangePicker = minDate => {
+  renderDateRangePicker = (minDate) => {
     return (
       <React.Fragment>
         <DateTimeRangePicker
@@ -276,21 +276,21 @@ class RoutesPlan extends Component {
       </React.Fragment>
     );
   };
-  onDateTimeRangeChange = date => this.setState({DateTimeRange: date});
+  onDateTimeRangeChange = (date) => this.setState({DateTimeRange: date});
 
-  advanceRadioClick = e => {
+  advanceRadioClick = (e) => {
     this.setState({
       plannow: true,
       planlater: false,
     });
   };
-  planlaterRadioClick = e => {
+  planlaterRadioClick = (e) => {
     this.setState({
       plannow: false,
       planlater: true,
     });
   };
-  onDateRangeChange = date => {
+  onDateRangeChange = (date) => {
     this.setState({
       rangedate: date,
     });
@@ -300,13 +300,14 @@ class RoutesPlan extends Component {
       type: type,
       // autoClose: false,
       autoClose: autoClose,
-      className: 'toastContainer',
+      className: style.toastContainer,
     });
   handleRecurringOptions = () => {};
   render() {
     return (
       <div className={`row ${style.routeplanDiv}`}>
         <ToastContainer
+          transition={Zoom}
           position="top-center"
           // autoClose={1500}
           hideProgressBar={false}
@@ -319,12 +320,23 @@ class RoutesPlan extends Component {
         />
         <div className="col-md-12 col-sm-12 col-xs-12">
           <div className="row mt-3 no-gutters">
-            <div className="col-md-4">
-              <div className="row no-gutters ml-n2 align-items-center">
+            <div className="col-md-4 align-content-center">
+              <div className="row no-gutters ml-n2">
                 <div className="col-md-7 mr-n5">
-                  <b>Routes > Trip Planning ></b>
+                  <div className="row">
+                    <ol className={`col-8 offset-1 breadcrumb ${style.breadCrumb} ${style.inputShadow}`}>
+                      <li className={`${style.breadcrumbItem} breadcrumb-item`}>
+                        <b>Routes </b>
+                      </li>
+                      <li
+                        className={`${style.breadcrumbItem} active  breadcrumb-item`}
+                      >
+                        <b>Trip Planning</b>
+                      </li>
+                    </ol>
+                  </div>
                 </div>
-                <div className="col-md-5 ml-n3">
+                <div className="col-md-5 ml-n2">
                   <Form.Control
                     className={`rounded-0 ${style.inputShadow} textingred`}
                     type="text"
