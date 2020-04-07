@@ -7,7 +7,7 @@ import Live from '../Live/Live';
 import ControlTower from '../ControlTower/Controltower';
 import RoutePlan from '../RoutesPlan/RoutesPlan';
 import {withRouter} from 'react-router-dom';
-import BarChart from '../D3Charts/TestSample';
+import PieceSign from '../D3Charts/piece-sign';
 import {
   BrowserRouter as Router,
   Switch,
@@ -86,7 +86,7 @@ class App extends Component {
           </Route>
           <Route exact path="/test">
             <div className="mt-4">
-              <BarChart />
+              <PieceSign />
             </div>
           </Route>
           <Route exact path="/">
