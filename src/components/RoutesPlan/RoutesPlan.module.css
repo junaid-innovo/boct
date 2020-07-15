@@ -1,0 +1,87 @@
+.summaryDiv .card {
+  width: 100%;
+  height: 100%;
+  border-radius: 0px !important;
+  box-shadow: 1px 6px 10px 6px rgba(0, 0, 0, 0.49) !important;
+}
+
+.routeplanDiv small {
+  font-size: 63%;
+}
+
+.color-navbar .up-select {
+  font-size: 56%;
+  font-weight: bold;
+}
+.buttonShadow {
+  font-size: 56%;
+  font-weight: bold;
+  box-shadow: 3px 15px 14px -11px rgba(0, 0, 0, 0.49) !important;
+}
+
+.routeplanDiv i {
+  font-size: 80%;
+  font-weight: bold;
+  box-shadow: 3px 15px 14px -11px rgba(0, 0, 0, 0.49) !important;
+}
+.inputShadow {
+  box-shadow: 3px 15px 14px -11px rgba(0, 0, 0, 0.49) !important;
+  font-size: 56%;
+  font-weight: bold;
+}
+.routePlanNav {
+  background-color: white;
+  -webkit-box-shadow: 6px 3px 5px 6px #ccc; /* Safari 3-4, iOS 4.0.2 - 4.2, Android 2.3+ */
+  -moz-box-shadow: 6px 3px 5px 6px #ccc; /* Firefox 3.5 - 3.6 */
+  box-shadow: 6px 3px 5px 6px #ccc;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.49);
+}
+.routePlanNav .navLink {
+  padding-right: 0.5rem;
+  padding-left: 0.5rem;
+  font-size: 12px;
+}
+.routePlanNav .navLink.active {
+  /* background-color:darkred ; */
+
+  box-shadow: 0 7px  0 darkred;
+}
+.routeplanDiv .setShadow1 {
+  background-color: white;
+  box-shadow: 6px 9px 2px 6px #ccc;
+  -webkit-box-shadow: 6px 9px 2px 6px #ccc; /* Safari 3-4, iOS 4.0.2 - 4.2, Android 2.3+ */
+  -moz-box-shadow: 6px 9px 2px 6px #ccc; /* Firefox 3.5 - 3.6 */
+}
+.routeplanDiv .formCheck label {
+  font-size: 80%;
+}
+
+.routeplanDiv .map-top {
+  border-top: 1px solid white;
+}
+.routePlanNav select {
+  font-size: 56%;
+  font-weight: bold;
+  box-shadow: none;
+}
+
+.routeplanDiv input[readonly] {
+  background-color: white !important;
+}
+
+.toastContainer {
+  min-height: 37px !important;
+}
+
+.breadcrumbItem + .breadcrumbItem::before {
+  content: "> ";
+  font-size: bold;
+  
+  /* justify-content: center; */
+}
+.breadCrumb{
+  font-size: 14px;
+  padding: 0px;
+  background-color:inherit  !important;
+}
+/* .routeplanDiv  */

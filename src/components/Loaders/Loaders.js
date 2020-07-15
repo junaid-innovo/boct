@@ -1,5 +1,6 @@
-import React from "react"
-import {ClipLoader,FadeLoader} from 'react-spinners';
+import React from 'react';
+import {ClipLoader, FadeLoader, PropagateLoader} from 'react-spinners';
+import {css} from '@emotion/core';
 export const LoadFadeLoader = props => (
   <FadeLoader
     css={`
@@ -14,8 +15,17 @@ export const LoadFadeLoader = props => (
   />
 );
 
-export  const LoadClipLoader = props =>(
-  <ClipLoader
-  size={props.size}
-  ></ClipLoader>
-)
+export const LoadClipLoader = props => (
+  <ClipLoader size={props.size}></ClipLoader>
+);
+export const LoadPropagateLoader = props => (
+  <PropagateLoader
+    size={props.size}
+    // color={'red'}
+    css={css`
+      display: block;
+      margin: 0 auto;
+      border-color: red;
+    `}
+  ></PropagateLoader>
+);

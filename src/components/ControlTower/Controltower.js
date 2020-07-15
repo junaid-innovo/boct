@@ -1,18 +1,13 @@
 import React, {Component} from 'react';
 import {Card} from 'react-bootstrap';
 import axios from 'axios';
-import DonutChart from '../D3Charts/DonutChart';
+import PieClass from '../D3Charts/PieClass';
 import Map from '../Map';
 // import Test from "../D3Charts/Test"
 import {LOCAL_API_URL} from '../Constants/Enviroment/Enviroment';
-import {
-  ProgressBar,
-  Button,
-  FormControl,
-  Form,
-  InputGroup,
-} from 'react-bootstrap';
-import '../../css/ControlTower.css';
+import {ProgressBar, Button, FormControl, InputGroup} from 'react-bootstrap';
+// import '../../css/ControlTower.css';
+import style from './ControlTower.module.css';
 class Controltower extends Component {
   constructor(props) {
     super(props);
@@ -21,8 +16,12 @@ class Controltower extends Component {
       chartData: null,
       vehicleRoutes: null,
     };
-    this.data = [10, 10, 10, 10, 10];
-    this.now = [27,0,0,0]
+    this.tdRef = React.createRef();
+    this.oncRef = React.createRef();
+    this.doRef = React.createRef();
+    this.osRef = React.createRef();
+    this.data = [10, 20, 30, 40, 50];
+    this.now = [27, 0, 0, 0];
   }
   getData = () => {
     const data = {
@@ -30,7 +29,7 @@ class Controltower extends Component {
     };
     axios
       .post(`${LOCAL_API_URL}controlTower`, JSON.stringify(data))
-      .then(res => {
+      .then((res) => {
         let response = res.data;
         if (response.code === 200) {
           // alert(response.message);
@@ -38,7 +37,7 @@ class Controltower extends Component {
           // alert(response.message);
         }
       })
-      .catch(error => console.log(error));
+      .catch((error) => console.log(error));
   };
 
   componentDidMount() {
@@ -72,7 +71,7 @@ class Controltower extends Component {
                     </div>
                   </div>
                   <div className="row">
-                    <div className="col-12 custom-text-font">
+                    <div className={`col-12 ${style.customTextFont}`}>
                       <div className="row mt-1">
                         <div className="col-md-8 col-sm-8 col-xs-8 ml-2 pr-0">
                           <small className="font-weight-normal">
@@ -81,7 +80,7 @@ class Controltower extends Component {
                         </div>
                         <div className="col-md-3 col-sm-3 col-xs-3">
                           <ProgressBar
-                            className="ml-3n"
+                            className={`ml-3n ${style.progress}`}
                             now={this.now[0]}
                             label={`${this.now[0]}%`}
                           />
@@ -92,9 +91,7 @@ class Controltower extends Component {
                   <hr></hr>
                   <Card.Body>
                     <div className="row">
-                      <div className="offset-4 col-4">
-                        <DonutChart data={this.data} />
-                      </div>
+                      <PieClass data={this.data} legendRef={this.tdRef} />
                     </div>
                   </Card.Body>
                 </Card>
@@ -125,7 +122,7 @@ class Controltower extends Component {
                         </div>
                         <div className="col-md-3 col-sm-3 col-xs-3">
                           <ProgressBar
-                            className="ml-3n"
+                            className={`ml-3n ${style.progress}`}
                             now={this.now[1]}
                             label={`${this.now[1]}%`}
                           />
@@ -136,9 +133,7 @@ class Controltower extends Component {
                   <hr></hr>
                   <Card.Body>
                     <div className="row">
-                      <div className="offset-4 col-4">
-                        <DonutChart data={this.data} />
-                      </div>
+                      <PieClass data={this.data} legendRef={this.tdRef} />
                     </div>
                   </Card.Body>
                 </Card>
@@ -169,7 +164,7 @@ class Controltower extends Component {
                         </div>
                         <div className="col-md-3 col-sm-3 col-xs-3">
                           <ProgressBar
-                            className="ml-3n"
+                            className={`ml-3n ${style.progress}`}
                             now={this.now[2]}
                             label={`${this.now[2]}%`}
                           />
@@ -180,9 +175,7 @@ class Controltower extends Component {
                   <hr></hr>
                   <Card.Body>
                     <div className="row">
-                      <div className="offset-4 col-4">
-                        <DonutChart data={this.data} />
-                      </div>
+                      <PieClass data={this.data} legendRef={this.tdRef} />
                     </div>
                   </Card.Body>
                 </Card>
@@ -213,7 +206,7 @@ class Controltower extends Component {
                         </div>
                         <div className="col-md-3 col-sm-3 col-xs-3">
                           <ProgressBar
-                            className="ml-3n"
+                            className={`ml-3n ${style.progress}`}
                             now={this.now[3]}
                             label={`${this.now[3]}%`}
                           />
@@ -224,9 +217,7 @@ class Controltower extends Component {
                   <hr></hr>
                   <Card.Body>
                     <div className="row">
-                      <div className="offset-4 col-4">
-                        <DonutChart data={this.data} />
-                      </div>
+                      <PieClass data={this.data} legendRef={this.tdRef} />
                     </div>
                   </Card.Body>
                 </Card>
@@ -252,9 +243,7 @@ class Controltower extends Component {
               <hr></hr>
               <Card.Body>
                 <div className="row">
-                  <div className="offset-4 col-4">
-                    <DonutChart data={this.data} />
-                  </div>
+                  <PieClass data={this.data} legendRef={this.tdRef} />
                 </div>
               </Card.Body>
             </Card>
@@ -267,9 +256,7 @@ class Controltower extends Component {
               <hr></hr>
               <Card.Body>
                 <div className="row">
-                  <div className="offset-4 col-4">
-                    <DonutChart data={this.data} />
-                  </div>
+                  <PieClass data={this.data} legendRef={this.tdRef} />
                 </div>
               </Card.Body>
             </Card>
