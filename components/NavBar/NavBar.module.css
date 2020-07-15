@@ -1,0 +1,68 @@
+.colorNavbar {
+  background-color: white;
+  -webkit-box-shadow: 3px 3px 5px 6px #ccc; /* Safari 3-4, iOS 4.0.2 - 4.2, Android 2.3+ */
+  -moz-box-shadow: 3px 3px 5px 6px #ccc; /* Firefox 3.5 - 3.6 */
+  box-shadow: 3px 3px 5px 6px #ccc;
+  border-bottom: 1px solid black;
+}
+.navbarBrand {
+  font-size: 16px;
+}
+.navbarNav,
+.navLink,
+.dropdownToggle {
+  font-size: 12px;
+}
+.loadmain {
+  /* background-color: red; */
+  filter: alpha(opacity=70);
+  opacity: 0.7;
+}
+.loadmain:before {
+  position: absolute;
+  opacity: 0.7;
+  content: "";
+  width: 100%;
+  background: grey;
+  height: 100%;
+  left: 0;
+  z-index: 999;
+}
+.navLink {
+  max-width: fit-content;
+  white-space: nowrap;
+  padding-right: 1.5rem !important;
+  padding-left: 0.5rem !important;
+}
+.upSelect {
+  font-size: 70%;
+  font-weight: bold;
+}
+.upSelectLabel {
+  font-size: 70%;
+  padding-right: 1px !important;
+}
+.dropdownItem {
+  font-size: 12px;
+}
+.basicNavBar .navLink.active,
+.dropdownItem.active {
+  /* -webkit-box-shadow: 0 5px 0 #433b33; 
+   -moz-box-shadow: 0 5px 0 #433b33; 
+   box-shadow: 0 5px 0 #433b33 !important;
+   font-weight: bold !important; */
+  border-bottom: 3px solid #433b33;
+}
+.basicNavBar .navLink:hover {
+  /* -webkit-box-shadow: 0 5px 0 #433b33;
+   -moz-box-shadow: 0 5px 0 #433b33;
+   box-shadow: 0 5px 0 #433b33 !important;
+   font-weight: bold !important; */
+  border-bottom: 3px solid #433b33;
+}
+.toastContainer {
+  min-height: 37px !important;
+}
+.dropDown {
+  font-size: 81%;
+}
