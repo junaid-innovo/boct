@@ -19,6 +19,11 @@
   box-shadow: 3px 15px 14px -11px rgba(0, 0, 0, 0.49) !important;
 }
 
+.buttonShadow:hover {
+  background-color: #433b33;
+  color: white;
+}
+
 .buttonStyle {
   font-size: 56%;
   font-weight: bold;
@@ -166,6 +171,11 @@
   border-top: 1px solid white;
 }
 .routePlanNav select {
+  font-size: 60%;
+  font-weight: bold;
+  box-shadow: none;
+}
+.staticTopMenu select {
   font-size: 60%;
   font-weight: bold;
   box-shadow: none;
