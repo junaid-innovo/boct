@@ -35,6 +35,7 @@ import { get_defaults } from "../../store/actions/actionsCreator";
 import { LANG_AR, LANG_EN } from "../Constants/Language/Language";
 import { ClipLoader } from "react-spinners";
 import { withRouter } from "next/router";
+import { SELECT_BRANCH } from "../../store/actions/actionTypes";
 class NavBar extends Component {
   constructor(props) {
     super(props);
@@ -91,19 +92,24 @@ class NavBar extends Component {
   }
   componentDidUpdate(prevProps, prevState) {
     if (prevState.selectedStoreId !== this.state.selectedStoreId) {
-      const { cookies } = this.props;
-      cookies.set("AseelWareHouse", this.state.selectedStoreId, {
-        path: "/",
+      // const { cookies } = this.props;
+      // cookies.set("AseelWareHouse", this.state.selectedStoreId, {
+      //   path: "/",
+      // });
+      // cookies.set("AseelWareHouseLocation", this.state.defaultCenter, {
+      //   path: "/",
+      // });
+      // if (this.state.defaultCenter) {
+      //   this.props.warehouse_id(
+      //     this.state.selectedStoreId,
+      //     this.state.defaultCenter
+      //   );
+      // }
+    }
+    if (this.props.selectedBranchId !== prevProps.selectedBranchId) {
+      this.setState({
+        selectedStoreId: this.props.selectedBranchId,
       });
-      cookies.set("AseelWareHouseLocation", this.state.defaultCenter, {
-        path: "/",
-      });
-      if (this.state.defaultCenter) {
-        this.props.warehouse_id(
-          this.state.selectedStoreId,
-          this.state.defaultCenter
-        );
-      }
     }
     if (prevState.routesEnabled !== this.state.routesEnabled) {
       this.props.setRoutesStatus(this.state.routesEnabled);
@@ -187,27 +193,29 @@ class NavBar extends Component {
   };
   onBranchChange = (e) => {
     let warehouse_id = e.target.value;
-    if (warehouse_id.length > 0) {
-      let storeList = [...this.state.storeList];
-      let filterWareHouses = _.filter(storeList, (ware_house) => {
-        if (ware_house.warehouse_id === parseInt(warehouse_id)) {
-          return ware_house.loacation;
-        }
-      });
-      const { latitude, longitude } = filterWareHouses[0].loacation;
-      let defaultCenter = {
-        lat: parseFloat(latitude),
-        lng: parseFloat(longitude),
-      };
-      if (warehouse_id === "") {
-        // this.props.vehiclesList(null);
-      } else {
-        this.setState({
-          selectedStoreId: parseInt(warehouse_id),
-          defaultCenter: defaultCenter,
-        });
-      }
-    }
+    console.log("CHeck WAREHOUSE ID", warehouse_id);
+    this.props.setBranchId(parseInt(warehouse_id));
+    // if (warehouse_id.length > 0) {
+    //   let storeList = [...this.state.storeList];
+    //   let filterWareHouses = _.filter(storeList, (ware_house) => {
+    //     if (ware_house.warehouse_id === parseInt(warehouse_id)) {
+    //       return ware_house.loacation;
+    //     }
+    //   });
+    //   const { latitude, longitude } = filterWareHouses[0].loacation;
+    //   let defaultCenter = {
+    //     lat: parseFloat(latitude),
+    //     lng: parseFloat(longitude),
+    //   };
+    //   if (warehouse_id === "") {
+    //     // this.props.vehiclesList(null);
+    //   } else {
+    //     this.setState({
+    //       selectedStoreId: parseInt(warehouse_id),
+    //       defaultCenter: defaultCenter,
+    //     });
+    //   }
+    // }
   };
   getDefaultTex = () => {
     // return <Trans i18nKey={"Select Branch"} />;
@@ -221,6 +229,7 @@ class NavBar extends Component {
           controlId="formHorizontalEmail"
           className={`m-auto`}
         >
+          <Col sm={12} lg={12} xs={12} sm={12}></Col>
           <Form.Label
             column
             sm={!this.state.selectedStoreId ? 2 : 3}
@@ -229,10 +238,7 @@ class NavBar extends Component {
           >
             <Trans i18nKey={"Branches"} />
           </Form.Label>
-          <Col
-            sm={!this.state.selectedStoreId ? 6 : 9}
-            lg={!this.state.selectedStoreId ? 6 : 9}
-          >
+          <Col>
             <Form.Control
               as="select"
               onChange={this.onBranchChange}
@@ -246,14 +252,14 @@ class NavBar extends Component {
               {/* <option value="">{"Select Branch"}</option> */}
 
               {this.props.warehouses.map((store, key) => (
-                <option key={store.store_id} value={store.warehouse_id}>
+                <option key={store.store_id} value={store.store_id}>
                   {store.store_name.en}
                 </option>
               ))}
             </Form.Control>
           </Col>
           {!this.state.selectedStoreId && (
-            <Col sm={4} lg={4} className="mt-3">
+            <Col className="mt-3">
               <span
                 style={{
                   fontSize: "12px",
@@ -390,19 +396,13 @@ class NavBar extends Component {
                 {/* {"Control Tower"} */}
               </span>
             </Navbar.Brand>
-
             <Navbar.Collapse
               id="basic-navbar-nav"
               className={style.basicNavBar}
             >
               {/* <Nav className={this.props.language === LANG_EN ? "mr-auto" : ""}> */}
               <Nav className="mr-auto">
-                <Link
-                  // activeClassName={style.active}
-                  // exact
-
-                  href="/"
-                >
+                <Link href="/">
                   <a
                     className={`${style.navLink} ${
                       this.props.router.asPath === "/" ? style.active : null
@@ -412,17 +412,6 @@ class NavBar extends Component {
                     <Trans i18nKey={"Live"} />
                   </a>
                 </Link>{" "}
-                {/* <Link href="/tripplanning">
-                  <a
-                    className={`${style.navLink}  ${
-                      this.props.router.asPath === "/tripplanning"
-                        ? style.active
-                        : null
-                    }  nav-link `}
-                  >
-                    <Trans i18nKey={"Trip Planning"} />
-                  </a>
-                </Link>*/}
                 <NavDropdown
                   title="Trip Planning"
                   id="basic-nav-dropdown1"
@@ -524,20 +513,6 @@ class NavBar extends Component {
             </Nav>
             <Navbar.Toggle aria-controls="basic-navbar-nav" />
           </Navbar>
-          {/* <b
-            onClick={async () => {
-              await askForPermissioToReceiveNotifications().then((val) => {
-                console.log("FCM_TOKEN", val);
-                // let fcm_token = null
-                // fcm_token = val
-                // this.setState({
-                //    fcmToken: fcm_token,
-                // })
-              });
-            }}
-          >
-            CLick NOw
-          </b> */}
         </div>
       </React.Fragment>
     );
@@ -546,11 +521,14 @@ class NavBar extends Component {
 const mapStateToProps = (state) => {
   return {
     warehouses: state.navbar.warehouses,
+    selectedBranchId: state.navbar.selectedBranch,
   };
 };
 const mapDispatchToProps = (dispatch) => {
   return {
     getDefaultsApi: () => dispatch(get_defaults()),
+    setBranchId: (id) =>
+      dispatch({ type: SELECT_BRANCH, payload: { selectedBranchId: id } }),
   };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(NavBar));

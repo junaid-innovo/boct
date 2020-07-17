@@ -96,8 +96,8 @@ export const OrderTableColumns = [
       },
    },
    {
-      dataField: 'erp_id',
-      text: 'Action',
+      dataField: 'action',
+      text: '',
       hidden: true,
       // sort: true,
       style: {

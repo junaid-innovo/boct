@@ -121,7 +121,7 @@ class BootstrapDataTable extends Component {
     return sum;
   };
   expandRowSelection = () => {
-    let langauge =this.props.language
+    let langauge = this.props.language;
     let t = this.props.t;
     let expandRow;
     if (this.props.dataFor === "orders") {
@@ -266,6 +266,25 @@ class BootstrapDataTable extends Component {
     }
 
     return expandRow;
+  };
+  addInfoFormatter = (cell, row, rowIndex, formatExtraData) => {
+    let t = this.props.t;
+    return (
+      <span key={this.props.data.length} className="setMousePointer">
+        <OverlayTrigger
+          // key={1}
+          placement={"top"}
+          overlay={
+            <Tooltip id={`cod`} style={{ fontSize: "10px" }}>
+              <Trans i18nKey={"Order Info"} />
+            </Tooltip>
+          }
+        >
+          <i className="fa fa-info-circle text-success"></i>
+          {/* <img src={smCashonDelivery}></img> */}
+        </OverlayTrigger>
+      </span>
+    );
   };
   addPaymentFormatter = (cell, row, rowIndex, formatExtraData) => {
     let t = this.props.t;
@@ -459,7 +478,7 @@ class BootstrapDataTable extends Component {
     );
   };
   renderDataTable = () => {
-    let language = this.props.language
+    let language = this.props.language;
     if (this.props.data) {
       let products = [];
 
@@ -642,6 +661,17 @@ class BootstrapDataTable extends Component {
               this.addPaymentFormatter(cell, row, rowIndex),
           };
         }
+        if (val.dataField === "action") {
+          if (this.props.showInfoIcon) {
+            let editedVal = { ...val };
+            editedVal.hidden = false;
+            return {
+              ...editedVal,
+              formatter: (cell, row, rowIndex) =>
+                this.addInfoFormatter(cell, row, rowIndex),
+            };
+          }
+        }
         if (
           val.dataField === "order_number" ||
           val.dataField === "created_at" ||
@@ -687,7 +717,6 @@ class BootstrapDataTable extends Component {
     }
   };
   showMessage = (message, type, autoClose = 2000) => {
-    console.log("In Order DataTable Toaster");
     toast(message, {
       type: type,
       // autoClose: false,

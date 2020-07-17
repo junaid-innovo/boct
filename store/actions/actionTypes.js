@@ -1,6 +1,7 @@
 export const LOGIN = "LOGINAPI";
 export const LOGOUT = "LOGOUTAPI";
 export const GET_DEFAULT = "DEFAULTAPI";
+export const SELECT_BRANCH = "SELECTBRANCH";
 export const GET_VEHICLES = "VEHICLESAPI";
 export const GET_DELIVERIES = "DELIVERIESAPI";
 export const GET_TOWER = "TOWERAPI";
