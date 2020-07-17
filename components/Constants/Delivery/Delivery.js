@@ -1,0 +1,3 @@
+export const DELIVERY_TYPE_ANYTIME = 3
+export const DELIVERY_TYPE_MORNING = 1
+export const DELIVERY_TYPE_EVENING = 2

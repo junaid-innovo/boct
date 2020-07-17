@@ -1,0 +1,6 @@
+export const TRIP_STATUS_WAITING = 'Assigned'
+export const TRIP_STATUS_STARTED = 'Started'
+export const TRIP_STATUS_NOTSTARTED = 'Assigned'
+export const TRIP_STATUS_COMPLETED = 'Completed'
+export const TRIP_STATUS_PARTIALLY_CLOSED = 'Partially Closed'
+export const TRIP_STATUS_CLOSED = 'Closed'

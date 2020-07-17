@@ -1,0 +1,81 @@
+.routeNameInput {
+   font-size: 68%;
+   font-weight: bold;
+   max-width: 100%;
+}
+
+#goCenterUI,
+#setCenterUI {
+   /* background-color: #fff;
+   border: 2px solid #fff;
+   border-radius: 3px;
+   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+   cursor: pointer;
+   float: left;
+   margin-bottom: 22px;
+   text-align: center; */
+   direction: ltr;
+   overflow: hidden;
+   text-align: left;
+   position: relative;
+   color: rgb(0, 0, 0);
+   font-family: Roboto, Arial, sans-serif;
+   user-select: none;
+   font-size: 11px;
+   background-color: rgb(255, 255, 255);
+   padding: 4px;
+   border-bottom-left-radius: 2px;
+   border-top-left-radius: 2px;
+   background-clip: padding-box;
+   box-shadow: rgba(0, 0, 0, 0.3) 0px 1px 4px -1px;
+   font-weight: 500;
+}
+#goCenterText,
+#setCenterText {
+   /* color: rgb(25, 25, 25);
+   font-family: Roboto, Arial, sans-serif;
+   font-size: 15px;
+   line-height: 25px;
+   padding-left: 5px;
+   padding-right: 5px; */
+   /* direction: ltr;
+   overflow: hidden;
+   text-align: left;
+   position: relative;
+   color: rgb(0, 0, 0);
+   font-family: Roboto, Arial, sans-serif;
+   user-select: none;
+   font-size: 11px;
+   background-color: rgb(255, 255, 255);
+   padding: 4px;
+   border-bottom-left-radius: 2px;
+   border-top-left-radius: 2px;
+   background-clip: padding-box;
+   box-shadow: rgba(0, 0, 0, 0.3) 0px 1px 4px -1px;
+   font-weight: 500; */
+}
+#setCenterUI {
+   margin-left: 12px;
+}
+/* #controlDiv { */
+/* padding-top: 10px;
+} */
+
+.gmnoprint {
+   margin: 5px;
+   z-index: 10;
+   position: absolute;
+   right: 0px;
+   top: 0px;
+}
+.gmnofirstdiv {
+   float: left;
+   line-height: 0;
+}
+.toastContainerSuccess {
+   min-height: 37px !important;
+   background-color: #1a6734;
+}
+.toastContainer{
+   min-height: 37px !important;
+}
