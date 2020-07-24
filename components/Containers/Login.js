@@ -6,7 +6,7 @@ import {
   FormControl,
   FormLabel,
 } from "react-bootstrap";
-import { Redirect } from "react-router-dom";
+import { withRouter } from "next/router";
 // import Logo from '../../images/controltower.png'
 import AseelLogo from "../../public/images/controltower.png";
 // import App from "./App";
@@ -18,10 +18,16 @@ import {
 } from "../Constants/Enviroment/Enviroment";
 // import { askForPermissioToReceiveNotifications } from "../notifications/Push";
 import { ToastContainer, toast, Zoom } from "react-toastify";
-import jwt from "jsonwebtoken";
+import {
+  get_companies,
+  get_login,
+} from "../../store/actionsCreators/loginCreator";
+import Router from "next/router";
 import ChangePasswordModal from "../Modal/ChangePassword/ChangePassword";
 import { ClipLoader } from "react-spinners";
 import { ONLY_FOR_SUPERVISOR } from "../Constants/Messages/Messages";
+import { dispatch } from "d3";
+import { connect } from "react-redux";
 class Login extends Component {
   constructor(props) {
     super(props);
@@ -35,16 +41,43 @@ class Login extends Component {
       emailInvalid: false,
       passIsValid: false,
       passInvalid: false,
+      companyIsValid: false,
+      companyInvalid: false,
       showPassword: false,
       showEmail: true,
       pageloading: false,
       showChangePasswordModal: false,
       fcmToken: null,
+      selectedCompany: null,
+      userCompaniesList: [],
     };
   }
   validateForm = () => {
     return this.state.email.length > 0 && this.state.password.length > 0;
   };
+  onCompanyChange = (e) => {
+    let selectedCompany = e.target.value;
+    console.log("CHECK VALUE NOW", selectedCompany);
+    if (selectedCompany && selectedCompany.length > 0) {
+      this.setState({
+        companyIsValid: true,
+        companyInvalid: false,
+      });
+    } else {
+      this.setState({
+        companyIsValid: false,
+        companyInvalid: true,
+      });
+    }
+    this.setState({
+      selectedCompany: selectedCompany,
+    });
+  };
+  getUserCompanies = () => {
+    var data = { email: this.state.email };
+    this.props.getCompanyApi(data);
+  };
+
   async componentDidMount() {
     if (localStorage.getItem("authtoken")) {
       localStorage.removeItem("authtoken");
@@ -52,32 +85,15 @@ class Login extends Component {
     if (localStorage.getItem("username")) {
       localStorage.removeItem("username");
     }
-
-    // await askForPermissioToReceiveNotifications().then((val) => {
-    //   console.log(val);
-    //   let fcm_token = null;
-    //   fcm_token = val;
-    //   this.setState({
-    //     fcmToken: fcm_token,
-    //   });
-    // });
   }
-  handleSubmit = async (event) => {
+  handleSubmit = (event) => {
+    let lang = this.props.i18n.language;
     event.preventDefault();
     const form = event.currentTarget;
-    let regex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$/;
-    // let str = e.target.value
     if (
-      this.state.email.length === 0 ||
       this.state.password.length === 0 ||
-      !this.state.email.match(regex)
+      this.state.selectedCompany.length === 0
     ) {
-      if (this.state.email.length === 0) {
-        this.setState({
-          emailInvalid: true,
-          emailIsValid: false,
-        });
-      }
       if (this.state.password.length === 0) {
         this.setState({
           passInvalid: true,
@@ -94,57 +110,17 @@ class Login extends Component {
       let formData = new FormData();
       formData.append("email", this.state.email);
       formData.append("password", this.state.password);
-      formData.append("firebase_id", this.state.fcmToken);
-      axios
-        .post(`v1/user/login`, formData, {
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-          },
-        })
-        .then((res) => {
-          let response = res.data;
-          if (res.status === 200) {
-            if (response.token) {
-              let jwtString = jwt.decode(response.token);
-              let prefLang = jwtString.preferred_lang;
-              if (prefLang) {
-                localStorage.setItem(LANGUAGE_STRING, prefLang);
-              }
-              let role = jwtString.role;
-              let userName = jwtString.name;
-              if (role.length === 0) {
-                this.showMessage(ONLY_FOR_SUPERVISOR, "error");
-                this.setState({
-                  loggedin: false,
-                  email: "",
-                  password: "",
-                  emailIsValid: false,
-                  passIsValid: false,
-                  pageloading: false,
-                });
-              } else {
-                localStorage.setItem("authtoken", response.token);
-                localStorage.setItem("username", userName);
-                this.setState({ loggedin: true, pageloading: false });
-                this.props.loggedin(true);
-              }
-            }
-          }
-          if (parseInt(response.code) === 401) {
-            this.setState({
-              pageloading: false,
-            });
-            this.showMessage(response.message, "error");
-          }
-        })
-        .catch((error) => console.log(error));
+      formData.append("company_id", this.state.selectedCompany);
+      this.props.getLoginApi(formData, this.props.i18n.language);
+      // formData.append("firebase_id", this.state.fcmToken);
+
+      this.setState({ validated: false });
     }
-    this.setState({ validated: false });
   };
-  onNextClick = () => {
+  onNextClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     let regex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$/;
-    // let str = e.target.value
     if (this.state.email.length === 0 || !this.state.email.match(regex)) {
       if (this.state.email.length === 0) {
         this.setState({
@@ -154,12 +130,28 @@ class Login extends Component {
       }
     } else {
       this.setState({
-        showEmail: false,
-        showPassword: true,
+        pageloading: true,
       });
+      this.getUserCompanies();
     }
   };
+  componentDidUpdate(prevProps, prevState) {
+    if (this.props.userCompaniesList !== prevProps.userCompaniesList) {
+      this.setState({
+        showEmail: false,
+        showPassword: true,
+        userCompaniesList: this.props.userCompaniesList,
+        pageloading: false,
+      });
+    }
+    if (this.props.loggedIn !== prevProps.loggedIn) {
+      if (this.props.loggedIn) {
+        Router.replace("/");
+      }
+    }
+  }
   rednerLoginDesign = () => {
+    let lang = this.props.i18n.language;
     return (
       <div className="container-fluid">
         <div className="row mt-5">
@@ -190,48 +182,49 @@ class Login extends Component {
                 validated={this.state.validated}
                 onSubmit={this.handleSubmit}
               >
-                {this.state.showEmail && (
-                  <React.Fragment>
-                    <FormGroup controlid="email" bssize="large">
-                      <FormLabel>Email</FormLabel>
-                      <FormLabel className={"pull-right"}>
-                        البريد الإلكتروني
-                      </FormLabel>
-                      <FormControl
-                        required
-                        autoFocus
-                        ref="email"
-                        // type="email"
-                        value={this.state.email}
-                        onChange={(e) => {
-                          let regex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$/;
-                          let str = e.target.value;
-                          let m;
+                <React.Fragment>
+                  <FormGroup controlid="email" bssize="large">
+                    <FormLabel>Email</FormLabel>
+                    <FormLabel className={"pull-right"}>
+                      البريد الإلكتروني
+                    </FormLabel>
+                    <FormControl
+                      required
+                      autoFocus
+                      ref="email"
+                      // type="email"
+                      disabled={!this.state.showEmail}
+                      value={this.state.email}
+                      onChange={(e) => {
+                        let regex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$/;
+                        let str = e.target.value;
+                        let m;
 
-                          if ((m = regex.exec(str)) !== null) {
-                            // The result can be accessed through the `m`-variable.
-                            m.forEach((match, groupIndex) => {
-                              this.setState({
-                                email: e.target.value,
-                                emailIsValid: true,
-                                emailInvalid: false,
-                              });
-                            });
-                          } else {
+                        if ((m = regex.exec(str)) !== null) {
+                          // The result can be accessed through the `m`-variable.
+                          m.forEach((match, groupIndex) => {
                             this.setState({
                               email: e.target.value,
-                              emailInvalid: true,
-                              emailIsValid: false,
+                              emailIsValid: true,
+                              emailInvalid: false,
                             });
-                          }
-                        }}
-                        isValid={this.state.emailIsValid}
-                        isInvalid={this.state.emailInvalid}
-                      />
-                      <Form.Control.Feedback type="invalid">
-                        Valid Email Is Required
-                      </Form.Control.Feedback>
-                    </FormGroup>
+                          });
+                        } else {
+                          this.setState({
+                            email: e.target.value,
+                            emailInvalid: true,
+                            emailIsValid: false,
+                          });
+                        }
+                      }}
+                      isValid={this.state.emailIsValid}
+                      isInvalid={this.state.emailInvalid}
+                    />
+                    <Form.Control.Feedback type="invalid">
+                      Valid Email Is Required
+                    </Form.Control.Feedback>
+                  </FormGroup>
+                  {this.state.showEmail && (
                     <Button
                       block
                       bssize="large"
@@ -241,8 +234,9 @@ class Login extends Component {
                     >
                       Next / التالى
                     </Button>
-                  </React.Fragment>
-                )}
+                  )}
+                </React.Fragment>
+
                 {this.state.showPassword && (
                   <React.Fragment>
                     <FormGroup controlId="password" bssize="large">
@@ -278,17 +272,32 @@ class Login extends Component {
                       <Form.Control
                         as="select"
                         className="rounded-0"
-                        // onChange={this.onRouteChange}
-                        // value={
-                        //   this.state.selectedRoute
-                        //     ? this.state.selectedRoute
-                        //     : ""
-                        // }
+                        onChange={this.onCompanyChange}
+                        value={
+                          this.state.selectedCompany
+                            ? this.state.selectedCompany
+                            : ""
+                        }
+                        isValid={this.state.companyIsValid}
+                        isInvalid={this.state.companyInvalid}
                       >
-                        <option data-content="<i class='fa fa-cutlery'></i> Cutlery">
+                        <option
+                          value=""
+                          data-content="<i class='fa fa-cutlery'></i> Cutlery"
+                        >
                           ---Select Company---
                         </option>
+                        {this.state.userCompaniesList.map((com) => {
+                          return (
+                            <option key={com.company_id} value={com.company_id}>
+                              {`${com.company_name[lang]}-${com.company_code}`}
+                            </option>
+                          );
+                        })}
                       </Form.Control>
+                      <Form.Control.Feedback type="invalid">
+                        Company Is Required
+                      </Form.Control.Feedback>
                     </FormGroup>
                     <Button
                       block
@@ -359,4 +368,17 @@ class Login extends Component {
     );
   }
 }
-export default Login;
+const mapStateToProps = (state) => {
+  return {
+    loggedIn: state.authorization.logggedIn,
+    userCompaniesList: state.authorization.companiesList,
+    // selectedBranchId: state.navbar.selectedBranch,
+  };
+};
+const mapDispatchToProps = (dispatch) => {
+  return {
+    getCompanyApi: (data) => dispatch(get_companies(data)),
+    getLoginApi: (data) => dispatch(get_login(data)),
+  };
+};
+export default connect(mapStateToProps, mapDispatchToProps)(withRouter(Login));

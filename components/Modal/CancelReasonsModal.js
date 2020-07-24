@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, { Component } from "react";
 import {
   Modal,
   Container,
@@ -7,11 +7,13 @@ import {
   Button,
   Form,
   FormGroup,
-} from 'react-bootstrap';
-import {FadeLoader} from 'react-spinners';
-import $ from 'jquery';
-import axios from 'axios';
-import {LOCAL_API_URL} from '../Constants/Enviroment/Enviroment';
+} from "react-bootstrap";
+import { FadeLoader } from "react-spinners";
+import $ from "jquery";
+import axios from "axios";
+import { LOCAL_API_URL } from "../Constants/Enviroment/Enviroment";
+import { connect } from "react-redux";
+import { cancel_order } from "../../store/actions/live/actionCreator";
 class CancleReasonsModal extends Component {
   constructor(props) {
     super(props);
@@ -30,7 +32,7 @@ class CancleReasonsModal extends Component {
           border-color: red;
         `}
         size={150}
-        color={'#123abc'}
+        color={"#123abc"}
         loading={this.state.sideloading}
       />
     );
@@ -44,25 +46,27 @@ class CancleReasonsModal extends Component {
     }
     return state;
   }
-  handleSubmit = e => {
+  handleSubmit = (e) => {
     const formdata = new FormData(e.target);
     console.log(...formdata);
     const data = {
       order_id: this.state.order_id,
       cancel_reason_id: this.refs.cancelreason.value,
     };
+
     const newdata = JSON.stringify(data);
-    axios
-      .post(`${LOCAL_API_URL}cancelOrders`, newdata)
-      .then(res => {
-        let response = res.data;
-        if (response.code === 200) {
-          alert(response.message);
-        } else {
-          alert(response.message);
-        }
-      })
-      .catch(error => console.log(error));
+    this.props.cancelReasonApi(newdata);
+    // axios
+    //   .post(`${LOCAL_API_URL}cancelOrders`, newdata)
+    //   .then((res) => {
+    //     let response = res.data;
+    //     if (response.code === 200) {
+    //       alert(response.message);
+    //     } else {
+    //       alert(response.message);
+    //     }
+    //   })
+    //   .catch((error) => console.log(error));
     e.preventDefault();
   };
   render() {
@@ -71,7 +75,7 @@ class CancleReasonsModal extends Component {
         <Form
           noValidate
           validated={this.state.validated}
-          onSubmit={e => this.handleSubmit(e)}
+          onSubmit={(e) => this.handleSubmit(e)}
         >
           <Modal.Header closeButton>
             <Modal.Title id="contained-modal-title-vcenter">
@@ -97,7 +101,7 @@ class CancleReasonsModal extends Component {
                       </Col>
                     </Row>
                   ))
-                : ''}
+                : ""}
             </Container>
           </Modal.Body>
           <Modal.Footer>
@@ -109,5 +113,14 @@ class CancleReasonsModal extends Component {
     );
   }
 }
-
-export default CancleReasonsModal;
+const mapStateToProps = (state) => {
+  return {
+    cancelOrderResponse: state.live.cancelOrderResponse,
+  };
+};
+const mapDispatchToProps = (dispatch) => {
+  return {
+    cancelReasonApi: (data) => dispatch(cancel_order(data)),
+  };
+};
+export default connect(mapStateToProps, mapDispatchToProps)(CancleReasonsModal);

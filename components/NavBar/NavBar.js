@@ -36,6 +36,7 @@ import { LANG_AR, LANG_EN } from "../Constants/Language/Language";
 import { ClipLoader } from "react-spinners";
 import { withRouter } from "next/router";
 import { SELECT_BRANCH } from "../../store/actions/actionTypes";
+import { get_trips_list } from "../../store/actions/live/actionCreator";
 class NavBar extends Component {
   constructor(props) {
     super(props);
@@ -81,10 +82,7 @@ class NavBar extends Component {
   componentDidMount() {
     this._isMounted = true;
     if (this._isMounted) {
-      // alert("MOunted");
-      console.log("MOUNTED NAVBAR");
       this.props.getDefaultsApi();
-      // this.getStoreByDefault();
     }
   }
   componentWillUnmount() {
@@ -106,11 +104,11 @@ class NavBar extends Component {
       //   );
       // }
     }
-    if (this.props.selectedBranchId !== prevProps.selectedBranchId) {
-      this.setState({
-        selectedStoreId: this.props.selectedBranchId,
-      });
-    }
+    // if (this.props.selectedBranchId !== prevProps.selectedBranchId) {
+    //   this.setState({
+    //     selectedStoreId: this.props.selectedBranchId,
+    //   });
+    // }
     if (prevState.routesEnabled !== this.state.routesEnabled) {
       this.props.setRoutesStatus(this.state.routesEnabled);
     }
@@ -193,8 +191,13 @@ class NavBar extends Component {
   };
   onBranchChange = (e) => {
     let warehouse_id = e.target.value;
-    console.log("CHeck WAREHOUSE ID", warehouse_id);
-    this.props.setBranchId(parseInt(warehouse_id));
+    // console.log("CHeck WAREHOUSE ID", warehouse_id);
+    // let formattedDate = moment(this.state.currentDate).format("YYYY-MM-DD");
+    this.setState({
+      selectedStoreId: warehouse_id,
+    });
+    this.props.getTripsApi("2020-04-24", warehouse_id);
+    // this.props.setBranchId(parseInt(warehouse_id));
     // if (warehouse_id.length > 0) {
     //   let storeList = [...this.state.storeList];
     //   let filterWareHouses = _.filter(storeList, (ware_house) => {
@@ -521,14 +524,15 @@ class NavBar extends Component {
 const mapStateToProps = (state) => {
   return {
     warehouses: state.navbar.warehouses,
-    selectedBranchId: state.navbar.selectedBranch,
+    selectedBranchId: state.live.selectedBranch,
   };
 };
 const mapDispatchToProps = (dispatch) => {
   return {
     getDefaultsApi: () => dispatch(get_defaults()),
-    setBranchId: (id) =>
-      dispatch({ type: SELECT_BRANCH, payload: { selectedBranchId: id } }),
+    // setBranchId: (id) =>
+    //   dispatch({ type: SELECT_BRANCH, payload: { selectedBranchId: id } }),
+    getTripsApi: (date, store_id) => dispatch(get_trips_list(date, store_id)),
   };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(NavBar));
