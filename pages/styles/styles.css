@@ -130,10 +130,10 @@ rect {
 }
 .livepopcheckright {
   top: 0px !important;
-  left: -209px !important;
+  left: 113px !important;
 }
 .livepopcheckleft {
-  left: 113px !important;
+  left: 613px !important;
 }
 .setMousePointer {
   cursor: pointer;

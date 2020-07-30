@@ -105,6 +105,11 @@ import {
 import { Trans } from "../../i18n";
 import { LANG_AR, LANG_EN } from "../Constants/Language/Language";
 import { connect } from "react-redux";
+import {
+  get_trip_deliveries,
+  get_cancel_reasons,
+  get_delivery_slots,
+} from "../../store/actions/live/actionCreator";
 // import {Button} from 'semantic-ui-react';
 class Live extends PureComponent {
   constructor(props) {
@@ -173,13 +178,39 @@ class Live extends PureComponent {
     });
   };
   componentDidUpdate = (prevProps, prevState) => {
-    if (
-      parseInt(this.props.selectedwarehouse_id) !==
-      parseInt(this.state.selectedBranchId)
-    ) {
+    // if (
+    //   parseInt(this.props.selectedwarehouse_id) !==
+    //   parseInt(this.state.selectedBranchId)
+    // ) {
+    //   this.setState({
+    //     selectedBranchId: this.props.selectedwarehouse_id,
+    //     // defaultCenter:props.defa
+    //   });
+    // }
+    if (this.props.deliveriesList !== prevProps.deliveriesList) {
       this.setState({
-        selectedBranchId: this.props.selectedwarehouse_id,
-        // defaultCenter:props.defa
+        orders: this.props.deliveriesList.deliveries,
+        vehicleRoutes: this.props.deliveriesList,
+        routeloading: false,
+
+        disableall: {},
+        allorders: this.props.deliveriesList,
+      });
+    }
+    if (this.props.cancelReasonList !== prevProps.cancelReasonList) {
+      this.setState({
+        cancalReasons: this.props.cancelReasonList,
+        selectedOrder: this.props.selectedOrder,
+        routeloading: false,
+        reasonmodal: true,
+      });
+    }
+    if (this.props.deliverySlotList !== prevProps.deliverySlotList) {
+      this.setState({
+        timeSlots: this.props.deliverySlotList.slots,
+        timeSlotModel: true,
+        selectedOrder: this.props.selectedOrder,
+        routeloading: false,
       });
     }
     if (this.props.language !== this.state.language) {
@@ -216,17 +247,23 @@ class Live extends PureComponent {
       }
       this.props.currentDateCallBack(this.state.currentDate);
     }
-    if (
-      this.state.selectedBranchId &&
-      parseInt(this.state.selectedBranchId) !==
-        parseInt(prevState.selectedBranchId)
-    ) {
-      console.log("Check this now");
-      this.getVehiclesByStoreId(
-        this.state.selectedBranchId,
-        this.props.defaultCenter
-      );
+    if (this.props.tripList !== prevProps.tripList) {
+      this.setState({
+        vehicles: this.props.tripList,
+        routeloading: false,
+      });
     }
+    // if (
+    //   this.state.selectedBranchId &&
+    //   parseInt(this.state.selectedBranchId) !==
+    //     parseInt(prevState.selectedBranchId)
+    // ) {
+    //   console.log("Check this now");
+    //   this.getVehiclesByStoreId(
+    //     this.state.selectedBranchId,
+    //     this.props.defaultCenter
+    //   );
+    // }
   };
 
   componentDidMount() {}
@@ -283,26 +320,27 @@ class Live extends PureComponent {
     this.setState({
       routeloading: true,
     });
-    axios
-      .get(`storesupervisor/v1/cancelReasons`, {
-        headers: {
-          Authorization: `bearer ${localStorage.getItem("authtoken")}`,
-        },
-      })
-      .then((res) => {
-        let response = res.data;
-        if (response.code === 200) {
-          this.setState({
-            cancalReasons: response.data,
-            routeloading: false,
-            reasonmodal: true,
-            selectedOrder: order,
-          });
-        }
-      })
-      .catch((error) => {
-        this.showMessage(error.toString(), "error", false);
-      });
+    this.props.getCancelReasonApi(order);
+    // axios
+    //   .get(`storesupervisor/v1/cancelReasons`, {
+    //     headers: {
+    //       Authorization: `bearer ${localStorage.getItem("authtoken")}`,
+    //     },
+    //   })
+    //   .then((res) => {
+    //     let response = res.data;
+    //     if (response.code === 200) {
+    //       this.setState({
+    //         cancalReasons: response.data,
+    //         routeloading: false,
+    //         reasonmodal: true,
+    //         selectedOrder: order,
+    //       });
+    //     }
+    //   })
+    //   .catch((error) => {
+    //     this.showMessage(error.toString(), "error", false);
+    //   });
   };
 
   // get delivery time slots
@@ -310,92 +348,98 @@ class Live extends PureComponent {
     this.setState({
       routeloading: true,
     });
-    axios
-      .get(`storesupervisor/v1/deliverySlots`, {
-        headers: {
-          Authorization: `bearer ${localStorage.getItem("authtoken")}`,
-        },
-      })
-      .then((res) => {
-        let response = res.data;
-        if (response.code === 200) {
-          this.setState({
-            timeSlots: response.data.slots,
-            timeSlotModel: true,
-            selectedOrder: order,
-            routeloading: false,
-          });
-        }
-      })
-      .catch((error) => {
-        this.showMessage(error.toString(), "error", false);
-      });
+    this.props.getDeliverySlotApi(order);
+    // axios
+    //   .get(`storesupervisor/v1/deliverySlots`, {
+    //     headers: {
+    //       Authorization: `bearer ${localStorage.getItem("authtoken")}`,
+    //     },
+    //   })
+    //   .then((res) => {
+    //     let response = res.data;
+    //     if (response.code === 200) {
+    //       this.setState({
+    //         timeSlots: response.data.slots,
+    //         timeSlotModel: true,
+    //         selectedOrder: order,
+    //         routeloading: false,
+    //       });
+    //     }
+    //   })
+    //   .catch((error) => {
+    //     this.showMessage(error.toString(), "error", false);
+    //   });
   };
 
   getVehRoutesById = (e, dev_trip_id, veh_id) => {
     this.setState({
-      vehicleTracking: [],
-      routeloading: true,
-      disableall: {
-        pointerEvents: "none",
-        opacity: "0.4",
-      },
       activeTrip: dev_trip_id,
+      routeloading: true,
     });
+    this.props.getTripDeliveriesApi(dev_trip_id);
+    // this.setState({
+    //   vehicleTracking: [],
+    //   routeloading: true,
+    //   disableall: {
+    //     pointerEvents: "none",
+    //     opacity: "0.4",
+    //   },
+    //   activeTrip: dev_trip_id,
+    // });
     // let veh_idss = ['111', '333']
-    const { client } = this.state;
-    if (typeof client !== "undefined") {
-      client.disconnect();
-    }
-    this.PAHOFUNC(veh_id);
-    let formattedDate = moment(this.state.currentDate).format("YYYY-MM-DD");
-    axios
-      .get(`storesupervisor/v1/${formattedDate}/${dev_trip_id}/deliveries`, {
-        headers: {
-          Authorization: `bearer ${localStorage.getItem("authtoken")}`,
-        },
-      })
-      .then((res) => {
-        let response = res.data;
-        if (response.code === 200) {
-          let data = response.data;
+    // const { client } = this.state;
+    // if (typeof client !== "undefined") {
+    //   client.disconnect();
+    // }
+    // this.PAHOFUNC(veh_id);
+    // let formattedDate = moment(this.state.currentDate).format("YYYY-MM-DD");
+    // axios
+    //   .get(`storesupervisor/v1/${formattedDate}/${dev_trip_id}/deliveries`, {
+    //     headers: {
+    //       Authorization: `bearer ${localStorage.getItem("authtoken")}`,
+    //     },
+    //   })
+    //   .then((res) => {
+    //     let response = res.data;
+    //     if (response.code === 200) {
+    //       let data = response.data;
 
-          if (response.message) {
-            this.showMessage(response.message, "error");
-          }
-          if (data.deliveries.length > 0) {
-            this.setState({
-              orders: data.deliveries,
-              vehicleRoutes: data,
-              routeloading: false,
-              disableall: {},
-              allorders: data,
-            });
+    //       if (response.message) {
+    //         this.showMessage(response.message, "error");
+    //       }
+    //       if (data.deliveries.length > 0) {
+    //         this.setState({
+    //           orders: data.deliveries,
+    //           vehicleRoutes: data,
+    //           routeloading: false,
+    //           disableall: {},
+    //           allorders: data,
+    //         });
 
-            this.showMessage(
-              this.props.t("Vehicle Route Mapping Successfully"),
-              "success"
-            );
-          } else {
-            this.setState({
-              orders: data.deliveries,
-              vehicleRoutes: data,
-              // vehicleRoutes: data,
-              routeloading: false,
-              disableall: {},
-              allorders: data,
-            });
-            this.showMessage(this.props.t("No Record Found"), "error");
-          }
-        }
-      })
-      .catch((error) => {
-        this.showMessage(error.toString(), "error", false);
-        this.setState({
-          routeloading: false,
-          disableall: {},
-        });
-      });
+    //         this.showMessage(
+    //           this.props.t("Vehicle Route Mapping Successfully"),
+    //           "success"
+    //         );
+    //       } else {
+    //         this.setState({
+    //           orders: data.deliveries,
+    //           vehicleRoutes: data,
+    //           // vehicleRoutes: data,
+    //           routeloading: false,
+    //           disableall: {},
+    //           allorders: data,
+    //         });
+    //         this.showMessage(this.props.t("No Record Found"), "error");
+    //       }
+    //     }
+    //   })
+    //   .catch((error) => {
+    //     this.showMessage(error.toString(), "error", false);
+    //     this.setState({
+    //       routeloading: false,
+    //       disableall: {},
+    //     });
+    //   });
   };
 
   getVehiclesByStoreId = (id, center = null) => {
@@ -405,54 +449,56 @@ class Live extends PureComponent {
       disablebtn: true,
       activeTrip: null,
     });
-    let formattedDate = moment(this.state.currentDate).format("YYYY-MM-DD");
-    axios
-      .get(`storesupervisor/v1/${formattedDate}/${id}/vehicles`, {
-        headers: {
-          Authorization: `bearer ${localStorage.getItem("authtoken")}`,
-        },
-      })
-      .then((res) => {
-        let response = res.data;
-        if (response.code === 200) {
-          let data = response.data;
-          if (response.message) {
-            this.showMessage(response.message, "error");
-          }
-          if (data.length > 0) {
-            this.showMessage(
-              this.props.t("Vehicle Listed Successfully"),
-              "success"
-            );
-            this.setState({
-              trips: data,
-              vehicles: data,
-              disablebtn: false,
-              routeloading: false,
-              defaultCenter: center,
-              pageBodyStyle: {},
-            });
-          } else {
-            this.showMessage(this.props.t("No Record Found"), "error");
-            this.setState({
-              disablebtn: false,
-              routeloading: false,
-            });
-          }
-        }
-      })
-      .catch((error) => {
-        this.showMessage(error.toString(), "error", false);
-      });
+
+    // let formattedDate = moment(this.state.currentDate).format("YYYY-MM-DD");
+    // getTripsApi(formattedDate,id)
+    // axios
+    //   .get(`storesupervisor/v1/${formattedDate}/${id}/vehicles`, {
+    //     headers: {
+    //       Authorization: `bearer ${localStorage.getItem("authtoken")}`,
+    //     },
+    //   })
+    //   .then((res) => {
+    //     let response = res.data;
+    //     if (response.code === 200) {
+    //       let data = response.data;
+    //       if (response.message) {
+    //         this.showMessage(response.message, "error");
+    //       }
+    //       if (data.length > 0) {
+    //         this.showMessage(
+    //           this.props.t("Vehicle Listed Successfully"),
+    //           "success"
+    //         );
+    //         this.setState({
+    //           trips: data,
+    //           vehicles: data,
+    //           disablebtn: false,
+    //           routeloading: false,
+    //           defaultCenter: center,
+    //           pageBodyStyle: {},
+    //         });
+    //       } else {
+    //         this.showMessage(this.props.t("No Record Found"), "error");
+    //         this.setState({
+    //           disablebtn: false,
+    //           routeloading: false,
+    //         });
+    //       }
+    //     }
+    // })
+    // .catch((error) => {
+    //   this.showMessage(error.toString(), "error", false);
+    // });
   };
 
   renderProductPopUp = (items, order, key) => {
-    let lang = this.props.language;
+    let lang = this.props.i18n.language;
     let t = this.props.t;
     return (
       <Popover
-        id="popover-basic"
-        className={`${style.PopOverText} livepopcheckright row`}
+        id="productpopover-basic"
+        className={`${style.PopOverText}  row`}
       >
         <Popover.Title as="h5" className="bg-light-brown text-center">
           <Trans i18nKey={"Order Information"} />
@@ -497,7 +543,7 @@ class Live extends PureComponent {
             </div>
             <div>
               <span className="font-weight-bold pr-1">{t("Area Name")}: </span>
-              <span>{order.address.area_name[lang]}</span>
+              {/* <span>{order.address.area_name[lang]}</span> */}
             </div>
             <div>
               <span className="font-weight-bold pr-1">
@@ -521,7 +567,7 @@ class Live extends PureComponent {
               <span className="font-weight-bold pr-1">
                 {t("Payment Method")}:{" "}
               </span>
-              <span>{order.payment_method[lang]}</span>
+              {/* <span>{order.payment_method[lang]}</span> */}
             </div>
             <div>
               <span className="font-weight-bold pr-1">
@@ -712,12 +758,10 @@ class Live extends PureComponent {
     );
   };
   renderTripPopUp = (tripdata, key) => {
-    let lang = this.props.language;
+    let lang = this.props.i18n.language;
+    // console.log("CHECK LANG", lang);
     return (
-      <Popover
-        id="popover-basic"
-        className={`${style.PopOverText} livepopcheckleft row`}
-      >
+      <Popover id="trippopup-basic" className={`${style.PopOverText}  row`}>
         <Popover.Title as="h5" className="text-center bg-light-brown">
           <Trans i18nKey={"Trip Information"} />
         </Popover.Title>
@@ -743,7 +787,7 @@ class Live extends PureComponent {
             <span className="text-left font-weight-bold">
               <Trans i18nKey={"Driver Name"} />:{" "}
             </span>{" "}
-            {tripdata.driver.name}
+            {tripdata.driver.name[lang]}
           </div>
           <div>
             <span className="text-left font-weight-bold">
@@ -888,105 +932,108 @@ class Live extends PureComponent {
   };
 
   renderVehicles = () => {
-    let lang = this.props.language;
+    let lang = this.props.i18n.language;
     return (
       <div className={`card-main-content  ${col12} ${style.leftSideBar}`}>
         {this.state.vehicles && this.state.vehicles.length > 0 ? (
-          this.state.vehicles.map((data, key) => (
-            <div
-              style={this.state.disableall}
-              key={data.delivery_trip_id}
-              id={data.vehicle_id + data.driver.user_id}
-              className="pb-2 card-div row"
-            >
-              <Card
-                dir={this.props.language === LANG_AR ? "rtl" : "ltr"}
-                className={` ${
-                  data.delivery_trip_id === this.state.activeTrip
-                    ? `bg-brown`
-                    : "text-dark"
-                } text-center  small ${col12} ${style.card}`}
+          this.state.vehicles.map((data, key) => {
+            console.log("Check Data", data.driver.name[lang]);
+            return (
+              <div
+                style={this.state.disableall}
+                key={data.delivery_trip_id}
+                id={data.vehicle_id + data.driver.user_id}
+                className="pb-2 card-div row"
               >
-                <div
+                <Card
+                  dir={this.props.language === LANG_AR ? "rtl" : "ltr"}
                   className={` ${
                     data.delivery_trip_id === this.state.activeTrip
-                      ? `bg-light-brown`
-                      : `bg-brown`
-                  } custom-card-header text-light font-weight-bold`}
+                      ? `bg-brown`
+                      : "text-dark"
+                  } text-center  small ${col12} ${style.card}`}
                 >
-                  <Trans i18nKey={"Trip Code"} />: {data.trip_code}
-                </div>
-                <div
-                  onClick={
-                    Array.isArray(data.delivery_trip_id) &&
-                    data.delivery_trip_id.length > 1
-                      ? null
-                      : (e) =>
-                          this.getVehRoutesById(
-                            e,
-                            data.delivery_trip_id,
-                            data.vehicle_id
-                          )
-                  }
-                >
-                  <div>
-                    <span className="font-weight-bold pr-1">
-                      <Trans i18nKey={"Driver Name"} />:
-                    </span>
-                    <span>{data.driver.name}</span>
-                  </div>
-                  <div>
-                    <span className="font-weight-bold pr-1">
-                      <Trans i18nKey={"Plate No"} />:
-                    </span>
-                    <span>{data.vehicle_plate_number}</span>
-                  </div>
-                  <div>
-                    <span className="font-weight-bold pr-1">
-                      <Trans i18nKey={"Trip Status"} />:
-                    </span>
-                    <span>
-                      {data.trip_status ? data.trip_status[lang] : null}
-                    </span>
-                  </div>
-                  {Array.isArray(data.delivery_trip_id) &&
-                  data.delivery_trip_id.length > 1
-                    ? data.delivery_trip_id
-                        .filter(
-                          (item, index) =>
-                            data.delivery_trip_id.indexOf(item) === index
-                        )
-                        .map((value, key) => (
-                          <div>
-                            <button
-                              onClick={(e) =>
-                                this.getVehRoutesById(
-                                  e,
-                                  data.delivery_trip_id,
-                                  data.vehicle_id
-                                )
-                              }
-                            >
-                              Route {key + 1}
-                            </button>{" "}
-                          </div>
-                        ))
-                    : null}
-                </div>
-                <div>
-                  <OverlayTrigger
-                    key={key}
-                    trigger="click"
-                    placement="right"
-                    rootClose={true}
-                    overlay={this.renderTripPopUp(data)}
+                  <div
+                    className={` ${
+                      data.delivery_trip_id === this.state.activeTrip
+                        ? `bg-light-brown`
+                        : `bg-brown`
+                    } custom-card-header text-light font-weight-bold`}
                   >
-                    <i className="fa fa-info-circle text-success"></i>
-                  </OverlayTrigger>
-                </div>
-              </Card>
-            </div>
-          ))
+                    <Trans i18nKey={"Trip Code"} />: {data.trip_code}
+                  </div>
+                  <div
+                    onClick={
+                      Array.isArray(data.delivery_trip_id) &&
+                      data.delivery_trip_id.length > 1
+                        ? null
+                        : (e) =>
+                            this.getVehRoutesById(
+                              e,
+                              data.delivery_trip_id,
+                              data.vehicle_id
+                            )
+                    }
+                  >
+                    <div>
+                      <span className="font-weight-bold pr-1">
+                        <Trans i18nKey={"Driver Name"} />:
+                      </span>
+                      <span>{data.driver.name[lang]}</span>
+                    </div>
+                    <div>
+                      <span className="font-weight-bold pr-1">
+                        <Trans i18nKey={"Plate No"} />:
+                      </span>
+                      <span>{data.vehicle_plate_number}</span>
+                    </div>
+                    <div>
+                      <span className="font-weight-bold pr-1">
+                        <Trans i18nKey={"Trip Status"} />:
+                      </span>
+                      <span>
+                        {data.trip_status ? data.trip_status[lang] : null}
+                      </span>
+                    </div>
+                    {Array.isArray(data.delivery_trip_id) &&
+                    data.delivery_trip_id.length > 1
+                      ? data.delivery_trip_id
+                          .filter(
+                            (item, index) =>
+                              data.delivery_trip_id.indexOf(item) === index
+                          )
+                          .map((value, key) => (
+                            <div>
+                              <button
+                                onClick={(e) =>
+                                  this.getVehRoutesById(
+                                    e,
+                                    data.delivery_trip_id,
+                                    data.vehicle_id
+                                  )
+                                }
+                              >
+                                Route {key + 1}
+                              </button>{" "}
+                            </div>
+                          ))
+                      : null}
+                  </div>
+                  <div>
+                    <OverlayTrigger
+                      key={"tripoverlay"}
+                      trigger="click"
+                      placement="right"
+                      rootClose={true}
+                      overlay={this.renderTripPopUp(data)}
+                    >
+                      <i className="fa fa-info-circle text-success"></i>
+                    </OverlayTrigger>
+                  </div>
+                </Card>
+              </div>
+            );
+          })
         ) : this.state.trips.length > 0 ? (
           <div className="text-center text-light bg-brown shadow p-3 mb-1 col-md-12 col-md-12">
             <Trans i18nKey={"No Record Found"} />
@@ -1367,7 +1414,11 @@ class Live extends PureComponent {
                         <span className="font-weight-bold pr-1">
                           {t("Area Name")}:{" "}
                         </span>
-                        <span>{order.address.area_name[lang]}</span>
+                        <span>
+                          {/* {order.address.area_name !== "undefined"
+                            ? order.address.area_name[lang]
+                            : null} */}
+                        </span>
                       </div>
                     </div>
                     <div className="row">
@@ -1377,9 +1428,9 @@ class Live extends PureComponent {
                       >
                         <div className="row">
                           <OverlayTrigger
-                            key={key}
+                            key={"productoverlay"}
                             trigger="click"
-                            placement="left"
+                            placement={"left"}
                             rootClose={true}
                             overlay={this.renderProductPopUp(
                               order.items,
@@ -1581,12 +1632,19 @@ class Live extends PureComponent {
 }
 const mapStateToProps = (state) => {
   return {
-    ctr: state.counter,
+    tripList: state.live.tripList,
+    deliveriesList: state.live.deliveries,
+    cancelReasonList: state.live.cancelReasons,
+    deliverySlotList: state.live.deliverySlots,
+    selectedOrder: state.live.selectedOrder,
   };
 };
 const mapDispatchToProps = (dispatch) => {
   return {
-    onIncrementCounter: () => dispatch({ type: "INCREMENT" }),
+    // getTripsApi: (date, store_id) => dispatch(get_trips_list(date, store_id)),
+    getTripDeliveriesApi: (id) => dispatch(get_trip_deliveries(id)),
+    getCancelReasonApi: (order) => dispatch(get_cancel_reasons(order)),
+    getDeliverySlotApi: (order) => dispatch(get_delivery_slots(order)),
   };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(Live);

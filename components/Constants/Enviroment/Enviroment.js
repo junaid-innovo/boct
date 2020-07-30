@@ -1,8 +1,9 @@
 // export const LOCAL_API_URL =
 //   "https://alaseeldelivery.com/delivery_staging/public/api/";
 
-export const LOCAL_API_URL =
-  "https://gbhcdemosys.com/backoffice_dev/public/api/tower/";
+// export const LOCAL_API_URL =
+//   "https://gbhcdemosys.com/backoffice_dev/public/api/tower/";
+export const LOCAL_API_URL = "https://gbhcdemosys.com/backoffice_dev/public/";
 export const STAGGING_API_URL =
   "https://alaseeldelivery.com/delivery_staging/public/api/";
 export const PRODUCTION_API_URL =

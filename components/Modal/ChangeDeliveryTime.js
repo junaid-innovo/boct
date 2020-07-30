@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, { Component } from "react";
 import {
   Modal,
   Container,
@@ -7,12 +7,14 @@ import {
   Button,
   Form,
   FormGroup,
-} from 'react-bootstrap';
-import {FadeLoader} from 'react-spinners';
-import axios from 'axios';
-import DatePicker from '../DatePicker/Simple';
-import moment from 'moment';
-import {LOCAL_API_URL} from '../Constants/Enviroment/Enviroment';
+} from "react-bootstrap";
+import { FadeLoader } from "react-spinners";
+import axios from "axios";
+import DatePicker from "../DatePicker/Simple";
+import moment from "moment";
+import { LOCAL_API_URL } from "../Constants/Enviroment/Enviroment";
+import { connect } from "react-redux";
+import { update_order_delivery_time } from "../../store/actions/live/actionCreator";
 class ChangeDeliveryTime extends Component {
   constructor(props) {
     super(props);
@@ -21,7 +23,7 @@ class ChangeDeliveryTime extends Component {
       timeSlots: [],
       order_id: null,
       currentDate: new Date(),
-      dateFormat: 'yyyy-MM-dd  hh:mm:ss aa',
+      dateFormat: "yyyy-MM-dd  hh:mm:ss aa",
       currentTimeSlot: null,
       selectedTimeSlot: null,
       showModal: false,
@@ -36,7 +38,7 @@ class ChangeDeliveryTime extends Component {
           border-color: red;
         `}
         size={150}
-        color={'#123abc'}
+        color={"#123abc"}
         loading={this.state.sideloading}
       />
     );
@@ -51,7 +53,7 @@ class ChangeDeliveryTime extends Component {
           order_id: props.orderid,
         };
       } else {
-        console.log('yes selected slot false');
+        console.log("yes selected slot false");
         return {
           showModal: true,
           currentTimeSlot: props.currenttimeslot,
@@ -62,41 +64,40 @@ class ChangeDeliveryTime extends Component {
     }
     return state;
   }
-  handleSubmit = e => {
+  handleSubmit = (e) => {
     const formData = new FormData(e.target);
-    let deliverytime = formData.get('changedelivery');
+    let deliverytime = formData.get("changedelivery");
     let data = {
-      order_id: `${this.state.order_id}`,
-      delivery_slot_id: `${deliverytime}`,
-      date: `${moment(this.state.currentDate).format('YYYY-MM-DD hh:mm:ss')}`,
+      order_id: this.state.order_id,
+      delivery_slot_id: deliverytime,
+      date: moment(this.state.currentDate).format("YYYY-MM-DD"),
     };
-    axios
-      .post(
-        `${LOCAL_API_URL}updateOrderDelivery`,
-        JSON.stringify(data)
-      )
-      .then(res => {
-        let response = res.data;
-        if (response.code === 200) {
-          alert(response.message);
-          this.setState({selectedTimeSlot: null});
-          this.props.onHide(false);
-          this.props.changedeliveryslotid(this.state.order_id,deliverytime)
-        } else {
-          alert(response.message);
-        }
-      })
-      .catch(error => console.log(error));
+    let newData = JSON.stringify(data);
+    this.props.updateOrderDeliveryApi(newData);
     e.preventDefault();
+    // axios
+    //   .post(`${LOCAL_API_URL}updateOrderDelivery`, JSON.stringify(data))
+    //   .then((res) => {
+    //     let response = res.data;
+    //     if (response.code === 200) {
+    //       alert(response.message);
+    //       this.setState({ selectedTimeSlot: null });
+    //       this.props.onHide(false);
+    //       this.props.changedeliveryslotid(this.state.order_id, deliverytime);
+    //     } else {
+    //       alert(response.message);
+    //     }
+    //   })
+    //   .catch((error) => console.log(error));
   };
 
-  handleDateChange = date => {
+  handleDateChange = (date) => {
     console.log(date);
     this.setState({
       currentDate: date,
     });
   };
-  handleRadioChange = e => {
+  handleRadioChange = (e) => {
     this.setState({
       selectedTimeSlot: parseInt(e.target.value),
     });
@@ -111,7 +112,7 @@ class ChangeDeliveryTime extends Component {
         <Form
           noValidate
           validated={this.state.validated}
-          onSubmit={e => this.handleSubmit(e)}
+          onSubmit={(e) => this.handleSubmit(e)}
         >
           <Modal.Header closeButton>
             <Modal.Title id="contained-modal-title-vcenter">
@@ -166,5 +167,16 @@ class ChangeDeliveryTime extends Component {
     );
   }
 }
-
-export default ChangeDeliveryTime;
+const mapStateToProps = (state) => {
+  return {
+    updateOrderDeliveryResponse: state.live.updateOrderDeliveryResponse,
+  };
+};
+const mapDispatchToProps = (dispatch) => {
+  return {
+    // getTripsApi: (date, store_id) => dispatch(get_trips_list(date, store_id)),
+    updateOrderDeliveryApi: (data) =>
+      dispatch(update_order_delivery_time(data)),
+  };
+};
+export default connect(mapStateToProps, mapDispatchToProps)(ChangeDeliveryTime);
