@@ -73,7 +73,7 @@ class ChangeDeliveryTime extends Component {
       date: moment(this.state.currentDate).format("YYYY-MM-DD"),
     };
     let newData = JSON.stringify(data);
-    this.props.updateOrderDeliveryApi(newData);
+    this.props.updateOrderDeliveryApi(newData, this.props.selectedstore);
     e.preventDefault();
     // axios
     //   .post(`${LOCAL_API_URL}updateOrderDelivery`, JSON.stringify(data))
@@ -175,8 +175,8 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
   return {
     // getTripsApi: (date, store_id) => dispatch(get_trips_list(date, store_id)),
-    updateOrderDeliveryApi: (data) =>
-      dispatch(update_order_delivery_time(data)),
+    updateOrderDeliveryApi: (data, store_id) =>
+      dispatch(update_order_delivery_time(data, store_id)),
   };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(ChangeDeliveryTime);

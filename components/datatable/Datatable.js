@@ -190,8 +190,10 @@ class BootstrapDataTable extends Component {
                       return (
                         <div key={key}>
                           {product.product_name[langauge]} <br />
-                          {`${product.material} x ${product.quantity} ${
-                            parseInt(product.foc) !== 0
+                          {`${product.material ? product.material : ""} x ${
+                            product.quantity
+                          } ${
+                            product.foc && parseInt(product.foc) !== 0
                               ? ` + ${product.foc}`
                               : ""
                           }`}
@@ -437,25 +439,25 @@ class BootstrapDataTable extends Component {
             <img src={smDeliveryTimeAnyTime}></img>
           </OverlayTrigger>
         )}{" "}
-        {this.props.actionStatus &&
+        {/* {this.props.actionStatus &&
           this.props.isEditable &&
-          this.state.hideCancelOrder &&
-          parseInt(row.order_status_id) === ORDER_STATUS_READY_FOR_PICKUP && (
-            <OverlayTrigger
-              placement={"top"}
-              overlay={
-                <Tooltip id={`cadelivery`} style={{ fontSize: "10px" }}>
-                  <Trans i18nKey={"Cancel Delivery"} />
-                </Tooltip>
-              }
-            >
-              <i
-                style={{ fontSize: "18px", fontWeight: "bold" }}
-                onClick={(e) => this.onOrderCancelClick(row)}
-                className={`fa fa-trash fa-1x text-danger`}
-              ></i>
-            </OverlayTrigger>
-          )}
+          this.state.hideCancelOrder && */}
+        {/* parseInt(row.order_status_id) === ORDER_STATUS_READY_FOR_PICKUP && ( */}
+        <OverlayTrigger
+          placement={"top"}
+          overlay={
+            <Tooltip id={`cadelivery`} style={{ fontSize: "10px" }}>
+              <Trans i18nKey={"Cancel Delivery"} />
+            </Tooltip>
+          }
+        >
+          <i
+            style={{ fontSize: "18px", fontWeight: "bold" }}
+            onClick={(e) => this.onOrderCancelClick(row)}
+            className={`fa fa-trash fa-1x text-danger`}
+          ></i>
+        </OverlayTrigger>
+        {/* )} */}
       </span>
     );
   };
@@ -483,7 +485,7 @@ class BootstrapDataTable extends Component {
       let products = [];
 
       if (this.props.dataFor === "orders") {
-        products = _.map(this.props.data, "order");
+        products = this.props.data;
       }
       if (this.props.dataFor === "deliverytrips") {
         products = this.props.data;

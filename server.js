@@ -3,12 +3,14 @@ const next = require("next");
 const port = parseInt(process.env.PORT, 10) || 3000;
 const dev = process.env.NODE_ENV !== "production";
 const app = next({ dev });
+const cookieParser = require("cookie-parser");
 const handle = app.getRequestHandler();
 var cors = require("cors");
 const server = express();
 app.prepare().then(() => {
   // var cors = require("cors");
   // server.use(cors());
+  server.use(cookieParser());
   server.get("/service-worker.js", (req, res) => {
     app.serveStatic(req, res, "./.next/service-worker.js");
   });
@@ -38,7 +40,7 @@ app.prepare().then(() => {
 
 server.use(function (req, res, next) {
   // Allow Origins
-  res.header("Access-Control-Allow-Origin", "*");
+  // res.header("Access-Control-Allow-Origin", "*");
   // Allow Methods
   res.header(
     "Access-Control-Allow-Methods",

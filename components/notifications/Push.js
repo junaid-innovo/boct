@@ -1,5 +1,10 @@
 import firebase from "firebase";
 export const initializeFirebase = () => {
+  if (!firebase.apps.length) {
+    initilizeFirebase();
+  }
+};
+const initilizeFirebase = () => {
   firebase.initializeApp({
     apiKey: "AIzaSyD9NZEfb6xgMWUFJ7UweRiJeMsgbaAV6wk",
     authDomain: "alaseeldatescom.firebaseapp.com",

@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { Component, PureComponent } from "react";
 import {
   Form,
   Nav,
@@ -13,13 +13,23 @@ import {
 import Link from "next/link";
 // import DateTimeRangePicker from "@wojtekmaj/react-datetimerange-picker";
 import Map from "../googlemap/Map";
-
+import {
+  get_routes_and_capacity,
+  get_available_vehciles,
+  create_trip,
+  create_static_trip,
+} from "../../store/actions/routesplan/actionCreator";
 import { OrderTableColumns } from "../Constants/TableColumns/OrderColumns";
 import { DeliveryTripColumns } from "../Constants/TableColumns/DeliveryTripColumns";
 import BoostrapDataTable from "../datatable/Datatable";
 import DeliveryTripDataTable from "../datatable/DeliveryTripDataTable";
-import axios from "axios";
+import axios from "../API/Axios";
+import SearchDropDown from "../UI/DropDown/RoutePlanDropDown";
+import DatePicker from "react-datepicker";
+import moment from "moment";
+import CustomDatePickerInput from "../UI/Input/CustomDatePickerInput";
 import { LOCAL_API_URL } from "../Constants/Enviroment/Enviroment";
+import SampleData from "../../components/SampleData/RoutesPlanData.json";
 import paginationFactory from "react-bootstrap-table2-paginator";
 import {
   col6,
@@ -32,6 +42,7 @@ import {
   col_md_auto,
   col_lg_auto,
   col_sm_auto,
+  col4,
 } from "../Constants/Classes/BoostrapClassses";
 import RouteSummary from "../RoutesPlan/RouteSummary";
 import DateRangePicker from "@wojtekmaj/react-daterange-picker";
@@ -41,33 +52,45 @@ import { LoadPropagateLoader } from "../Loaders/Loaders";
 import style from "./RoutesPlan.module.css";
 import { Trans } from "../../i18n";
 import _ from "lodash";
-import { ALL_ORDERS, UNASSIGNED_ORDERS } from "../Constants/Order/Constants";
-class RoutesPlan extends Component {
+import {
+  ALL_ORDERS,
+  UNASSIGNED_ORDERS,
+  ORDER_STATUS_CONFIRMED,
+  ORDER_STATUS_READY_FOR_PICKUP,
+} from "../Constants/Order/Constants";
+import { connect } from "react-redux";
+class StaticRoutesPlan extends PureComponent {
   constructor(props) {
     super(props);
     this._isMounted = false;
     this.state = {
-      routes: null,
+      routes: [],
       vehicleRoutes: null,
       orders: [],
+      allOrders: [],
       plandate: "PLAN-04/15/2020 5:51:06PM",
       listview: true,
       mapview: false,
       constraints: null,
       selectedConstraints: null,
       selectedConstraintName: { type: "", names: [] },
+      selectedRoute: null,
+      selectedVehicle: null,
       advancemenu: false,
       date: [new Date(), new Date()],
-      DateTimeRange: [new Date(), new Date()],
       plannow: false,
       planlater: false,
       startDate: new Date(),
       endDate: new Date(),
-      rangedate: [new Date(), new Date()],
       summarystats: null,
       isActive: false,
       pageloading: true,
       routeOrders: null,
+      cityDefaultText: "--- Select City ---",
+      routeDefaultText: "--- Select Route ---",
+      areaDefaultText: "--- Select Area ---",
+      selectedCity: null,
+      selectedArea: null,
       mapfeatures: {
         showMarker: true,
         showRoutes: false,
@@ -78,7 +101,7 @@ class RoutesPlan extends Component {
         routesEnabled: false,
       },
       showOrders: true,
-      showByOrder: false,
+      showByOrder: true,
       showByRoute: false,
       showByArea: false,
       showDeliveryTrip: false,
@@ -94,122 +117,175 @@ class RoutesPlan extends Component {
       generatedTripCode: null,
       AllFilter: "All Orders",
       dataTableloading: false,
-      routes: [],
+      tripDate: new Date(),
+      vehicleList: [],
+      areaList: [],
+      cityList: [],
     };
   }
 
   onChange = (date) => this.setState({ date });
-  componentDidMount() {
-    this._isMounted = true;
+  onPageContetRefresh = () => {
     this.getRoutesandCapacity();
+  };
+  componentDidMount() {
+    let lang = this.props.i18n.language;
+    this._isMounted = true;
+    if (this.props.selectedBranch) {
+      this.props.getAvailableVehiclesApi(
+        this.props.selectedBranch,
+        moment(this.state.tripDate).format("YYYY-MM-DD")
+      );
+      this.getRoutesandCapacity();
+    }
+
+    // }
   }
+  onTripDateChange = (date) => {
+    this.setState({
+      tripDate: date,
+      // vehicleLoading: true,
+      pageloading: true,
+      selectedVehicle: null,
+    });
+  };
+
+  onVehicleChange = (e) => {
+    this.setState({
+      selectedVehicle: e.target.value,
+    });
+  };
+  componentDidUpdate(prevProps, prevState) {
+    if (this.props.selectedBranch !== prevProps.selectedBranch) {
+      if (this.props.selectedBranch) {
+        this.props.getAvailableVehiclesApi(
+          this.props.selectedBranch,
+          moment(this.state.tripDate).format("YYYY-MM-DD")
+        );
+      }
+      this.getRoutesandCapacity();
+    }
+    if (this.props.routesAndPlanData !== prevProps.routesAndPlanData) {
+      let lang = this.props.i18n.language;
+      let data = this.props.routesAndPlanData;
+      let orders = data.orders;
+      let routes = data.Routes;
+      let cityList = data.Locations;
+      let store_address = { ...this.state.defaultCenter };
+      let modifiedOrders = [];
+      let getAreaList = [];
+      orders.map((order, key) => {
+        if (parseInt(order.order_status_id) === ORDER_STATUS_CONFIRMED) {
+          modifiedOrders.push({ order: order });
+          getAreaList.push({
+            id: order.address.area_id,
+            name: order.address.area_name[lang],
+          });
+        }
+      });
+      this.setState({
+        routeOrders: {
+          deliveries: orders,
+          store_address: {
+            latitude: store_address.lat,
+            longitude: store_address.lng,
+          },
+        },
+        orders: modifiedOrders,
+        allOrders: orders,
+        cityList: _.uniqBy(cityList, "loaction_id"),
+        areaList: _.uniqBy(getAreaList, "id"),
+        routes: routes,
+        defaultMenuText: "All Orders",
+        defaultMenuText2: "Unassigned Orders",
+      });
+    }
+    if (this.state.vehicleList !== this.props.vehicleList) {
+      this.setState({
+        vehicleList: this.props.vehicleList,
+      });
+    }
+    if (this.props.tripCode) {
+      if (this.props.tripCode !== this.state.generatedTripCode) {
+        this.setState({
+          generatedTripCode: this.props.tripCode,
+        });
+      }
+    }
+    if (this.props.message !== prevProps.message) {
+      this.showMessage(this.props.message, "success");
+      this.setState({
+        createTrip: false,
+        selectedOrderId: [],
+        selectedVehicle: null,
+      });
+    }
+    if (this.state.tripDate !== prevState.tripDate) {
+    }
+    if (this.state.date !== prevState.date) {
+      console.log("DATE RANGE CHECK", this.state.DateTimeRange);
+    }
+  }
+
   componentWillUnmount() {
     this._isMounted = false;
   }
-  getRoutesandCapacity = () => {
-    axios
-      .get(`${LOCAL_API_URL}2020-02-01/2020-03-01/routingAndCapacity`)
-      .then((res) => {
-        let response = res.data;
-        if (response.code === 200) {
-          if (this._isMounted) {
-            this.showMessage(
-              "Route Data Retrieved Successfully",
-              "success",
-              1500
-            );
-            let data = response.data;
-            let orders = data.orders;
-            let constraints = data.constraints;
-            let summarystats = data.counters;
-            let modifiedOrders = [];
-            orders.map((val, key) => {
-              modifiedOrders.push({ order: val });
-            });
-            console.log("Check Modified Orders", modifiedOrders);
-            this.setState({
-              routeOrders: { deliveries: modifiedOrders },
-              orders: modifiedOrders,
-              constraints: _.sortBy(constraints, "constraint_id"),
-              summarystats: summarystats,
-            });
-          }
-        }
-      })
-      .catch((error) => {
-        this.showMessage(error.toString(), "error", false);
-      });
+  onCreateTripClick = () => {
+    this.setState({
+      createTrip: true,
+    });
   };
-  renderDataTable = () => {
-    if (this.state.orders.length > 0) {
-      let products = [...this.state.orders];
-      const options = {
-        // pageStartIndex: 0,
-        sizePerPage: 11,
-        hideSizePerPage: true,
-        hidePageListOnlyOnePage: true,
-      };
-      const selectRow = {
-        mode: "checkbox",
-        clickToSelect: true,
-      };
-      const defaultSorted = [
-        {
-          dataField: "name",
-          order: "desc",
-        },
-      ];
-      const columns = [
-        {
-          dataField: "order_id",
-          text: "Order Id",
-          sort: true,
-          headerStyle: {
-            fontSize: "10px",
-          },
-          style: {
-            fontSize: "10px",
-          },
-        },
-        {
-          dataField: "order_number",
-          text: "Order No.",
-          sort: true,
-          style: {
-            fontSize: "10px",
-          },
-          headerStyle: {
-            fontSize: "10px",
-          },
-        },
-        {
-          dataField: "address_title",
-          text: "Address",
-          sort: true,
-          style: {
-            fontSize: "10px",
-          },
-          headerStyle: {
-            fontSize: "10px",
-          },
-        },
-      ];
+  getRoutesandCapacity = () => {
+    let getDateRange = [...this.state.date];
+    let selectedRoute = this.state.selectedRoute;
+    let startDate = moment(getDateRange[0]).format("YYYY-MM-DD");
+    let endDate = moment(getDateRange[1]).format("YYYY-MM-DD");
+    this.props.getrouteandplanApi(
+      startDate,
+      endDate,
+      this.props.selectedBranch
+    );
 
-      return (
-        <BootstrapTable
-          bootstrap4
-          keyField="order_number"
-          data={products}
-          columns={columns}
-          defaultSorted={defaultSorted}
-          pagination={paginationFactory(options)}
-          selectRow={selectRow}
-          fontSize={15}
-          bordered={false}
-          tdStyle={{ fontSize: "10px" }}
-        />
-      );
-    }
+    // axios
+    //   .get(
+    //     `api/tower/v1/routing/2020-04-03/2020-04-03/${this.props.selectedBranch}`,
+    //     {
+    //       headers: {
+    //         Authorization: `bearer ${localStorage.getItem("authtoken")}`,
+    //       },
+    //     }
+    //   )
+    //   .then((res) => {
+    //     let response = res.data;
+    //     if (response.code === 200) {
+    //       if (this._isMounted) {
+    //         this.showMessage(
+    //           "Route Data Retrieved Successfully",
+    //           "success",
+    //           1500
+    //         );
+    //         let data = response.data;
+    //         let orders = data.orders;
+    //         let constraints = data.constraints;
+    //         let summarystats = data.counters;
+    //         let modifiedOrders = [];
+    //         console.log("CHECK ORDERS", orders);
+    //         orders.map((val, key) => {
+    //           modifiedOrders.push({ order: val });
+    //         });
+    //         console.log("Check Modified Orders", modifiedOrders);
+    //         this.setState({
+    //           routeOrders: { deliveries: orders },
+    //           orders: modifiedOrders,
+    //           constraints: _.sortBy(constraints, "constraint_id"),
+    //           summarystats: summarystats,
+    //         });
+    //       }
+    //     }
+    //   })
+    //   .catch((error) => {
+    //     this.showMessage(error.toString(), "error", false);
+    //   });
   };
 
   renderConstraints = () => {
@@ -308,10 +384,40 @@ class RoutesPlan extends Component {
   };
   onDateRangeChange = (date) => {
     this.setState({
-      rangedate: date,
+      date: date,
     });
   };
+  getMapSelectedOrderId = (order_id, orders_in_detail) => {
+    let order_detail = orders_in_detail;
+    if (order_id.length === 0) {
+      this.setState({
+        selectedVehicle: null,
+        tripDate: new Date(),
+        createTrip: false,
+        planCode: "PLAN-",
+        generatedTripCode: null,
+      });
+    }
+    this.setState({
+      selectedOrderId: order_id,
+      selectedOrdersDetail: _.uniqBy(order_detail, "id"),
+      generatedTripCode: null,
+    });
+  };
+  assignPlanRoute2 = () => {
+    let getDateRange = [...this.state.date];
+    let startDate = moment(getDateRange[0]).format("YYYY-MM-DD");
+    let endDate = moment(getDateRange[1]).format("YYYY-MM-DD");
+    let data = {
+      route_ids: [this.selectedRoute],
+      order_ids: [this.state.selectedOrderId],
+      area_ids: [this.state.selectedArea],
+      date_from: startDate,
+      date_to: endDate,
+    };
 
+    this.props.createTripApi(this.props.selectedBranch, JSON.stringify(data));
+  };
   //new
   setDataTableSelectedId = (order_ids, orders_in_detail) => {
     if (order_ids.length === 0) {
@@ -335,36 +441,274 @@ class RoutesPlan extends Component {
       autoClose: autoClose,
       className: style.toastContainer,
     });
+
   handleRecurringOptions = () => {};
+  //new
+  onSearchClick = () => {
+    let getDateRange = [...this.state.date];
+    let selectedRoute = this.state.selectedRoute;
+    let startDate = getDateRange[0].getTime();
+    let endDate = getDateRange[1].getTime();
+    if (this.state.showByOrder) {
+      let orders = this.state.allOrders ? [...this.state.allOrders] : [];
+      let getFiltredOrders = _.filter(orders, (order) => {
+        let order_date = new Date(order.created_at).getTime();
+        if (
+          order_date >= startDate &&
+          order_date <= endDate &&
+          this.state.selectedRoute &&
+          order.routes.map((route) => route.includes(selectedRoute))
+        ) {
+          return order;
+        }
+      });
+      if (getFiltredOrders.length > 0) {
+        this.setState({
+          routeOrders: { deliveries: getFiltredOrders },
+        });
+      } else {
+        this.setState({
+          routeOrders: null,
+        });
+      }
+    } else if (this.state.showByRoute) {
+      let selectedArea = this.state.selectedArea;
+      let orders = this.state.allOrders ? [...this.state.allOrders] : [];
+      let getFiltredOrders = _.filter(orders, (order) => {
+        let order_date = new Date(order.created_at).getTime();
+
+        return (
+          parseInt(order.address.area_id) === parseInt(selectedArea) &&
+          order_date >= startDate &&
+          order_date <= endDate
+        );
+      });
+      if (getFiltredOrders.length > 0) {
+        this.setState({
+          routeOrders: { deliveries: getFiltredOrders },
+        });
+      } else {
+        this.setState({
+          routeOrders: null,
+        });
+      }
+    } else {
+      let selectedCity = this.state.selectedCity;
+      let orders = this.state.allOrders ? [...this.state.allOrders] : [];
+      let getFiltredOrders = _.filter(orders, (order) => {
+        let order_date = new Date(order.created_at).getTime();
+
+        return (
+          parseInt(order.address.area_id) === parseInt(selectedCity) &&
+          order_date >= startDate &&
+          order_date <= endDate
+        );
+      });
+      if (getFiltredOrders.length > 0) {
+        this.setState({
+          routeOrders: { deliveries: getFiltredOrders },
+        });
+      } else {
+        this.setState({
+          routeOrders: null,
+        });
+      }
+    }
+  };
+  removeDeletedRoute = (route_id) => {
+    let allroutes = [...this.state.routes];
+    _.remove(allroutes, { route_id: route_id });
+    this.setState({
+      routes: allroutes,
+    });
+  };
+  mapLoadError = () => {};
+  removeGeofenceOrders = () => {
+    this.getRoutesandCapacity();
+  };
+  onRouteChange = (text, evt) => {
+    let selectedRoute = evt.target.value;
+    this.setState({
+      routeDefaultText: text,
+      selectedRoute: selectedRoute,
+    });
+
+    // let status = null;
+    // if (this.state.isActive === 1) {
+    //   status = ORDER_STATUS_READY_FOR_PICKUP;
+    // } else if (this.state.isActive === 2) {
+    //   status = DELIVERY_TRIPS;
+    // } else {
+    //   status = ORDER_STATUS_CONFIRMED;
+    // }
+    // let route_id = e;
+    // let selectedRoute = parseInt(route_id);
+    // // if (selectedRoute === UNASSIGNED_ORDERS) {
+    // let getRouteOrders = [];
+    // let getRouteDeliveryTrip = [];
+    // if (status === ORDER_STATUS_READY_FOR_PICKUP) {
+    //   if (this.state.orders.length > 0) {
+    //     if (selectedRoute === UNASSIGNED_ORDERS) {
+    //       getRouteOrders = _.filter(this.state.orders, (col, i) => {
+    //         let order = col.order;
+    //         return order.routes.length === 0;
+    //       });
+    //     } else if (selectedRoute === ALL_ORDERS) {
+    //       getRouteOrders = [...this.state.orders];
+    //     } else {
+    //       getRouteOrders = _.filter(this.state.orders, (col, i) => {
+    //         let order = col.order;
+    //         return order.routes.includes(selectedRoute);
+    //       });
+    //     }
+    //   }
+    // } else if (status === ORDER_STATUS_CONFIRMED) {
+    //   if (selectedRoute === UNASSIGNED_ORDERS) {
+    //     getRouteOrders = _.filter(this.state.ordersInProduction, (col, i) => {
+    //       let order = col.order;
+    //       return order.routes.length === 0;
+    //     });
+    //   } else if (selectedRoute === ALL_ORDERS) {
+    //     getRouteOrders = [...this.state.ordersInProduction];
+    //   } else {
+    //     getRouteOrders = _.filter(this.state.ordersInProduction, (col, i) => {
+    //       let order = col.order;
+    //       return order.routes.includes(selectedRoute);
+    //     });
+    //   }
+    // } else {
+    //   if (this.state.deliveryTrips.length > 0) {
+    //     if (selectedRoute === UNASSIGNED_ORDERS) {
+    //       getRouteDeliveryTrip = _.filter(
+    //         this.state.deliveryTrips,
+    //         (trip, i) => {
+    //           let id = trip.route_id;
+    //           return id.length === 0;
+    //         }
+    //       );
+    //     } else if (selectedRoute === ALL_ORDERS) {
+    //       getRouteDeliveryTrip = [...this.state.deliveryTrips];
+    //     } else {
+    //       getRouteDeliveryTrip = _.filter(this.state.orders, (trip, i) => {
+    //         let id = trip.route_id;
+    //         return id === selectedRoute;
+    //       });
+    //     }
+    //   }
+    // }
+    // let getRouteOrdersInProduction;
+    // if (this.state.ordersInProduction.length > 0) {
+    //   getRouteOrdersInProduction = _.filter(
+    //     this.state.ordersInProduction,
+    //     (col, i) => {
+    //       let order = col.order;
+    //       return order.routes.includes(selectedRoute);
+    //     }
+    //   );
+    // }
+    // let finalpath = [];
+    // let getGeoLocation = [];
+    // if (this.state.routes.length > 0) {
+    //   getGeoLocation = _.filter(
+    //     this.state.routes,
+    //     (route, i) => route.route_id === selectedRoute
+    //   );
+    //   getGeoLocation = _.map(getGeoLocation, "geofence_locations");
+    //   if (getGeoLocation[0]) {
+    //     getGeoLocation[0].map((point) => {
+    //       finalpath.push({
+    //         lat: parseFloat(point.lat),
+    //         lng: parseFloat(point.lng),
+    //       });
+    //     });
+    //   }
+    // }
+    // let store_address = { ...this.state.defaultCenter };
+    // let order = {
+    //   deliveries: [],
+    //   store_address: { latitude: null, longitude: null },
+    // };
+    // if (typeof getRouteOrders !== "undefined" && getRouteOrders.length > 0) {
+    //   let order = {
+    //     deliveries: [],
+    //     store_address: { latitude: null, longitude: null },
+    //   };
+    //   order.store_address.latitude = store_address.lat;
+    //   order.store_address.longitude = store_address.lng;
+    //   order.deliveries = [...getRouteOrders];
+    // }
+    // this.setState({
+    //   routeOrders: {
+    //     deliveries: getRouteOrders,
+    //     store_address: {
+    //       latitude: store_address.lat,
+    //       longitude: store_address.lng,
+    //     },
+    //   },
+    //   // routeOrders: order,
+    //   routeTrips: getRouteDeliveryTrip,
+    //   selectedRoute: selectedRoute,
+    //   routesOrdersInProduction: getRouteOrders,
+    //   selectedOrderId: [],
+    //   createTrip: false,
+    //   selectedVehicle: null,
+    //   // selectedRoute: selectedRoute,
+    //   // polygonPaths: finalpath,
+    //   routeIsActive: route_id,
+    // });
+  };
+  onCityChange = (text, evt) => {
+    let selectedCity = evt.target.value;
+    let getAreaList = [...this.state.areaList];
+    let filteredArea = _.filter(getAreaList, ({ id }) => {
+      return id === parseInt(selectedCity);
+    });
+    this.setState({
+      areaList: filteredArea,
+      cityDefaultText: text,
+      selectedCity: selectedCity,
+    });
+  };
+  onAreaChange = (text, evt) => {
+    let selectedArea = evt.target.value;
+    let getRouteList = [...this.state.routes];
+    let filteredRoute = _.filter(getRouteList, ({ area_id }) => {
+      return area_id === parseInt(selectedArea);
+    });
+
+    this.setState({
+      routes: filteredRoute,
+      areaDefaultText: text,
+      selectedArea: selectedArea,
+    });
+  };
   render() {
+    let t = this.props.t;
+    let lang = this.props.i18n.language;
     let mapComponent = (
       <Map
-        language={this.props.language}
+        language={this.props.i18n.language}
         routelist={
-          // this.state.routeOrders && this.state.routeOrders.deliveries
-          //   ? this.state.routeOrders:
-          []
+          this.state.routeOrders && this.state.routeOrders.deliveries
+            ? this.state.routeOrders
+            : []
         }
         t={this.props.t}
         getMapError={this.mapLoadError}
-        selectedBranchId={this.state.selectedBranchId}
+        selectedBranchId={this.props.selectedBranch}
         selectedRouteId={this.state.selectedRoute}
         getDeltedRouteId={this.removeDeletedRoute}
         mapfeatures={this.state.mapfeatures}
-        defaultCenter={this.state.defaultCenter}
+        defaultCenter={this.props.defaultCenter}
         orderType={this.state.mapfeatures.orderType}
         getDeletedOrders={this.removeGeofenceOrders}
-        polygonPaths={
-          this.state.polygonPaths &&
-          this.state.polygonPaths.length > 0 &&
-          this.state.polygonPaths
-        }
+        polygonPaths={null}
         googleMapURL={this.state.mapUrl}
         loadingElement={
           <div
             style={{
               height: `${
-                this.state.selectedOrderId.length > 0 ? "71.5vh" : "72vh"
+                this.state.selectedOrderId.length > 0 ? "70vh" : "71.5vh"
               }`,
             }}
           />
@@ -373,7 +717,7 @@ class RoutesPlan extends Component {
           <div
             style={{
               height: `${
-                this.state.selectedOrderId.length > 0 ? "71.5vh" : "72vh"
+                this.state.selectedOrderId.length > 0 ? "70vh" : "71.5vh"
               }`,
             }}
           />
@@ -388,13 +732,14 @@ class RoutesPlan extends Component {
           <div
             style={{
               height: `${
-                this.state.selectedOrderId.length > 0 ? "71.5vh" : "72vh"
+                this.state.selectedOrderId.length > 0 ? "70vh" : "71.5vh"
               }`,
             }}
           />
         }
       />
     );
+
     return (
       <div className={`row ${style.routeplanDiv}`}>
         <ToastContainer
@@ -418,23 +763,8 @@ class RoutesPlan extends Component {
                 <div className={col3}>
                   <ButtonGroup aria-label="Basic example">
                     <Button
-                      variant=""
                       className={`${style.buttonShadow} ${
-                        this.state.showByRoute ? "bg-brown" : "bg-light-brown"
-                      } `}
-                      onClick={() =>
-                        this.setState({
-                          showByRoute: true,
-                          showByArea: false,
-                          showByOrder: false,
-                        })
-                      }
-                    >
-                      Route Wise
-                    </Button>
-                    <Button
-                      className={`${style.buttonShadow} ${
-                        this.state.showByOrder ? "bg-brown" : "bg-light-brown"
+                        this.state.showByOrder ? "bg-purple" : "bg-light-purple"
                       } `}
                       variant=""
                       onClick={() =>
@@ -449,7 +779,7 @@ class RoutesPlan extends Component {
                     </Button>{" "}
                     <Button
                       className={`${style.buttonShadow} ${
-                        this.state.showByArea ? "bg-brown" : "bg-light-brown"
+                        this.state.showByArea ? "bg-purple" : "bg-light-purple"
                       } `}
                       variant=""
                       onClick={() =>
@@ -462,11 +792,70 @@ class RoutesPlan extends Component {
                     >
                       Area Wise
                     </Button>
+                    <Button
+                      variant=""
+                      className={`${style.buttonShadow} ${
+                        this.state.showByRoute ? "bg-purple" : "bg-light-purple"
+                      } `}
+                      onClick={() =>
+                        this.setState({
+                          showByRoute: true,
+                          showByArea: false,
+                          showByOrder: false,
+                        })
+                      }
+                    >
+                      Route Wise
+                    </Button>
                   </ButtonGroup>
                 </div>
+
+                {this.state.showByRoute ||
+                this.state.showByOrder ||
+                this.state.showByArea ? (
+                  <React.Fragment>
+                    <div className={col2}>
+                      <SearchDropDown
+                        language={lang}
+                        dropInfo={{
+                          text: t(this.state.cityDefaultText),
+
+                          id: "searchcity",
+                          event: this.onCityChange,
+                          data: this.state.cityList,
+                        }}
+                      />
+                    </div>
+                    {!this.state.showByArea && (
+                      <div className={`${col2}`}>
+                        <SearchDropDown
+                          language={lang}
+                          dropInfo={{
+                            text: t(this.state.areaDefaultText),
+
+                            id: "searcharea",
+                            event: this.onAreaChange,
+                            data: this.state.areaList,
+                          }}
+                        />
+                      </div>
+                    )}
+                  </React.Fragment>
+                ) : null}
                 {this.state.showByOrder && (
                   <div className={col2}>
-                    <Form.Control
+                    <SearchDropDown
+                      language={lang}
+                      dropInfo={{
+                        text: t(this.state.routeDefaultText),
+                        text1: t(this.state.defaultMenuText),
+                        text2: t(this.state.defaultMenuText2),
+                        id: "searchroute",
+                        event: this.onRouteChange,
+                        data: this.state.routes,
+                      }}
+                    />
+                    {/* <Form.Control
                       as="select"
                       className="rounded-0"
                       onChange={this.onRouteChange}
@@ -485,79 +874,17 @@ class RoutesPlan extends Component {
                       </option>
                       {this.state.routes.map((route) => (
                         <option key={route.route_id} value={route.route_id}>
-                          {route.route_name}
+                          {route.route_name[lang]}
                         </option>
                       ))}
-                    </Form.Control>
+                    </Form.Control> */}
                   </div>
-                )}{" "}
-                {this.state.showByRoute ||
-                this.state.showByOrder ||
-                this.state.showByArea ? (
-                  <React.Fragment>
-                    <div className={col2}>
-                      <Form.Control
-                        as="select"
-                        className="rounded-0"
-                        onChange={this.onRouteChange}
-                        defaultValue={
-                          this.state.selectedRoute
-                            ? this.state.selectedRoute
-                            : ""
-                        }
-                      >
-                        <option data-content="<i class='fa fa-cutlery'></i> Cutlery">
-                          --- {this.props.t("Select City")} ---
-                        </option>
-                        <option value={ALL_ORDERS}>
-                          {this.props.t(this.state.defaultMenuText)}
-                        </option>
-                        <option value={UNASSIGNED_ORDERS}>
-                          {this.props.t(this.state.defaultMenuText2)}
-                        </option>
-                        {this.state.routes.map((route) => (
-                          <option key={route.route_id} value={route.route_id}>
-                            {route.route_name}
-                          </option>
-                        ))}
-                      </Form.Control>
-                    </div>
-                    {!this.state.showByArea && (
-                      <div className={`${col2}`}>
-                        <Form.Control
-                          as="select"
-                          className="rounded-0"
-                          onChange={this.onRouteChange}
-                          defaultValue={
-                            this.state.selectedRoute
-                              ? this.state.selectedRoute
-                              : ""
-                          }
-                        >
-                          <option data-content="<i class='fa fa-cutlery'></i> Cutlery">
-                            --- {this.props.t("Select  Area")} ---
-                          </option>
-                          <option value={ALL_ORDERS}>
-                            {this.props.t(this.state.defaultMenuText)}
-                          </option>
-                          <option value={UNASSIGNED_ORDERS}>
-                            {this.props.t(this.state.defaultMenuText2)}
-                          </option>
-                          {this.state.routes.map((route) => (
-                            <option key={route.route_id} value={route.route_id}>
-                              {route.route_name}
-                            </option>
-                          ))}
-                        </Form.Control>
-                      </div>
-                    )}
-                  </React.Fragment>
-                ) : null}
+                )}
                 <div className={col2}>
                   <InputGroup>
                     <DateRangePicker
                       className={style.inputShadow}
-                      onChange={this.onChange}
+                      onChange={this.onDateRangeChange}
                       value={this.state.date}
                       format="MM/dd/y"
                     />
@@ -565,6 +892,7 @@ class RoutesPlan extends Component {
                 </div>
                 <div className={col1}>
                   <Button
+                    onClick={this.onSearchClick}
                     className={`btn btn-primary btn-xs ${style.buttonShadow}`}
                   >
                     <i
@@ -628,20 +956,24 @@ class RoutesPlan extends Component {
                     <React.Fragment>
                       <div className={col4}>
                         <div className="row no-gutters">
-                          <div className={`${col4} ${style.inputShadow} pt-1 pb-1`}>
+                          <div className={`${col4} ${style.inputShadow} pt-2`}>
                             <Trans i18nKey={"Select Date"} />:
                           </div>
                           <div
                             className={`col-md-8 col-sm-8  ${style.inputShadow} col-xs-8 col-lg-8 pt-1 pb-1`}
                           >
                             <DatePicker
-                              showTimeSelect={false}
-                              title="Select Date"
-                              currentDate={this.state.tripDate}
-                              dateFormat={this.state.dateFormat}
-                              minDate={new Date()}
+                              selected={this.state.tripDate}
+                              // onChange={(date) => setStartDate(date)}
+                              // customInput={<ExampleCustomInput />}
+                              // showTimeSelect={false}
+                              // title="Select Date"
+                              // currentDate={this.state.tripDate}
+                              // dateFormat={this.state.dateFormat}
+                              // minDate={new Date()}
                               onChange={this.onTripDateChange}
-                              className={`rounded-0 ${style.datePickerinputShadow}  textingred form-control`}
+                              customInput={<CustomDatePickerInput />}
+                              className={`rounded-0 ${style.datePickerinputShadow}  textingred `}
                             ></DatePicker>
                           </div>
                         </div>
@@ -652,7 +984,7 @@ class RoutesPlan extends Component {
                     <div className={col4}>
                       <div className="row no-gutters">
                         <div
-                          className={`RoutesPlan_inputShadow__5Ht1u pt-4 ${col4}`}
+                          className={`RoutesPlan_inputShadow__5Ht1u pt-2 ${col4}`}
                           style={{
                             fontSize: "10px",
                           }}
@@ -662,7 +994,7 @@ class RoutesPlan extends Component {
                         <div
                           className={`${
                             this.state.vehicleLoading ? col7 : col7
-                          } pt-3 pb-3`}
+                          } pt-1 pb-1`}
                         >
                           <Form.Control
                             as="select"
@@ -686,7 +1018,7 @@ class RoutesPlan extends Component {
                                 >
                                   {`${vehicle.number_plate} - ${
                                     typeof vehicle.driver_name !== "undefined"
-                                      ? vehicle.driver_name
+                                      ? vehicle.driver_name[lang]
                                       : null
                                   }
                                 (${vehicle.vehicle_code})`}
@@ -698,7 +1030,7 @@ class RoutesPlan extends Component {
                     </div>
                   ) : null}
                   {this.state.selectedVehicle ? (
-                    <div className="col-md-2 col-sm-2 col-xs-2 col-lg-2 pt-1 pb-1">
+                    <div className="col-md-2 col-sm-2 col-xs-2 col-lg-2 pt-2 pb-1">
                       <Button
                         className={style.buttonStyle}
                         onClick={this.assignPlanRoute2}
@@ -854,4 +1186,26 @@ class RoutesPlan extends Component {
     );
   }
 }
-export default RoutesPlan;
+const mapStateToProps = (state) => {
+  return {
+    selectedBranch: state.navbar.selectedBranch,
+    // apiLoaded: state.routesplan.routesPlanLoaded,
+    vehicleList: state.routesplan.vehicleList,
+    defaultCenter: state.navbar.defaultCenter,
+    message: state.routesplan.message,
+    tripCode: state.routesplan.tripCode,
+    tripData: state.routesplan.staticTripData,
+    routesAndPlanData: state.routesplan.routesAndPlanData,
+  };
+};
+const mapDispatchToProps = (dispatch) => {
+  return {
+    getrouteandplanApi: (from_date, to_date, store_id) =>
+      dispatch(get_routes_and_capacity(from_date, to_date, store_id)),
+    getAvailableVehiclesApi: (branchId, date) =>
+      dispatch(get_available_vehciles(branchId, date)),
+    createTripApi: (branchId, data) =>
+      dispatch(create_static_trip(branchId, data)),
+  };
+};
+export default connect(mapStateToProps, mapDispatchToProps)(StaticRoutesPlan);

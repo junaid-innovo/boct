@@ -70,10 +70,10 @@ export const get_trips_list = (currentDate, id) => {
   };
 };
 
-export const get_trip_deliveries = (trip_id) => {
+export const get_trip_deliveries = (trip_id, store_id) => {
   return (dispatch) => {
     axios
-      .get(`api/tower/v1/${trip_id}/trip-deliveries-listing`, {
+      .get(`api/tower/v1/${trip_id}/trip-deliveries-listing/${store_id}`, {
         headers: {
           Authorization: `bearer ${localStorage.getItem("authtoken")}`,
         },
@@ -107,10 +107,10 @@ export const get_trip_deliveries = (trip_id) => {
   };
 };
 
-export const get_cancel_reasons = (order) => {
+export const get_cancel_reasons = (order, store_id) => {
   return (dispatch) => {
     axios
-      .get(`api/tower/v1/cancel-reasons`, {
+      .get(`api/tower/v1/cancel-reasons/${store_id}`, {
         headers: {
           Authorization: `bearer ${localStorage.getItem("authtoken")}`,
         },
@@ -145,10 +145,10 @@ export const get_cancel_reasons = (order) => {
       });
   };
 };
-export const get_delivery_slots = (order) => {
+export const get_delivery_slots = (order, store_id) => {
   return (dispatch) => {
     axios
-      .get(`api/tower/v1/delivery-slots`, {
+      .get(`api/tower/v1/delivery-slots/${store_id}`, {
         headers: {
           Authorization: `bearer ${localStorage.getItem("authtoken")}`,
         },
@@ -184,10 +184,10 @@ export const get_delivery_slots = (order) => {
   };
 };
 
-export const cancel_order = (data) => {
+export const cancel_order = (data, store_id) => {
   return (dispatch) => {
     axios
-      .post(`api/tower/v1/cancel-orders`, data, {
+      .post(`api/tower/v1/cancel-orders/${store_id}`, data, {
         headers: {
           Authorization: `bearer ${localStorage.getItem("authtoken")}`,
         },
@@ -196,7 +196,6 @@ export const cancel_order = (data) => {
         let response = res.data;
         if (response.code === 200) {
           let data = response.data;
-
           dispatch({
             type: CANCEL_ORDER,
             payload: {
@@ -220,10 +219,10 @@ export const cancel_order = (data) => {
   };
 };
 
-export const update_order_delivery_time = (data) => {
+export const update_order_delivery_time = (data, store_id) => {
   return (dispatch) => {
     axios
-      .post(`api/tower/v1/update-delivery-order`, data, {
+      .post(`api/tower/v1/update-delivery-order/${store_id}`, data, {
         headers: {
           Authorization: `bearer ${localStorage.getItem("authtoken")}`,
         },

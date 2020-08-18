@@ -1,5 +1,5 @@
 // import Live from "../components/Live/Live";
-import RoutesPlan from "../../components/RoutesPlan/RoutesPlan";
+import RoutesPlan from "../../components/RoutesPlan/CustomRouting";
 import Layout from "../../components/Layout/Layout";
 
 // import "./index.css";

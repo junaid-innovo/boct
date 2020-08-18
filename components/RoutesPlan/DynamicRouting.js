@@ -11,7 +11,11 @@ import {
 import Link from "next/link";
 // import DateTimeRangePicker from "@wojtekmaj/react-datetimerange-picker";
 import Map from "../googlemap/Map";
-
+import {
+  get_routes_and_capacity,
+  get_available_vehciles,
+  create_trip,
+} from "../../store/actions/routesplan/actionCreator";
 import { OrderTableColumns } from "../Constants/TableColumns/OrderColumns";
 import { DeliveryTripColumns } from "../Constants/TableColumns/DeliveryTripColumns";
 import BoostrapDataTable from "../datatable/Datatable";
@@ -26,8 +30,11 @@ import { ClipLoader } from "react-spinners";
 import { ToastContainer, toast, Zoom } from "react-toastify";
 import { LoadPropagateLoader } from "../Loaders/Loaders";
 import style from "./RoutesPlan.module.css";
+import SampleData from "../SampleData/RoutesPlanData.json";
+import moment from "moment";
 import _ from "lodash";
-class RoutesPlan extends Component {
+import { connect } from "react-redux";
+class DynamicRoutesPlan extends Component {
   constructor(props) {
     super(props);
     this._isMounted = false;
@@ -82,48 +89,61 @@ class RoutesPlan extends Component {
   onChange = (date) => this.setState({ date });
   componentDidMount() {
     this._isMounted = true;
-    this.getRoutesandCapacity();
+    // if (this.props.selectedBranch) {
+    let lang = this.props.i18n.language;
+    this._isMounted = true;
+    if (this.props.selectedBranch) {
+      this.props.getAvailableVehiclesApi(
+        this.props.selectedBranch,
+        moment(this.state.tripDate).format("YYYY-MM-DD")
+      );
+    }
+    let data = SampleData;
+    let orders = data.orders;
+    let constraints = data.constraints;
+    let summarystats = data.counters;
+    let modifiedOrders = [];
+    let getAreaList = [];
+    orders.map((val, key) => {
+      modifiedOrders.push({ order: val });
+      const { order } = val;
+      getAreaList.push(order.address.area_name[lang]);
+    });
+    this.setState({
+      routeOrders: { deliveries: orders },
+      orders: modifiedOrders,
+      constraints: _.sortBy(constraints, "constraint_id"),
+      summarystats: summarystats,
+      areaList: _.uniq(getAreaList),
+      routes: data.Routes,
+      defaultMenuText: "All Orders",
+      defaultMenuText2: "Unassigned Orders",
+    });
+    // this.getRoutesandCapacity();
+    // }
   }
-  // componentDidUpdate(prevProps, prevState) {
-  //   console.log('test update');
-  //   this.getRoutesandCapacity();
-  // }
+  componentDidUpdate(prevProps, prevState) {
+    if (this.props.selectedBranch !== prevProps.selectedBranch) {
+      this.getRoutesandCapacity();
+    }
+    if (this.props.apiLoaded) {
+      this.setState({
+        routeOrders: this.props.routeOrders,
+        orders: this.props.orders,
+        constraints: state.routesplan.constraints,
+        summarystats: state.routesplan.summaryStats,
+      });
+    }
+  }
   componentWillUnmount() {
     this._isMounted = false;
   }
   getRoutesandCapacity = () => {
-    axios
-      .get(`${LOCAL_API_URL}2020-02-01/2020-03-01/routingAndCapacity`)
-      .then((res) => {
-        let response = res.data;
-        if (response.code === 200) {
-          if (this._isMounted) {
-            this.showMessage(
-              "Route Data Retrieved Successfully",
-              "success",
-              1500
-            );
-            let data = response.data;
-            let orders = data.orders;
-            let constraints = data.constraints;
-            let summarystats = data.counters;
-            let modifiedOrders = [];
-            orders.map((val, key) => {
-              modifiedOrders.push({ order: val });
-            });
-            console.log("Check Modified Orders", modifiedOrders);
-            this.setState({
-              routeOrders: { deliveries: modifiedOrders },
-              orders: modifiedOrders,
-              constraints: _.sortBy(constraints, "constraint_id"),
-              summarystats: summarystats,
-            });
-          }
-        }
-      })
-      .catch((error) => {
-        this.showMessage(error.toString(), "error", false);
-      });
+    this.props.getrouteandplanApi(
+      "2020-04-03",
+      "2020-04-03",
+      this.props.selectedBranch
+    );
   };
   renderDataTable = () => {
     if (this.state.orders.length > 0) {
@@ -787,4 +807,25 @@ class RoutesPlan extends Component {
     );
   }
 }
-export default RoutesPlan;
+
+const mapStateToProps = (state) => {
+  return {
+    selectedBranch: state.live.selectedBranch,
+    routeOrders: state.routesplan.routeOrders,
+    orders: state.routesplan.orders,
+    constraints: state.routesplan.constraints,
+    summaryStats: state.routesplan.summaryStats,
+    apiLoaded: state.routesplan.routesPlanLoaded,
+    vehicleList: state.routesplan.vehicleList,
+  };
+};
+const mapDispatchToProps = (dispatch) => {
+  return {
+    getrouteandplanApi: (from_date, to_date, store_id) =>
+      dispatch(get_routes_and_capacity(from_date, to_date, store_id)),
+    getAvailableVehiclesApi: (branchId, date) =>
+      dispatch(get_available_vehciles(branchId, date)),
+    createTripApi: (branchId, data) => dispatch(create_trip(branchId, data)),
+  };
+};
+export default connect(mapStateToProps, mapDispatchToProps)(DynamicRoutesPlan);

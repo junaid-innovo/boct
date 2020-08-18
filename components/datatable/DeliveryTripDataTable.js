@@ -19,6 +19,8 @@ import _ from "lodash";
 import moment from "moment";
 import axios from "../API/Axios";
 import { Trans } from "react-i18next";
+import { connect } from "react-redux";
+import { get_trip_deliveries } from "../../store/actions/live/actionCreator";
 
 class DeliveryTripDataTable extends Component {
   constructor(props) {
@@ -42,6 +44,7 @@ class DeliveryTripDataTable extends Component {
       infoClick: false,
       selectedTripIsEditable: false,
       selectedTripInfo: null,
+      isEditable: false,
     };
   }
   static getDerivedStateFromProps(props, state) {
@@ -52,6 +55,47 @@ class DeliveryTripDataTable extends Component {
       };
     }
     return state;
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (this.props.deliveriesList !== prevProps.deliveriesList) {
+      let data = this.props.deliveriesList;
+      let is_editable = this.state.isEditable;
+      if (data.deliveries.length > 0) {
+        if (this.state.infoClick) {
+          this.setState({
+            showOrderInfoModal: true,
+            deliveryOrders: data.deliveries,
+            selectedTripIsEditable: is_editable,
+            // tripEditData: row,
+          });
+          this.props.getRouteOrders([]);
+        } else {
+          this.setState({
+            showOrderInfoModal: false,
+            deliveryOrders: data.deliveries,
+            // tripEditData: row,
+          });
+          this.props.getRouteOrders(data.deliveries);
+        }
+
+        this.props.isPageLoading(false);
+
+        // this.showMessage(
+        //    'Vehicle Route Mapping Successfully ',
+        //    'success'
+        // )
+      } else {
+        this.setState({
+          // vehicleRoutes: data,
+          routeloading: false,
+          deliveryOrders: data.deliveries,
+        });
+        this.props.isPageLoading(false);
+        this.props.getRouteOrders(data.deliveries);
+        this.showMessage(this.props.t("No Record Found"), "error");
+      }
+    }
   }
   onTripEditClick = (row) => {
     this.setState({
@@ -74,64 +118,69 @@ class DeliveryTripDataTable extends Component {
       showOrderInfoModal: false,
       showOrderEditModal: false,
       showOrderCancelModal: false,
+      isEditable: is_editable,
       // tripEditData: row,
     });
-    axios
-      .get(`storesupervisor/v1/${tripDate}/${delivery_trip_id}/deliveries`, {
-        headers: {
-          Authorization: `bearer ${localStorage.getItem("authtoken")}`,
-        },
-      })
-      .then((res) => {
-        let response = res.data;
-        if (response.code === 200) {
-          let data = response.data;
-          if (response.message) {
-            this.showMessage(response.message, "error");
-          }
-          if (data.deliveries.length > 0) {
-            if (this.state.infoClick) {
-              this.setState({
-                showOrderInfoModal: true,
-                deliveryOrders: data.deliveries,
-                selectedTripIsEditable: is_editable,
-                // tripEditData: row,
-              });
-              this.props.getRouteOrders([]);
-            } else {
-              this.setState({
-                showOrderInfoModal: false,
-                deliveryOrders: data.deliveries,
-                // tripEditData: row,
-              });
-              this.props.getRouteOrders(data.deliveries);
-            }
+    this.props.getTripDeliveriesApi(
+      delivery_trip_id,
+      this.props.selectedBranch
+    );
+    // axios
+    //   .get(`storesupervisor/v1/${tripDate}/${delivery_trip_id}/deliveries`, {
+    //     headers: {
+    //       Authorization: `bearer ${localStorage.getItem("authtoken")}`,
+    //     },
+    //   })
+    //   .then((res) => {
+    //     let response = res.data;
+    //     if (response.code === 200) {
+    //       let data = response.data;
+    //       if (response.message) {
+    //         this.showMessage(response.message, "error");
+    //       }
+    //       if (data.deliveries.length > 0) {
+    //         if (this.state.infoClick) {
+    //           this.setState({
+    //             showOrderInfoModal: true,
+    //             deliveryOrders: data.deliveries,
+    //             selectedTripIsEditable: is_editable,
+    //             // tripEditData: row,
+    //           });
+    //           this.props.getRouteOrders([]);
+    //         } else {
+    //           this.setState({
+    //             showOrderInfoModal: false,
+    //             deliveryOrders: data.deliveries,
+    //             // tripEditData: row,
+    //           });
+    //           this.props.getRouteOrders(data.deliveries);
+    //         }
 
-            this.props.isPageLoading(false);
+    //         this.props.isPageLoading(false);
 
-            // this.showMessage(
-            //    'Vehicle Route Mapping Successfully ',
-            //    'success'
-            // )
-          } else {
-            this.setState({
-              // vehicleRoutes: data,
-              routeloading: false,
-              deliveryOrders: data.deliveries,
-            });
-            this.props.isPageLoading(false);
-            this.props.getRouteOrders(data.deliveries);
-            this.showMessage(this.props.t("No Record Found"), "error");
-          }
-        }
-      })
-      .catch((error) => {
-        this.showMessage(error.toString(), "error", false);
-        this.setState({
-          routeloading: false,
-          disableall: {},
-        });
-      });
+    //         // this.showMessage(
+    //         //    'Vehicle Route Mapping Successfully ',
+    //         //    'success'
+    //         // )
+    //       } else {
+    //         this.setState({
+    //           // vehicleRoutes: data,
+    //           routeloading: false,
+    //           deliveryOrders: data.deliveries,
+    //         });
+    //         this.props.isPageLoading(false);
+    //         this.props.getRouteOrders(data.deliveries);
+    //         this.showMessage(this.props.t("No Record Found"), "error");
+    //       }
+    //     }
+    //   })
+    //   .catch((error) => {
+    //     this.showMessage(error.toString(), "error", false);
+    //     this.setState({
+    //       routeloading: false,
+    //       disableall: {},
+    //     });
+    //   });
   };
   showMessage = (message, type, autoClose = 2000) => {
     toast(message, {
@@ -145,6 +194,7 @@ class DeliveryTripDataTable extends Component {
   actionsFormatter = (cell, row, index) => {
     let t = this.props.t;
     // let status = row.trip_status
+    // console.log("CHECK ROW NOW", row);
     let is_editable = row.is_cancellable === "True" ? true : false;
     let is_cancleable = row.is_editable === "True" ? true : false;
     return (
@@ -321,6 +371,9 @@ class DeliveryTripDataTable extends Component {
         if (val.dataField === "trip_status") {
           updatedval.dataField = `trip_status[${lang}]`;
         }
+        if (val.dataField === "driver.name") {
+          updatedval.dataField = `driver.name[${lang}]`;
+        }
         let text = "";
         if (this.props.t) {
           text = this.props.t(val.text);
@@ -469,4 +522,19 @@ class DeliveryTripDataTable extends Component {
     );
   }
 }
-export default DeliveryTripDataTable;
+const mapStateToProps = (state) => {
+  return {
+    deliveriesList: state.live.deliveries,
+    selectedBranch: state.navbar.selectedBranch,
+  };
+};
+const mapDispatchToProps = (dispatch) => {
+  return {
+    getTripDeliveriesApi: (trip_id, store_id) =>
+      dispatch(get_trip_deliveries(trip_id, store_id)),
+  };
+};
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(DeliveryTripDataTable);

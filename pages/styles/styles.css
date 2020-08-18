@@ -39,7 +39,10 @@
     transform: rotate(360deg);
   }
 }
-
+.changemailBtn:hover {
+  border-bottom: 1px solid #433b33;
+  cursor: pointer;
+}
 .routePlanDiv .react-daterange-picker__button svg {
   height: 16px !important;
   width: 15px !important;
@@ -101,9 +104,20 @@ rect {
   /* max-width: 7.5rem !important; */
 }
 
-.bg-brown {
-  background-color: #433b33;
+.bg-light-purple {
+  background-color: #c3a2d1;
   color: white;
+}
+.bg-purple {
+  background-color: #2b2742;
+  color: white;
+}
+
+.border-purple {
+  border: 2px solid #2b2742;
+}
+.border-light-purple {
+  border: 2px solid #c3a2d1;
 }
 .bg-light-brown {
   background-color: #ccc2a7;
@@ -140,8 +154,8 @@ rect {
 }
 .btnBrown {
   color: white !important;
-  border-color: #433b33;
-  background-color: #433b33;
+  border-color: #2b2742;
+  background-color: #2b2742;
 }
 .btnBrown:hover {
   color: white !important;
@@ -165,10 +179,10 @@ rect {
   color: white;
 }
 .page-link {
-  color: #433b33;
+  color: #2b2742;
 }
 .page-link:hover {
-  color: #433b33;
+  color: #2b2742;
 }
 .page-link.a:focus {
   outline: none;
@@ -176,8 +190,8 @@ rect {
 .page-item.active .page-link {
   z-index: 1;
   color: #fff;
-  border-color: #433b33;
-  background-color: #433b33;
+  border-color: #2b2742;
+  background-color: #2b2742;
 }
 
 .infoModalBoostrapTable {
@@ -275,7 +289,7 @@ rect {
 
 #collasible-nav-dropdown {
   color: white;
-  background: #433b33;
+  background: #2b2742;
 }
 #collasible-nav-dropdown:hover {
   color: white;

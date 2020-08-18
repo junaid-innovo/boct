@@ -175,6 +175,13 @@
   font-weight: bold;
   box-shadow: none;
 }
+.routePlanNav .dropdownMenu {
+  font-size: 60%;
+  font-weight: bold;
+  box-shadow: none;
+  height: 300px !important;
+  overflow-x: auto !important;
+}
 .staticTopMenu select {
   font-size: 60%;
   font-weight: bold;
@@ -218,7 +225,7 @@
   content: "";
   width: 100%;
   background: grey;
-  height: 100%;
+  height: 89.5%;
   left: 0;
   z-index: 1;
 }

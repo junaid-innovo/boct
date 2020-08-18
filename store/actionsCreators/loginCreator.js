@@ -1,8 +1,14 @@
 import axios from "../../components/API/Axios";
 import jwt from "jsonwebtoken";
+import cookie from "js-cookie";
 import { HTTP_STATUS_OK } from "../../components/Constants/HTTP_STATUS/status";
-import { LOGIN, GET_USER_COMPANIES } from "../actions/actionTypes";
-import Cookies from "js-cookie";
+import {
+  LOGIN,
+  GET_USER_COMPANIES,
+  LOGOUT,
+  CHANGE_PASSWORD,
+} from "../actions/actionTypes";
+import Router from "next/router";
 export const get_login = (formData, language) => {
   let lang = language;
   return (dispatch) => {
@@ -15,49 +21,75 @@ export const get_login = (formData, language) => {
       })
       .then((res) => {
         let response = res.data;
-        if (res.status === 200) {
+        if (response.code === 200) {
           if (response.token) {
             let jwtString = jwt.decode(response.token);
-            console.log("JWT string", jwtString);
-            // let prefLang = jwtString.preferred_lang;
-            // if (prefLang) {
-            //   localStorage.setItem(LANGUAGE_STRING, prefLang);
-            // }
-            // let role = jwtString.role;
             let userName = jwtString.name[lang];
             localStorage.setItem("authtoken", response.token);
             localStorage.setItem("username", userName);
-            Cookies.set("authtoken", response.token);
-            // if (role.length === 0) {
-            //   this.showMessage(ONLY_FOR_SUPERVISOR, "error");
-            //   this.setState({
-            //     loggedin: false,
-            //     email: "",
-            //     password: "",
-            //     emailIsValid: false,
-            //     passIsValid: false,
-            //     pageloading: false,
-            //   });
-            // } else {
-            //   localStorage.setItem("authtoken", response.token);
-            //   localStorage.setItem("username", userName);
-            //   this.setState({ loggedin: true, pageloading: false });
-            //   this.props.loggedin(true);
-            // }
+            cookie.set("authtoken", response.token);
+            Router.push("/");
             dispatch({
               type: LOGIN,
-              payload: { loginStatus: true, message: response.message },
+              payload: {
+                loginStatus: true,
+                token: response.token,
+                message: response.message,
+              },
             });
           }
         } else {
           if (parseInt(response.code) === 401) {
-            // this.setState({
-            //   pageloading: false,
-            // });
-            // this.showMessage(response.message, "error");
           }
           dispatch({
             type: LOGIN,
+            payload: {
+              loginStatus: false,
+              token: response.token,
+              message: response.message,
+            },
+          });
+        }
+      })
+      .catch((error) => console.log(error));
+  };
+};
+export const reauthenticate = (token) => {
+  return (dispatch) => {
+    dispatch({
+      type: LOGIN,
+      payload: { loginStatus: true, message: response.message, token: token },
+    });
+  };
+};
+export const get_logout = () => {
+  return (dispatch) => {
+    axios
+      .post(
+        `api/user/logout`,
+        {},
+        {
+          headers: {
+            Authorization: `bearer ${localStorage.getItem("authtoken")}`,
+          },
+        }
+      )
+      .then((res) => {
+        let response = res.data;
+        if (res.status === 200) {
+          localStorage.removeItem("authtoken");
+          localStorage.removeItem("username");
+          cookie.remove("authtoken", response.token);
+          Router.push("/login");
+          dispatch({
+            type: LOGOUT,
+            payload: { loginStatus: false, message: response.message },
+          });
+        } else {
+          if (parseInt(response.code) === 401) {
+          }
+          dispatch({
+            type: LOGOUT,
             payload: { loginStatus: false, message: response.message },
           });
         }
@@ -65,27 +97,52 @@ export const get_login = (formData, language) => {
       .catch((error) => console.log(error));
   };
 };
-
-// axios
-//   .get("2020-03-10/warehouses")
-//   .then((response) => {
-//     let resp = response.data;
-//     if (resp.code === HTTP_STATUS_OK) {
-//       dispatch(saveDefaultResult(resp.data));
-//     }
-//   })
-//   .catch((error) => {
-//     console.log("ERROR", error);
-//   });
-
-export const get_logout = () => {};
-// export const saveDefaultResult = (res) => {
-//   return {
-//     type: GET_DEFAULT,
-//     result: res,
-//   };
-// };
-
+export const change_password = (data) => {
+  return (dispatch) => {
+    axios
+      .post(`api/user/update-password`, data, {
+        headers: {
+          Authorization: `bearer ${localStorage.getItem("authtoken")}`,
+        },
+      })
+      .then((res) => {
+        let response = res.data;
+        if (res.status === 200) {
+          localStorage.removeItem("authtoken");
+          localStorage.removeItem("username");
+          cookie.remove("authtoken", response.token);
+          Router.push("/login");
+          dispatch({
+            type: CHANGE_PASSWORD,
+            payload: { loginStatus: false, message: response.message },
+          });
+        } else {
+          if (parseInt(response.code) === 401) {
+          }
+          dispatch({
+            type: CHANGE_PASSWORD,
+            payload: { loginStatus: false, message: response.message },
+          });
+        }
+      })
+      .catch((error) => console.log(error));
+  };
+};
+export const checkServerSideCookie = (ctx) => {
+  if (ctx.isServer) {
+    if (ctx.req.headers.cookie) {
+      const token = getCookie("authtoken", ctx.req);
+      ctx.store.dispatch(reauthenticate(token, user));
+    }
+  } else {
+    const token = ctx.store.getState().authorization.token;
+    if (token && user && ctx.pathname === "/login") {
+      setTimeout(function () {
+        Router.push("/");
+      }, 0);
+    }
+  }
+};
 export const get_companies = (data) => {
   return (dispatch) => {
     axios
@@ -107,12 +164,6 @@ export const get_companies = (data) => {
               message: response.message,
             },
           });
-          //   this.setState({
-          //     showEmail: false,
-          //     showPassword: true,
-          //     userCompaniesList: data,
-          //     pageloading: false,
-          //   });
         } else {
           if (parseInt(response.code) === 401) {
             this.showMessage(response.message, "error");
@@ -124,11 +175,48 @@ export const get_companies = (data) => {
               message: response.message,
             },
           });
-          //   this.setState({
-          //     pageloading: false,
-          //   });
         }
       })
       .catch((error) => console.log(error));
   };
+};
+
+export const setCookie = (key, value) => {
+  if (process.browser) {
+    cookie.set(key, value, {
+      expires: 1,
+      path: "/",
+    });
+  }
+};
+
+export const removeCookie = (key) => {
+  if (process.browser) {
+    cookie.remove(key, {
+      expires: 1,
+    });
+  }
+};
+
+export const getCookie = (key, req) => {
+  return process.browser
+    ? getCookieFromBrowser(key)
+    : getCookieFromServer(key, req);
+};
+
+const getCookieFromBrowser = (key) => {
+  return cookie.get(key);
+};
+
+const getCookieFromServer = (key, req) => {
+  if (!req.headers.cookie) {
+    return undefined;
+  }
+  const rawCookie = req.headers.cookie
+    .split(";")
+    .find((c) => c.trim().startsWith(`${key}=`));
+  if (!rawCookie) {
+    return undefined;
+  }
+  return rawCookie.split("=")[1];
 };
