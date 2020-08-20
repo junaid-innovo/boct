@@ -1,8 +1,8 @@
 .summaryDiv .card {
   width: 100%;
-  height: 100%;
+  height: 89%;
   border-radius: 0px !important;
-  box-shadow: 1px 6px 10px 6px rgba(0, 0, 0, 0.49) !important;
+  box-shadow: 1px 3px 10px 6px rgba(0, 0, 0, 0.49) !important;
 }
 
 .routeplanDiv small {
@@ -18,7 +18,9 @@
   font-weight: bold;
   box-shadow: 3px 15px 14px -11px rgba(0, 0, 0, 0.49) !important;
 }
-
+.cardBody {
+  padding: 1.2rem !important;
+}
 .buttonShadow:hover {
   background-color: #433b33;
   color: white;
@@ -122,7 +124,7 @@
 .routePlanTabs .navItem {
   margin-bottom: -1px;
   border-color: white;
-  width: 33.3%;
+  width: 50%;
   text-align: center;
 }
 
@@ -159,9 +161,9 @@
 }
 .routeplanDiv .setShadow1 {
   background-color: white;
-  box-shadow: 6px 9px 2px 6px #ccc;
-  -webkit-box-shadow: 6px 9px 2px 6px #ccc; /* Safari 3-4, iOS 4.0.2 - 4.2, Android 2.3+ */
-  -moz-box-shadow: 6px 9px 2px 6px #ccc; /* Firefox 3.5 - 3.6 */
+  box-shadow: -7px 9px 11px -7px #ccc;
+  -webkit-box-shadow: -7px 9px 11px -7px #ccc; /* Safari 3-4, iOS 4.0.2 - 4.2, Android 2.3+ */
+  -moz-box-shadow: -7px 9px 11px -7px #ccc; /* Firefox 3.5 - 3.6 */
 }
 .routeplanDiv .formCheck label {
   font-size: 80%;

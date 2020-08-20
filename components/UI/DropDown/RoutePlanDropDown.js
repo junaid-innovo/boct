@@ -66,7 +66,7 @@ const CustomDropDown = (props) => {
       <Dropdown.Menu as={CustomMenu} className={`${style.dropDownMenu}`}>
         {props.dropInfo.id === "searchroute" ? (
           <React.Fragment>
-            <Dropdown.Item
+            {/* <Dropdown.Item
               as="button"
               key={ALL_ORDERS}
               eventKey={ALL_ORDERS}
@@ -81,7 +81,7 @@ const CustomDropDown = (props) => {
               value={UNASSIGNED_ORDERS}
             >
               {props.dropInfo.text2}
-            </Dropdown.Item>
+            </Dropdown.Item> */}
 
             {props.dropInfo.data.length > 0 &&
               props.dropInfo.data.map((menu, key) => {

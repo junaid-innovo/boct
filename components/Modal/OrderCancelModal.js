@@ -15,7 +15,10 @@ import { LOCAL_API_URL } from "../Constants/Enviroment/Enviroment";
 import { ToastContainer, toast, Zoom } from "react-toastify";
 import style from "./OrderCancelModal.module.css";
 import { connect } from "react-redux";
-import { remove_delivery } from "../../store/actions/routesplan/actionCreator";
+import {
+  remove_delivery,
+  delete_delivery,
+} from "../../store/actions/routesplan/actionCreator";
 class OrderCancelModal extends Component {
   constructor(props) {
     super(props);
@@ -37,16 +40,18 @@ class OrderCancelModal extends Component {
       }
     }
     if (this.props.message != prevProps.message) {
-      this.showMessage(this.props.message, "success");
+      if (this.props.message) {
+        this.showMessage(this.props.message, "success");
+      }
+      this.props.cancelleddelivery(this.props.canceldata.delivery_trip_id);
     }
   }
   handleSubmit = (e) => {
     const data = {
-      trip_id: `${this.state.tripId}`,
-      deliveries: [],
+      trip_id: `${this.props.canceldata.delivery_trip_id}`,
     };
     const newdata = JSON.stringify(data);
-    this.props.removeDeliveryApi(this.props.selectedBranchId, newdata);
+    this.props.deleteDeliveryApi(this.props.selectedBranchId, newdata);
     //  axios
     //    .post(`storesupervisor/v1/removeTrip`, newdata, {
     //      headers: {
@@ -139,8 +144,8 @@ const mapStateToProps = (state) => {
 };
 const mapDispatchToProps = (dispatch) => {
   return {
-    removeDeliveryApi: (branchId, data) =>
-      dispatch(remove_delivery(branchId, data)),
+    deleteDeliveryApi: (branchId, data) =>
+      dispatch(delete_delivery(branchId, data)),
   };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(OrderCancelModal);

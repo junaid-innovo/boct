@@ -686,13 +686,13 @@ class Map extends PureComponent {
       this.props.routelist.deliveries.length > 0
     ) {
       this.setState({
-        routes: _.uniqBy(this.props.routelist.deliveries, "order.order_id"),
+        routes: _.uniqBy(this.props.routelist.deliveries, "order_id"),
         ordercaltime: [],
       });
       let wayPoints = [];
       let routelist;
       // let wayPointsmax = 25;
-      routelist = _.uniqBy(this.props.routelist.deliveries, "order.order_id");
+      routelist = _.uniqBy(this.props.routelist.deliveries, "order_id");
       let store_address = null;
       if (this.state.mapfeatures.showOriginMarker) {
         if (this.props.routelist.store_address) {
@@ -704,6 +704,7 @@ class Map extends PureComponent {
       //   this.props.routelist.store_address
       // );
       let chunkarray = _.chunk(routelist, 24);
+      console.log("CHUNK ARRAY", chunkarray);
       for (let i = 0; i < chunkarray.length; i++) {
         if (i !== 0) {
           let firstchunkitem = chunkarray[i][0];

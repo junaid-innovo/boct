@@ -5,10 +5,16 @@ import {
   CREATE_STATIC_TRIP,
   REMOVE_DELIVERY,
   ADD_DELIVERY,
+  DELETE_DELIVERY,
 } from "../actionTypes";
 import axios from "../../../components/API/Axios";
 import { data } from "jquery";
-export const get_routes_and_capacity = (form_date, to_date, branchId) => {
+export const get_routes_and_capacity = (
+  form_date,
+  to_date,
+  branchId,
+  pageFor = ""
+) => {
   return (dispatch) => {
     axios
       .get(`api/tower/v1/routing/${form_date}/${to_date}/${branchId}`, {
@@ -20,34 +26,41 @@ export const get_routes_and_capacity = (form_date, to_date, branchId) => {
         let response = res.data;
         let data = response.data;
         if (response.code === 200) {
-          // let orders = data.orders;
-          // let constraints = data.constraints;
-          // let summarystats = data.counters;
-          // let modifiedOrders = [];
-
-          // orders.map((val, key) => {
-          //   modifiedOrders.push({ order: val });
-          // });
-          dispatch({
-            type: GET_ROUTES_CAPACITY,
-            payload: {
-              routesAndPlanData: data,
-              // orders: modifiedOrders,
-              // routeOrders: { deliveries: orders },
-              // constraints: _.sortBy(constraints, "constraint_id"),
-              // summaryStats: summarystats,
-              // message: response.message,
-              // },
-            },
-          });
+          if (pageFor === "available_deliveries") {
+            dispatch({
+              type: GET_ROUTES_CAPACITY,
+              payload: {
+                foravailabledeliveries: data.orders,
+                message: response.message,
+              },
+            });
+          } else {
+            dispatch({
+              type: GET_ROUTES_CAPACITY,
+              payload: {
+                routesAndPlanData: data,
+                message: response.message,
+              },
+            });
+          }
         } else {
-          dispatch({
-            type: GET_ROUTES_CAPACITY,
-            payload: {
-              routesAndPlanData: data,
-              message: response.message,
-            },
-          });
+          if (pageFor === "available_deliveries") {
+            dispatch({
+              type: GET_ROUTES_CAPACITY,
+              payload: {
+                foravailabledeliveries: data.orders,
+                message: response.message,
+              },
+            });
+          } else {
+            dispatch({
+              type: GET_ROUTES_CAPACITY,
+              payload: {
+                routesAndPlanData: data,
+                message: response.message,
+              },
+            });
+          }
         }
       })
       .catch((error) => {});
@@ -146,7 +159,7 @@ export const create_static_trip = (branchId, data) => {
 export const remove_delivery = (branchId, data) => {
   return (dispatch) => {
     axios
-      .put(`api/tower/v1/remove-delivery/${branchId}`, data, {
+      .post(`api/tower/v1/remove-delivery/${branchId}`, data, {
         headers: {
           Authorization: `bearer ${localStorage.getItem("authtoken")}`,
         },
@@ -190,7 +203,7 @@ export const add_delivery = (branchId, data) => {
           dispatch({
             type: ADD_DELIVERY,
             payload: {
-              // statictripData: data,
+              statictripData: data,
               message: response.message,
             },
           });
@@ -198,7 +211,68 @@ export const add_delivery = (branchId, data) => {
           dispatch({
             type: ADD_DELIVERY,
             payload: {
-              // statictripData: data,
+              statictripData: data,
+              message: response.message,
+            },
+          });
+        }
+      })
+      .catch((error) => {});
+  };
+};
+
+export const update_delivery = (branchId, data) => {
+  return (dispatch) => {
+    axios
+      .post(`api/tower/v1/update-trip/${branchId}`, data, {
+        headers: {
+          Authorization: `bearer ${localStorage.getItem("authtoken")}`,
+        },
+      })
+      .then((res) => {
+        let response = res.data;
+        if (response.code === 200) {
+          let data = response.data;
+          dispatch({
+            type: UPDATE_DELIVERY,
+            payload: {
+              message: response.message,
+            },
+          });
+        } else {
+          dispatch({
+            type: UPDATE_DELIVERY,
+            payload: {
+              message: response.message,
+            },
+          });
+        }
+      })
+      .catch((error) => {});
+  };
+};
+export const delete_delivery = (branchId, data) => {
+  return (dispatch) => {
+    axios
+      .post(`api/tower/v1/delete-trip/${branchId}`, data, {
+        headers: {
+          Authorization: `bearer ${localStorage.getItem("authtoken")}`,
+        },
+      })
+      .then((res) => {
+        let response = res.data;
+        if (response.code === 200) {
+          let data = response.data;
+          dispatch({
+            type: DELETE_DELIVERY,
+            payload: {
+              message: response.message,
+            },
+          });
+        } else {
+          dispatch({
+            type: DELETE_DELIVERY,
+            payload: {
               message: response.message,
             },
           });

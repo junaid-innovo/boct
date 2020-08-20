@@ -195,7 +195,7 @@ rect {
 }
 
 .infoModalBoostrapTable {
-  max-height: 40vh !important;
+  max-height: 41vh !important;
   overflow-y: auto;
   overflow-x: hidden;
 }

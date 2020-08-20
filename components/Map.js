@@ -341,6 +341,7 @@ class Map extends PureComponent {
   };
   renderMarkers = () => {
     const markerColors = { green: "#008000", red: "#FF0000" };
+
     return (
       this.markerPositions &&
       this.state.directions &&

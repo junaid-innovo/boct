@@ -6,6 +6,9 @@ import {
   CREATE_STATIC_TRIP,
   ADD_DELIVERY,
   REMOVE_DELIVERY,
+  CLEAR_ROUTES_PLAN,
+  UPDATE_DELIVERY,
+  DELETE_DELIVERY,
 } from "../actions/actionTypes";
 
 const initialState = {
@@ -16,22 +19,23 @@ const initialState = {
   constraints: null,
   routesPlanLoaded: false,
   vehicleList: [],
-  message: "",
+  message: null,
   code: null,
   tripCode: null,
   staticTripData: null,
   routesAndPlanData: null,
+  foravailableDeliveries: null,
 };
 
 const reducers = (state = initialState, action) => {
   if (action.type === GET_ROUTES_CAPACITY) {
     let currState = { ...state };
-    currState.routesAndPlanData = action.payload.routesAndPlanData;
+    if (typeof action.payload.routesAndPlanData !== "undefined") {
+      currState.routesAndPlanData = action.payload.routesAndPlanData;
+    } else {
+      currState.foravailableDeliveries = action.payload.foravailabledeliveries;
+    }
     currState.message = action.payload.message;
-    // currState.routeOrders = action.payload.routeOrders;
-    // currState.summaryStats = action.payload.summaryStats;
-    // currState.constraints = action.payload.constraints;
-    // currState.routesPlanLoaded = true;
     return currState;
   }
   if (action.type === GET_AVAILABLE_VEHICLES) {
@@ -48,20 +52,36 @@ const reducers = (state = initialState, action) => {
     return currState;
   }
   if (action.type === CREATE_STATIC_TRIP) {
-    let currState = { ...state };
     currState.message = action.payload.message;
     currState.staticTripData = action.payload.statictripData;
     return currState;
   }
   if (action.type === ADD_DELIVERY) {
+    let currState = { ...state };
     currState.message = action.payload.message;
     return currState;
   }
   if (action.type === REMOVE_DELIVERY) {
+    let currState = { ...state };
     currState.message = action.payload.message;
     return currState;
   }
-
+  if (action.type === CLEAR_ROUTES_PLAN) {
+    let currState = { ...state };
+    currState.routesAndPlanData = null;
+    currState.message = null;
+    return currState;
+  }
+  if (action.type === UPDATE_DELIVERY) {
+    let currState = { ...state };
+    currState.message = action.payload.message;
+    return currState;
+  }
+  if (action.type === DELETE_DELIVERY) {
+    let currState = { ...state };
+    currState.message = action.payload.message;
+    return currState;
+  }
   return state;
 };
 export default reducers;

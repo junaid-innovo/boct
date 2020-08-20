@@ -443,6 +443,11 @@ class DeliveryTripDataTable extends Component {
       infoClick: false,
     });
   };
+  showInfoModalAgain = () => {
+    this.setState({
+      showOrderInfoModal: true,
+    });
+  };
   renderOrderModals = () => {
     return (
       <div style={{ width: "95%", height: "auto" }}>
@@ -481,6 +486,7 @@ class DeliveryTripDataTable extends Component {
           show={this.state.showOrderInfoModal}
           isEditable={this.state.selectedTripIsEditable}
           t={this.props.t}
+          showModalAgain={this.showInfoModalAgain}
           language={this.props.language}
           // onModalClose={this.onModalClose}
           orderdata={this.state.deliveryOrders}

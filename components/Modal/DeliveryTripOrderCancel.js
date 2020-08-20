@@ -37,11 +37,11 @@ class DeliveryTripOrderCancel extends Component {
   }
   handleSubmit = (e) => {
     const data = {
-      order_id: this.state.selectedOrderId,
-      cancel_reason_id: 1,
+      deliveries: [this.state.selectedOrderId],
+      trip_id: this.props.tripId,
     };
     const newdata = JSON.stringify(data);
-    this.props.cancelReasonApi(data, this.props.selectedBranch);
+    this.props.removeDeliveryApi(this.props.selectedBranch, data);
     // axios
     //    .post(`storesupervisor/v1/cancelOrders`, newdata, {
     //       headers: {
@@ -134,7 +134,8 @@ const mapStateToProps = (state) => {
 };
 const mapDispatchToProps = (dispatch) => {
   return {
-    cancelReasonApi: (data, store_id) => dispatch(cancel_order(data, store_id)),
+    removeDeliveryApi: (store_id, data) =>
+      dispatch(remove_delivery(store_id, data)),
   };
 };
 export default connect(

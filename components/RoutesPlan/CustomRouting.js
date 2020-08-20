@@ -218,19 +218,22 @@ class CustomRoutesPlan extends Component {
       });
     }
     if (this.props.message !== prevProps.message) {
-      this.showMessage(this.props.message, "success");
+      if (this.props.message) {
+        this.showMessage(this.props.message, "success");
+      }
     }
     if (this.props.routesAndPlanData !== prevProps.routesAndPlanData) {
+      console.log("CHECK CUSTOME UDPATERION");
       let mapfeatures = { ...this.state.mapfeatures };
       mapfeatures.orderType = ORDERS_READYFORPICKUP;
       let data = this.props.routesAndPlanData;
+
       let orders = data.orders.filter((order) => {
         return (
           parseInt(order.order_status_id) === ORDER_STATUS_READY_FOR_PICKUP
         );
       });
       let allOrders = data.orders;
-
       let ordersInProduction = data.orders.filter((order) => {
         return parseInt(order.order_status_id) === ORDER_STATUS_CONFIRMED; // confirmed
       });
@@ -542,65 +545,6 @@ class CustomRoutesPlan extends Component {
     }
   };
 
-  assignPlanRoute = () => {
-    let data = {
-      vehicle_id: this.state.selectedVehicle,
-      // trip_code: this.state.planCode,
-      warehouse_id: parseInt(this.state.selectedBranchId),
-      order_ids: this.state.selectedOrderId,
-      route_id: 1,
-      trip_date: moment(this.state.tripDate).format("YYYY-MM-DD"),
-    };
-    this.setState({
-      pageloading: true,
-    });
-    axios
-      .post(`storesupervisor/v1/planRoute`, data, {
-        headers: {
-          Authorization: `bearer ${localStorage.getItem("authtoken")}`,
-        },
-      })
-      .then((res) => {
-        let response = res.data;
-        let store_address = { ...this.state.defaultCenter };
-        if (response.code === 200) {
-          this.showMessage(this.props.t("Route Saved Successfully"), "success");
-          if (this.state.routeOrders.deliveries) {
-            let selectedOrderIds = [...this.state.routeOrders.deliveries];
-            let getallorders = [...this.state.allorders];
-            _.remove(selectedOrderIds, ({ order }) =>
-              this.state.selectedOrderId.includes(order.order_id)
-            );
-            _.remove(getallorders, ({ order }) =>
-              this.state.selectedOrderId.includes(order.order_id)
-            );
-
-            // this.getRoutesandCapacity()
-            this.setState({
-              allorders: getallorders,
-              routeOrders: {
-                deliveries: selectedOrderIds,
-                // let store_address = { ...this.state.defaultCenter }
-                store_address: {
-                  latitude: store_address.lat,
-                  longitude: store_address.lng,
-                },
-              },
-              createTrip: false,
-              selectedVehicle: null,
-              selectedOrderId: [],
-              pageloading: false,
-            });
-          }
-        } else {
-          this.showMessage(response.mesaege, "error");
-        }
-      })
-      .catch((error) => {
-        this.showMessage(error.toString(), "error", false);
-      });
-  };
-
   assignPlanRoute2 = () => {
     let data = {
       vehicle_id: this.state.selectedVehicle,
@@ -612,7 +556,6 @@ class CustomRoutesPlan extends Component {
       trip_code: "",
       store_location: this.props.defaultCenter,
       trip_date: moment(this.state.tripDate).format("YYYY-MM-DD"),
-      // trip_code: this.state.planCode,
       order_ids: this.state.selectedOrdersDetail,
     };
 
@@ -1100,12 +1043,12 @@ class CustomRoutesPlan extends Component {
                               <option data-content="<i class='fa fa-cutlery'></i> Cutlery">
                                 --- {this.props.t("Select Route")} ---
                               </option>
-                              <option value={ALL_ORDERS}>
+                              {/* <option value={ALL_ORDERS}>
                                 {this.props.t(this.state.defaultMenuText)}
                               </option>
                               <option value={UNASSIGNED_ORDERS}>
                                 {this.props.t(this.state.defaultMenuText2)}
-                              </option>
+                              </option> */}
                               {this.state.routes.map((route) => (
                                 <option
                                   key={route.route_id}
@@ -1447,18 +1390,6 @@ class CustomRoutesPlan extends Component {
                             <Trans i18nKey={"Delivery Trips"} />
                           </a>
                         </li>
-                        <li className={style.navItem}>
-                          <a
-                            id="3"
-                            onClick={() => this.ordersInProductionClick()}
-                            className={`${style.navLink} ${
-                              this.state.isActive == 3 ? style.active : ""
-                            } nav-link`}
-                            role="button"
-                          >
-                            <Trans i18nKey={"Orders In Production"} />
-                          </a>
-                        </li>
                       </ul>
                     </div>
                   </div>
@@ -1475,11 +1406,7 @@ class CustomRoutesPlan extends Component {
 const mapStateToProps = (state) => {
   return {
     selectedBranch: state.navbar.selectedBranch,
-    routeOrders: state.routesplan.routeOrders,
-    orders: state.routesplan.orders,
     vehicleList: state.routesplan.vehicleList,
-    constraints: state.routesplan.constraints,
-    summaryStats: state.routesplan.summaryStats,
     apiLoaded: state.routesplan.routesPlanLoaded,
     tripList: state.live.tripList,
     defaultCenter: state.navbar.defaultCenter,

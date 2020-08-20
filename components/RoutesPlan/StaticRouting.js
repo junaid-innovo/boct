@@ -57,8 +57,11 @@ import {
   UNASSIGNED_ORDERS,
   ORDER_STATUS_CONFIRMED,
   ORDER_STATUS_READY_FOR_PICKUP,
+  DELIVERY_TRIPS,
 } from "../Constants/Order/Constants";
 import { connect } from "react-redux";
+import { get_trips_list } from "../../store/actions/live/actionCreator";
+import { CLEAR_ROUTES_PLAN } from "../../store/actions/actionTypes";
 class StaticRoutesPlan extends PureComponent {
   constructor(props) {
     super(props);
@@ -86,6 +89,7 @@ class StaticRoutesPlan extends PureComponent {
       isActive: false,
       pageloading: true,
       routeOrders: null,
+      tripcallPending: false,
       cityDefaultText: "--- Select City ---",
       routeDefaultText: "--- Select Route ---",
       areaDefaultText: "--- Select Area ---",
@@ -108,19 +112,21 @@ class StaticRoutesPlan extends PureComponent {
       showOrdersInProduction: false,
       showTripModal: false,
       selectedOrderId: [],
-      selectedBranchId: 1,
+      selectedBranchId: null,
       forDataTableSelectedId: [],
       mapUrl: `https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing,places&key=${process.env.REACT_APP_GOOGLE_KEY}&language=en}`,
-      isChanged: true,
+      isChanged: false,
       showBackdrop: true,
       selectedOrdersDetail: [],
       generatedTripCode: null,
       AllFilter: "All Orders",
       dataTableloading: false,
       tripDate: new Date(),
+      deliveryTrips: [],
       vehicleList: [],
       areaList: [],
       cityList: [],
+      routeTrips: [],
     };
   }
 
@@ -141,6 +147,22 @@ class StaticRoutesPlan extends PureComponent {
 
     // }
   }
+  getDeliveryTrips = (e) => {
+    if (this.state.tripcallPending) {
+      return false;
+    } else {
+      if (this.state.deliveryTrips.length > 0) {
+        return false;
+      } else {
+        this.setState({
+          tripcallPending: true,
+          dataTableloading: true,
+          showOrders: false,
+        });
+        this.props.getTripsApi("2020-04-24", this.props.selectedBranch);
+      }
+    }
+  };
   onTripDateChange = (date) => {
     this.setState({
       tripDate: date,
@@ -168,37 +190,45 @@ class StaticRoutesPlan extends PureComponent {
     if (this.props.routesAndPlanData !== prevProps.routesAndPlanData) {
       let lang = this.props.i18n.language;
       let data = this.props.routesAndPlanData;
-      let orders = data.orders;
-      let routes = data.Routes;
-      let cityList = data.Locations;
-      let store_address = { ...this.state.defaultCenter };
-      let modifiedOrders = [];
-      let getAreaList = [];
-      orders.map((order, key) => {
-        if (parseInt(order.order_status_id) === ORDER_STATUS_CONFIRMED) {
-          modifiedOrders.push({ order: order });
-          getAreaList.push({
-            id: order.address.area_id,
-            name: order.address.area_name[lang],
-          });
-        }
-      });
-      this.setState({
-        routeOrders: {
-          deliveries: orders,
-          store_address: {
-            latitude: store_address.lat,
-            longitude: store_address.lng,
+      if (data) {
+        let orders = data.orders;
+        let routes = data.Routes;
+        let cityList = data.Locations;
+        let store_address = { ...this.state.defaultCenter };
+        let modifiedOrders = [];
+        let getAreaList = [];
+        orders.map((order, key) => {
+          if (parseInt(order.order_status_id) === ORDER_STATUS_CONFIRMED) {
+            modifiedOrders.push({ order: order });
+            getAreaList.push({
+              id: order.address.area_id,
+              name: order.address.area_name[lang],
+            });
+          }
+        });
+        this.setState({
+          routeOrders: {
+            deliveries: orders,
+            store_address: {
+              latitude: store_address.lat,
+              longitude: store_address.lng,
+            },
           },
-        },
-        orders: modifiedOrders,
-        allOrders: orders,
-        cityList: _.uniqBy(cityList, "loaction_id"),
-        areaList: _.uniqBy(getAreaList, "id"),
-        routes: routes,
-        defaultMenuText: "All Orders",
-        defaultMenuText2: "Unassigned Orders",
-      });
+          isActive: 1,
+          orders: modifiedOrders,
+          allOrders: orders,
+          cityList: _.uniqBy(cityList, "loaction_id"),
+          areaList: _.uniqBy(getAreaList, "id"),
+          pageloading: false,
+          routes: routes,
+          showOrders: true,
+          showDeliveryTrip: false,
+          tripcallPending: false,
+          defaultMenuText: "All Orders",
+          defaultMenuText2: "Unassigned Orders",
+          isChanged: true,
+        });
+      }
     }
     if (this.state.vehicleList !== this.props.vehicleList) {
       this.setState({
@@ -212,18 +242,44 @@ class StaticRoutesPlan extends PureComponent {
         });
       }
     }
-    if (this.props.message !== prevProps.message) {
-      this.showMessage(this.props.message, "success");
+    if (this.props.message) {
+      if (this.props.message !== prevProps.message) {
+        this.showMessage(this.props.message, "success");
+        this.setState({
+          createTrip: false,
+          selectedOrderId: [],
+          selectedVehicle: null,
+        });
+      }
+    }
+    if (this.props.tripList !== prevProps.tripList) {
+      let store_address = { ...this.props.defaultCenter };
+
+      let mapfeatures = { ...this.state.mapfeatures };
+      mapfeatures.orderType = DELIVERY_TRIPS;
+      let data = this.props.tripList;
       this.setState({
-        createTrip: false,
-        selectedOrderId: [],
-        selectedVehicle: null,
+        isActive: 2,
+        showDeliveryTrip: true,
+        routeTrips: data,
+        routeOrders: {
+          deliveries: [],
+          store_address: {
+            latitude: store_address.lat,
+            longitude: store_address.lng,
+          },
+        },
+        polygonPaths: null,
+        mapfeatures: mapfeatures,
+        showOrdersInProduction: false,
+        showOrders: false,
+        deliveryTrips: data,
+        selectedRoute: ALL_ORDERS,
+        defaultMenuText: "All Trips",
+        defaultMenuText2: "Unassigned Trips",
+        tripcallPending: false,
+        dataTableloading: false,
       });
-    }
-    if (this.state.tripDate !== prevState.tripDate) {
-    }
-    if (this.state.date !== prevState.date) {
-      console.log("DATE RANGE CHECK", this.state.DateTimeRange);
     }
   }
 
@@ -240,52 +296,14 @@ class StaticRoutesPlan extends PureComponent {
     let selectedRoute = this.state.selectedRoute;
     let startDate = moment(getDateRange[0]).format("YYYY-MM-DD");
     let endDate = moment(getDateRange[1]).format("YYYY-MM-DD");
+    this.setState({
+      pageloading: true,
+    });
     this.props.getrouteandplanApi(
       startDate,
       endDate,
       this.props.selectedBranch
     );
-
-    // axios
-    //   .get(
-    //     `api/tower/v1/routing/2020-04-03/2020-04-03/${this.props.selectedBranch}`,
-    //     {
-    //       headers: {
-    //         Authorization: `bearer ${localStorage.getItem("authtoken")}`,
-    //       },
-    //     }
-    //   )
-    //   .then((res) => {
-    //     let response = res.data;
-    //     if (response.code === 200) {
-    //       if (this._isMounted) {
-    //         this.showMessage(
-    //           "Route Data Retrieved Successfully",
-    //           "success",
-    //           1500
-    //         );
-    //         let data = response.data;
-    //         let orders = data.orders;
-    //         let constraints = data.constraints;
-    //         let summarystats = data.counters;
-    //         let modifiedOrders = [];
-    //         console.log("CHECK ORDERS", orders);
-    //         orders.map((val, key) => {
-    //           modifiedOrders.push({ order: val });
-    //         });
-    //         console.log("Check Modified Orders", modifiedOrders);
-    //         this.setState({
-    //           routeOrders: { deliveries: orders },
-    //           orders: modifiedOrders,
-    //           constraints: _.sortBy(constraints, "constraint_id"),
-    //           summarystats: summarystats,
-    //         });
-    //       }
-    //     }
-    //   })
-    //   .catch((error) => {
-    //     this.showMessage(error.toString(), "error", false);
-    //   });
   };
 
   renderConstraints = () => {
@@ -446,25 +464,34 @@ class StaticRoutesPlan extends PureComponent {
   //new
   onSearchClick = () => {
     let getDateRange = [...this.state.date];
-    let selectedRoute = this.state.selectedRoute;
+    let selectedRoute = this.state.selectedRoute
+      ? parseInt(this.state.selectedRoute)
+      : null;
+    console.log("CHECK ROUTES", selectedRoute);
     let startDate = getDateRange[0].getTime();
     let endDate = getDateRange[1].getTime();
     if (this.state.showByOrder) {
       let orders = this.state.allOrders ? [...this.state.allOrders] : [];
-      let getFiltredOrders = _.filter(orders, (order) => {
+      let getfilteredOrders = _.filter(orders, (order) => {
         let order_date = new Date(order.created_at).getTime();
-        if (
-          order_date >= startDate &&
-          order_date <= endDate &&
-          this.state.selectedRoute &&
-          order.routes.map((route) => route.includes(selectedRoute))
-        ) {
-          return order;
+        console.log(
+          order_date >= startDate && order_date <= endDate && selectedRoute
+            ? order.routes.map((val) => val.includes(selectedRoute))
+            : true
+        );
+        if (selectedRoute) {
+          return (
+            order_date >= startDate &&
+            order_date <= endDate &&
+            order.routes.map((val) => val.includes(selectedRoute))
+          );
+        } else {
+          return order_date >= startDate && order_date <= endDate;
         }
       });
-      if (getFiltredOrders.length > 0) {
+      if (getfilteredOrders.length > 0) {
         this.setState({
-          routeOrders: { deliveries: getFiltredOrders },
+          routeOrders: { deliveries: getfilteredOrders },
         });
       } else {
         this.setState({
@@ -478,9 +505,8 @@ class StaticRoutesPlan extends PureComponent {
         let order_date = new Date(order.created_at).getTime();
 
         return (
-          parseInt(order.address.area_id) === parseInt(selectedArea) &&
-          order_date >= startDate &&
-          order_date <= endDate
+          (order_date >= startDate && order_date <= endDate) ||
+          parseInt(order.address.area_id) === parseInt(selectedArea)
         );
       });
       if (getFiltredOrders.length > 0) {
@@ -499,9 +525,8 @@ class StaticRoutesPlan extends PureComponent {
         let order_date = new Date(order.created_at).getTime();
 
         return (
-          parseInt(order.address.area_id) === parseInt(selectedCity) &&
-          order_date >= startDate &&
-          order_date <= endDate
+          (order_date >= startDate && order_date <= endDate) ||
+          parseInt(order.address.area_id) === parseInt(selectedCity)
         );
       });
       if (getFiltredOrders.length > 0) {
@@ -520,6 +545,31 @@ class StaticRoutesPlan extends PureComponent {
     _.remove(allroutes, { route_id: route_id });
     this.setState({
       routes: allroutes,
+    });
+  };
+  onOrderClick = () => {
+    this.setState({
+      // tripcallPending: true,
+      // dataTableloading: !this.state.dataTableloading,
+      pageloading: false,
+      // showOrders: false,
+
+      showOrdersInProduction: false,
+      polygonPaths: null,
+      deliveryTrips: [],
+    });
+    this.props.resetRoutesandPlanApi();
+    this.getRoutesandCapacity();
+  };
+  removeCancelDeliveries = (cancelled_delivery_trip_id) => {
+    let deliveryTrips = [...this.state.deliveryTrips];
+    _.remove(
+      deliveryTrips,
+      ({ delivery_trip_id }) => cancelled_delivery_trip_id === delivery_trip_id
+    );
+    this.setState({
+      deliveryTrips: deliveryTrips,
+      routeTrips: deliveryTrips,
     });
   };
   mapLoadError = () => {};
@@ -682,6 +732,23 @@ class StaticRoutesPlan extends PureComponent {
       selectedArea: selectedArea,
     });
   };
+  onModalsLoading = (flag) => {
+    this.setState({
+      pageloading: flag,
+    });
+  };
+  getSelectedDeliveryTripOrder = (routeOrders) => {
+    let store_address = { ...this.props.defaultCenter };
+    this.setState({
+      routeOrders: {
+        deliveries: routeOrders,
+        store_address: {
+          latitude: store_address.lat,
+          longitude: store_address.lng,
+        },
+      },
+    });
+  };
   render() {
     let t = this.props.t;
     let lang = this.props.i18n.language;
@@ -741,7 +808,7 @@ class StaticRoutesPlan extends PureComponent {
     );
 
     return (
-      <div className={`row ${style.routeplanDiv}`}>
+      <div className={`${style.routeplanDiv}`}>
         <ToastContainer
           transition={Zoom}
           position="top-center"
@@ -754,433 +821,446 @@ class StaticRoutesPlan extends PureComponent {
           draggable
           pauseOnHover
         />
-        <div className="col-md-12 col-sm-12 col-xs-12">
-          <div className="row mt-3 no-gutters">
-            <div
-              className={`${col12} ${style.staticTopMenu} align-content-center`}
-            >
-              <div className="row">
-                <div className={col3}>
-                  <ButtonGroup aria-label="Basic example">
-                    <Button
-                      className={`${style.buttonShadow} ${
-                        this.state.showByOrder ? "bg-purple" : "bg-light-purple"
-                      } `}
-                      variant=""
-                      onClick={() =>
-                        this.setState({
-                          showByRoute: false,
-                          showByArea: false,
-                          showByOrder: true,
-                        })
-                      }
-                    >
-                      Order Wise
-                    </Button>{" "}
-                    <Button
-                      className={`${style.buttonShadow} ${
-                        this.state.showByArea ? "bg-purple" : "bg-light-purple"
-                      } `}
-                      variant=""
-                      onClick={() =>
-                        this.setState({
-                          showByRoute: false,
-                          showByArea: true,
-                          showByOrder: false,
-                        })
-                      }
-                    >
-                      Area Wise
-                    </Button>
-                    <Button
-                      variant=""
-                      className={`${style.buttonShadow} ${
-                        this.state.showByRoute ? "bg-purple" : "bg-light-purple"
-                      } `}
-                      onClick={() =>
-                        this.setState({
-                          showByRoute: true,
-                          showByArea: false,
-                          showByOrder: false,
-                        })
-                      }
-                    >
-                      Route Wise
-                    </Button>
-                  </ButtonGroup>
-                </div>
-
-                {this.state.showByRoute ||
-                this.state.showByOrder ||
-                this.state.showByArea ? (
-                  <React.Fragment>
-                    <div className={col2}>
-                      <SearchDropDown
-                        language={lang}
-                        dropInfo={{
-                          text: t(this.state.cityDefaultText),
-
-                          id: "searchcity",
-                          event: this.onCityChange,
-                          data: this.state.cityList,
-                        }}
-                      />
+        <ClipLoader
+          css={`
+            position: fixed;
+            top: 40%;
+            left: 42%;
+            right: 40%;
+            bottom: 20%;
+            // opacity: 0.5;
+            z-index: 500;
+          `}
+          size={"200px"}
+          this
+          also
+          works
+          color={"#196633"}
+          height={200}
+          // margin={2}
+          loading={this.state.pageloading}
+        />
+        <div
+          className={`${this.state.pageloading ? style.loadmain : null} row`}
+        >
+          {this.state.isChanged && (
+            <div className="col-md-12 col-sm-12 col-xs-12">
+              <div className="row mt-3 no-gutters">
+                <div
+                  className={`${col12} ${style.staticTopMenu} align-content-center`}
+                >
+                  <div className="row">
+                    <div className={col3}>
+                      <ButtonGroup aria-label="Basic example">
+                        <Button
+                          className={`${style.buttonShadow} ${
+                            this.state.showByOrder
+                              ? "bg-purple"
+                              : "bg-light-purple"
+                          } `}
+                          variant=""
+                          onClick={() =>
+                            this.setState({
+                              showByRoute: false,
+                              showByArea: false,
+                              showByOrder: true,
+                            })
+                          }
+                        >
+                          Order Wise
+                        </Button>{" "}
+                        <Button
+                          className={`${style.buttonShadow} ${
+                            this.state.showByArea
+                              ? "bg-purple"
+                              : "bg-light-purple"
+                          } `}
+                          variant=""
+                          onClick={() =>
+                            this.setState({
+                              showByRoute: false,
+                              showByArea: true,
+                              showByOrder: false,
+                            })
+                          }
+                        >
+                          Area Wise
+                        </Button>
+                        <Button
+                          variant=""
+                          className={`${style.buttonShadow} ${
+                            this.state.showByRoute
+                              ? "bg-purple"
+                              : "bg-light-purple"
+                          } `}
+                          onClick={() =>
+                            this.setState({
+                              showByRoute: true,
+                              showByArea: false,
+                              showByOrder: false,
+                            })
+                          }
+                        >
+                          Route Wise
+                        </Button>
+                      </ButtonGroup>
                     </div>
-                    {!this.state.showByArea && (
-                      <div className={`${col2}`}>
+
+                    {this.state.showByRoute ||
+                    this.state.showByOrder ||
+                    this.state.showByArea ? (
+                      <React.Fragment>
+                        <div className={col2}>
+                          <SearchDropDown
+                            language={lang}
+                            dropInfo={{
+                              text: t(this.state.cityDefaultText),
+
+                              id: "searchcity",
+                              event: this.onCityChange,
+                              data: this.state.cityList,
+                            }}
+                          />
+                        </div>
+                        {!this.state.showByArea && (
+                          <div className={`${col2}`}>
+                            <SearchDropDown
+                              language={lang}
+                              dropInfo={{
+                                text: t(this.state.areaDefaultText),
+
+                                id: "searcharea",
+                                event: this.onAreaChange,
+                                data: this.state.areaList,
+                              }}
+                            />
+                          </div>
+                        )}
+                      </React.Fragment>
+                    ) : null}
+                    {this.state.showByOrder && (
+                      <div className={col2}>
                         <SearchDropDown
                           language={lang}
                           dropInfo={{
-                            text: t(this.state.areaDefaultText),
-
-                            id: "searcharea",
-                            event: this.onAreaChange,
-                            data: this.state.areaList,
+                            text: t(this.state.routeDefaultText),
+                            // text1: t(this.state.defaultMenuText),
+                            // text2: t(this.state.defaultMenuText2),
+                            id: "searchroute",
+                            event: this.onRouteChange,
+                            data: this.state.routes,
                           }}
                         />
                       </div>
                     )}
-                  </React.Fragment>
-                ) : null}
-                {this.state.showByOrder && (
-                  <div className={col2}>
-                    <SearchDropDown
-                      language={lang}
-                      dropInfo={{
-                        text: t(this.state.routeDefaultText),
-                        text1: t(this.state.defaultMenuText),
-                        text2: t(this.state.defaultMenuText2),
-                        id: "searchroute",
-                        event: this.onRouteChange,
-                        data: this.state.routes,
-                      }}
-                    />
-                    {/* <Form.Control
-                      as="select"
-                      className="rounded-0"
-                      onChange={this.onRouteChange}
-                      defaultValue={
-                        this.state.selectedRoute ? this.state.selectedRoute : ""
+                    <div className={col2}>
+                      <InputGroup>
+                        <DateRangePicker
+                          className={style.inputShadow}
+                          onChange={this.onDateRangeChange}
+                          value={this.state.date}
+                          format="MM/dd/y"
+                        />
+                      </InputGroup>
+                    </div>
+                    <div className={col1}>
+                      <Button
+                        onClick={this.onSearchClick}
+                        className={`btn btn-primary btn-xs ${style.buttonShadow}`}
+                      >
+                        <i
+                          className="fa fa-search"
+                          style={{ fontSize: "10px" }}
+                        ></i>{" "}
+                        Search
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                <div className="col-md-7 offset-1"></div>
+              </div>
+              <div
+                className={` row mt-1 ${style.routePlanNav}  align-items-center`}
+              >
+                {this.state.selectedBranchId ? null : (
+                  <div className="col-4 offset-5">
+                    <span className="text-danger">
+                      {" "}
+                      <Trans
+                        i18nKey={"Please Select Branch To Continue"}
+                      ></Trans>
+                    </span>
+                  </div>
+                )}
+                {this.state.selectedBranchId && (
+                  <div className={`${col1} pt-1 pb-1`}>
+                    <OverlayTrigger
+                      key={1}
+                      placement={"right"}
+                      overlay={
+                        <Tooltip id={`tooltip-12`} style={{ fontSize: "10px" }}>
+                          <Trans i18nKey={"Refresh Page Content"} />
+                        </Tooltip>
                       }
                     >
-                      <option data-content="<i class='fa fa-cutlery'></i> Cutlery">
-                        --- {this.props.t("Select Route")} ---
-                      </option>
-                      <option value={ALL_ORDERS}>
-                        {this.props.t(this.state.defaultMenuText)}
-                      </option>
-                      <option value={UNASSIGNED_ORDERS}>
-                        {this.props.t(this.state.defaultMenuText2)}
-                      </option>
-                      {this.state.routes.map((route) => (
-                        <option key={route.route_id} value={route.route_id}>
-                          {route.route_name[lang]}
-                        </option>
-                      ))}
-                    </Form.Control> */}
+                      <i
+                        // title="Refresh Page Content"
+                        className={`fa fa-refresh fa-1x setMousePointer`}
+                        onClick={() => this.onPageContetRefresh()}
+                      ></i>
+                    </OverlayTrigger>
                   </div>
                 )}
-                <div className={col2}>
-                  <InputGroup>
-                    <DateRangePicker
-                      className={style.inputShadow}
-                      onChange={this.onDateRangeChange}
-                      value={this.state.date}
-                      format="MM/dd/y"
-                    />
-                  </InputGroup>
-                </div>
-                <div className={col1}>
-                  <Button
-                    onClick={this.onSearchClick}
-                    className={`btn btn-primary btn-xs ${style.buttonShadow}`}
-                  >
-                    <i
-                      className="fa fa-search"
-                      style={{ fontSize: "10px" }}
-                    ></i>{" "}
-                    Search
-                  </Button>
-                </div>
-              </div>
-            </div>
-            <div className="col-md-7 offset-1"></div>
-          </div>
-          <div
-            className={` row mt-1 ${style.routePlanNav}  align-items-center`}
-          >
-            {this.state.selectedBranchId ? null : (
-              <div className="col-4 offset-5">
-                <span className="text-danger">
-                  {" "}
-                  <Trans i18nKey={"Please Select Branch To Continue"}></Trans>
-                </span>
-              </div>
-            )}
-            {this.state.selectedBranchId && (
-              <div className={`${col1} pt-1 pb-1`}>
-                <OverlayTrigger
-                  key={1}
-                  placement={"right"}
-                  overlay={
-                    <Tooltip id={`tooltip-12`} style={{ fontSize: "10px" }}>
-                      <Trans i18nKey={"Refresh Page Content"} />
-                    </Tooltip>
-                  }
-                >
-                  <i
-                    // title="Refresh Page Content"
-                    className={`fa fa-refresh fa-1x setMousePointer`}
-                    onClick={() => this.onPageContetRefresh()}
-                  ></i>
-                </OverlayTrigger>
-              </div>
-            )}
-            <div className={`${col7} offset-2`}>
-              {this.state.selectedOrderId.length > 0 ? (
-                <div className="row">
+                <div className={`${col7} offset-2`}>
                   {this.state.selectedOrderId.length > 0 ? (
-                    <div
-                      className={`${col_md_auto} ${col_lg_auto} ${col_sm_auto} ${col_sm_auto} pt-1 pb-1`}
-                    >
-                      <Button
-                        className={style.buttonStyle}
-                        onClick={() => this.onCreateTripClick()}
-                      >
-                        <Trans i18nKey={"Create Trip"}></Trans>
-                      </Button>
-                    </div>
-                  ) : null}
+                    <div className="row">
+                      {this.state.selectedOrderId.length > 0 ? (
+                        <div
+                          className={`${col_md_auto} ${col_lg_auto} ${col_sm_auto} ${col_sm_auto} pt-1 pb-1`}
+                        >
+                          <Button
+                            className={style.buttonStyle}
+                            onClick={() => this.onCreateTripClick()}
+                          >
+                            <Trans i18nKey={"Create Trip"}></Trans>
+                          </Button>
+                        </div>
+                      ) : null}
 
-                  {this.state.createTrip ? (
-                    <React.Fragment>
-                      <div className={col4}>
-                        <div className="row no-gutters">
-                          <div className={`${col4} ${style.inputShadow} pt-2`}>
-                            <Trans i18nKey={"Select Date"} />:
+                      {this.state.createTrip ? (
+                        <React.Fragment>
+                          <div className={col4}>
+                            <div className="row no-gutters">
+                              <div
+                                className={`${col4} ${style.inputShadow} pt-2`}
+                              >
+                                <Trans i18nKey={"Select Date"} />:
+                              </div>
+                              <div
+                                className={`col-md-8 col-sm-8  ${style.inputShadow} col-xs-8 col-lg-8 pt-1 pb-1`}
+                              >
+                                <DatePicker
+                                  selected={this.state.tripDate}
+                                  // onChange={(date) => setStartDate(date)}
+                                  // customInput={<ExampleCustomInput />}
+                                  // showTimeSelect={false}
+                                  // title="Select Date"
+                                  // currentDate={this.state.tripDate}
+                                  // dateFormat={this.state.dateFormat}
+                                  // minDate={new Date()}
+                                  onChange={this.onTripDateChange}
+                                  customInput={<CustomDatePickerInput />}
+                                  className={`rounded-0 ${style.datePickerinputShadow}  textingred `}
+                                ></DatePicker>
+                              </div>
+                            </div>
                           </div>
-                          <div
-                            className={`col-md-8 col-sm-8  ${style.inputShadow} col-xs-8 col-lg-8 pt-1 pb-1`}
-                          >
-                            <DatePicker
-                              selected={this.state.tripDate}
-                              // onChange={(date) => setStartDate(date)}
-                              // customInput={<ExampleCustomInput />}
-                              // showTimeSelect={false}
-                              // title="Select Date"
-                              // currentDate={this.state.tripDate}
-                              // dateFormat={this.state.dateFormat}
-                              // minDate={new Date()}
-                              onChange={this.onTripDateChange}
-                              customInput={<CustomDatePickerInput />}
-                              className={`rounded-0 ${style.datePickerinputShadow}  textingred `}
-                            ></DatePicker>
-                          </div>
-                        </div>
-                      </div>
-                    </React.Fragment>
-                  ) : null}
-                  {this.state.createTrip ? (
-                    <div className={col4}>
-                      <div className="row no-gutters">
-                        <div
-                          className={`RoutesPlan_inputShadow__5Ht1u pt-2 ${col4}`}
-                          style={{
-                            fontSize: "10px",
-                          }}
-                        >
-                          {t("Select Vehicle")}:{" "}
-                        </div>
-                        <div
-                          className={`${
-                            this.state.vehicleLoading ? col7 : col7
-                          } pt-1 pb-1`}
-                        >
-                          <Form.Control
-                            as="select"
-                            className="rounded-0"
-                            onChange={this.onVehicleChange}
-                            value={
-                              this.state.selectedVehicle
-                                ? this.state.selectedVehicle
-                                : ""
-                            }
-                          >
-                            <option data-content="<i class='fa fa-cutlery'></i> Cutlery">
-                              --- {t("Select Vehicle")}
-                              ---
-                            </option>
-                            {this.state.vehicleList.length > 0 &&
-                              this.state.vehicleList.map((vehicle) => (
-                                <option
-                                  key={vehicle.vehicle_id}
-                                  value={vehicle.vehicle_id}
-                                >
-                                  {`${vehicle.number_plate} - ${
-                                    typeof vehicle.driver_name !== "undefined"
-                                      ? vehicle.driver_name[lang]
-                                      : null
-                                  }
-                                (${vehicle.vehicle_code})`}
+                        </React.Fragment>
+                      ) : null}
+                      {this.state.createTrip ? (
+                        <div className={col4}>
+                          <div className="row no-gutters">
+                            <div
+                              className={`RoutesPlan_inputShadow__5Ht1u pt-2 ${col4}`}
+                              style={{
+                                fontSize: "10px",
+                              }}
+                            >
+                              {t("Select Vehicle")}:{" "}
+                            </div>
+                            <div
+                              className={`${
+                                this.state.vehicleLoading ? col7 : col7
+                              } pt-1 pb-1`}
+                            >
+                              <Form.Control
+                                as="select"
+                                className="rounded-0"
+                                onChange={this.onVehicleChange}
+                                value={
+                                  this.state.selectedVehicle
+                                    ? this.state.selectedVehicle
+                                    : ""
+                                }
+                              >
+                                <option data-content="<i class='fa fa-cutlery'></i> Cutlery">
+                                  --- {t("Select Vehicle")}
+                                  ---
                                 </option>
-                              ))}
-                          </Form.Control>
-                        </div>{" "}
-                      </div>
+                                {this.state.vehicleList.length > 0 &&
+                                  this.state.vehicleList.map((vehicle) => (
+                                    <option
+                                      key={vehicle.vehicle_id}
+                                      value={vehicle.vehicle_id}
+                                    >
+                                      {`${vehicle.number_plate} - ${
+                                        typeof vehicle.driver_name !==
+                                        "undefined"
+                                          ? vehicle.driver_name[lang]
+                                          : null
+                                      }
+                                (${vehicle.vehicle_code})`}
+                                    </option>
+                                  ))}
+                              </Form.Control>
+                            </div>{" "}
+                          </div>
+                        </div>
+                      ) : null}
+                      {this.state.selectedVehicle ? (
+                        <div className="col-md-2 col-sm-2 col-xs-2 col-lg-2 pt-2 pb-1">
+                          <Button
+                            className={style.buttonStyle}
+                            onClick={this.assignPlanRoute2}
+                          >
+                            {t("Assign Vehicle")}
+                          </Button>
+                        </div>
+                      ) : null}
                     </div>
+                  ) : this.state.generatedTripCode && !this.state.createTrip ? (
+                    <b>
+                      Trip {this.state.generatedTripCode} Created Successfully
+                    </b>
                   ) : null}
-                  {this.state.selectedVehicle ? (
-                    <div className="col-md-2 col-sm-2 col-xs-2 col-lg-2 pt-2 pb-1">
-                      <Button
-                        className={style.buttonStyle}
-                        onClick={this.assignPlanRoute2}
-                      >
-                        {t("Assign Vehicle")}
-                      </Button>
-                    </div>
-                  ) : null}
-                </div>
-              ) : this.state.generatedTripCode && !this.state.createTrip ? (
-                <b>Trip {this.state.generatedTripCode} Created Successfully</b>
-              ) : null}
-            </div>
-          </div>
-          <div className="row mt-3 mb-1 no-gutters">
-            {this.state.isChanged && this.state.listview ? (
-              <div className={`${col6}`}>
-                <div className="row" style={{ marginLeft: "-1.8rem" }}>
-                  <div className={`${col12} w-auto h-auto test`}>
-                    <ClipLoader
-                      css={`
-                        position: fixed;
-                        top: 35%;
-                        left: 12%;
-                        right: 40%;
-                        bottom: 20%;
-                        z-index: 999999;
-                      `}
-                      size={200}
-                      this
-                      also
-                      works
-                      color={"#196633"}
-                      loading={this.state.dataTableloading}
-                    />
-                    {this.state.showOrders && (
-                      <BoostrapDataTable
-                        sendSelectedOrderId={this.setDataTableSelectedId}
-                        t={this.props.t}
-                        language={this.props.i18n.language}
-                        actionStatus={false}
-                        rowExpansion={true}
-                        rowSelection={true}
-                        columns={OrderTableColumns}
-                        data={
-                          this.state.routeOrders
-                            ? this.state.routeOrders.deliveries
-                              ? this.state.routeOrders.deliveries
-                              : []
-                            : []
-                        }
-                        mapSelectedOrderId={
-                          this.state.selectedOrderId.length > 0
-                            ? this.state.selectedOrderId
-                            : []
-                        }
-                        fromPage={"routesPlan"}
-                        mapSelectedDetailOrders={
-                          this.state.selectedOrdersDetail.length > 0
-                            ? this.state.selectedOrdersDetail
-                            : []
-                        }
-                        showInfoIcon={
-                          this.state.showByArea || this.state.showByRoute
-                            ? true
-                            : false
-                        }
-                        wrapperClasses={"routePlanBoostrapTable"}
-                        dataFor="orders"
-                        keyField="order_id"
-                      />
-                    )}
-                    {/*
-                    {this.state.showOrdersInProduction && (
-                      <BoostrapDataTable
-                        sendSelectedOrderId={this.setDataTableSelectedId}
-                        language={this.props.language}
-                        t={this.props.t}
-                        actionStatus={false}
-                        rowExpansion={true}
-                        rowSelection={false}
-                        columns={OrderTableColumns}
-                        data={
-                          this.state.routeOrders
-                            ? this.state.routeOrders.deliveries
-                              ? this.state.routeOrders.deliveries
-                              : []
-                            : []
-                        }
-                        mapSelectedOrderId={
-                          this.state.selectedOrderId.length > 0
-                            ? this.state.selectedOrderId
-                            : []
-                        }
-                        mapSelectedDetailOrders={
-                          this.state.selectedOrdersDetail.length > 0
-                            ? this.state.selectedOrdersDetail
-                            : []
-                        }
-                        wrapperClasses={"routePlanBoostrapTable"}
-                        fromPage={"routesPlan"}
-                        dataFor="orders"
-                        keyField="order_id"
-                      />
-                    )}
-                    {this.state.showDeliveryTrip && (
-                      <DeliveryTripDataTable
-                        t={this.props.t}
-                        language={this.props.language}
-                        sendSelectedOrderId={this.setDataTableSelectedId}
-                        warehouse_id={this.state.selectedBranchId}
-                        getRouteOrders={this.getSelectedDeliveryTripOrder}
-                        isPageLoading={this.onModalsLoading}
-                        rowSelection={false}
-                        rowExpansion={false}
-                        columns={DeliveryTripColumns}
-                        data={this.state.routeTrips}
-                        mapSelectedOrderId={
-                          this.state.selectedOrderId.length > 0
-                            ? this.state.selectedOrderId
-                            : []
-                        }
-                        getCancelDeliveries={this.removeCancelDeliveries}
-                        ordersdata={this.state.allorders}
-                        vehiclesdata={this.state.vehicleList}
-                        wrapperClasses={"routePlanBoostrapTable"}
-                        dataFor="deliverytrips"
-                        keyField="delivery_trip_id"
-                      />
-                    )}{" "}
-                    */}
-                  </div>
                 </div>
               </div>
-            ) : null}
-            <div className={`${this.state.listview ? col6 : col5}`}>
-              {mapComponent}
-            </div>
-            {!this.state.listview && (
-              <div className={col7}>
-                {this.state.summarystats ? (
-                  <RouteSummary
-                    summary={this.state.summarystats}
-                  ></RouteSummary>
-                ) : (
-                  <LoadPropagateLoader size={15}></LoadPropagateLoader>
+
+              <div className="row mt-3 mb-1 no-gutters">
+                {this.state.listview ? (
+                  <div className={`${col5}`}>
+                    <div className="row" style={{ marginLeft: "-1.8rem" }}>
+                      <div className={`${col12} w-auto h-auto test`}>
+                        <ClipLoader
+                          css={`
+                            position: fixed;
+                            top: 35%;
+                            left: 12%;
+                            right: 40%;
+                            bottom: 20%;
+                            z-index: 999999;
+                          `}
+                          size={200}
+                          this
+                          also
+                          works
+                          color={"#196633"}
+                          loading={this.state.dataTableloading}
+                        />
+                        {this.state.showOrders && (
+                          <BoostrapDataTable
+                            sendSelectedOrderId={this.setDataTableSelectedId}
+                            t={this.props.t}
+                            language={this.props.i18n.language}
+                            actionStatus={false}
+                            rowExpansion={true}
+                            rowSelection={true}
+                            columns={OrderTableColumns}
+                            data={
+                              this.state.routeOrders
+                                ? this.state.routeOrders.deliveries
+                                  ? this.state.routeOrders.deliveries
+                                  : []
+                                : []
+                            }
+                            mapSelectedOrderId={
+                              this.state.selectedOrderId.length > 0
+                                ? this.state.selectedOrderId
+                                : []
+                            }
+                            fromPage={"routesPlan"}
+                            mapSelectedDetailOrders={
+                              this.state.selectedOrdersDetail.length > 0
+                                ? this.state.selectedOrdersDetail
+                                : []
+                            }
+                            showInfoIcon={
+                              this.state.showByArea || this.state.showByRoute
+                                ? true
+                                : false
+                            }
+                            wrapperClasses={"routePlanBoostrapTable"}
+                            dataFor="orders"
+                            keyField="order_id"
+                          />
+                        )}
+                        {this.state.showDeliveryTrip && (
+                          <DeliveryTripDataTable
+                            t={this.props.t}
+                            language={this.props.i18n.language}
+                            sendSelectedOrderId={this.setDataTableSelectedId}
+                            warehouse_id={this.state.selectedBranchId}
+                            getRouteOrders={this.getSelectedDeliveryTripOrder}
+                            isPageLoading={this.onModalsLoading}
+                            rowSelection={false}
+                            rowExpansion={false}
+                            columns={DeliveryTripColumns}
+                            data={this.state.routeTrips}
+                            mapSelectedOrderId={
+                              this.state.selectedOrderId.length > 0
+                                ? this.state.selectedOrderId
+                                : []
+                            }
+                            getCancelDeliveries={this.removeCancelDeliveries}
+                            ordersdata={this.state.allorders}
+                            vehiclesdata={this.state.vehicleList}
+                            wrapperClasses={"routePlanBoostrapTable"}
+                            dataFor="deliverytrips"
+                            keyField="delivery_trip_id"
+                          />
+                        )}{" "}
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+                <div className={`${this.state.listview ? col7 : col5}`}>
+                  {mapComponent}
+                </div>
+                {this.state.listview && (
+                  <div className="row mt-1 align-items-center fixed-bottom">
+                    <div className={col12}>
+                      <div className={`row`}>
+                        <div className={col6}>
+                          <ul className={`nav nav-tabs ${style.routePlanTabs}`}>
+                            <li className={style.navItem}>
+                              <a
+                                style={{
+                                  height: "100%",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                                id="1"
+                                onClick={(e) => this.onOrderClick(e)}
+                                className={`${style.navLink} ${
+                                  this.state.isActive == 1 ? style.active : ""
+                                } nav-link`}
+                                role="button"
+                              >
+                                <Trans i18nKey={"Orders"} />
+                              </a>
+                            </li>
+                            <li className={style.navItem}>
+                              <a
+                                onClick={(e) => this.getDeliveryTrips(e)}
+                                id="2"
+                                className={`${style.navLink} ${
+                                  this.state.isActive == 2 ? style.active : ""
+                                } nav-link`}
+                                role="button"
+                              >
+                                <Trans i18nKey={"Delivery Trips"} />
+                              </a>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -1192,6 +1272,7 @@ const mapStateToProps = (state) => {
     // apiLoaded: state.routesplan.routesPlanLoaded,
     vehicleList: state.routesplan.vehicleList,
     defaultCenter: state.navbar.defaultCenter,
+    tripList: state.live.tripList,
     message: state.routesplan.message,
     tripCode: state.routesplan.tripCode,
     tripData: state.routesplan.staticTripData,
@@ -1204,6 +1285,8 @@ const mapDispatchToProps = (dispatch) => {
       dispatch(get_routes_and_capacity(from_date, to_date, store_id)),
     getAvailableVehiclesApi: (branchId, date) =>
       dispatch(get_available_vehciles(branchId, date)),
+    getTripsApi: (currentDate, id) => dispatch(get_trips_list(currentDate, id)),
+    resetRoutesandPlanApi: () => dispatch({ type: CLEAR_ROUTES_PLAN }),
     createTripApi: (branchId, data) =>
       dispatch(create_static_trip(branchId, data)),
   };

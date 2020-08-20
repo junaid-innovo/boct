@@ -17,6 +17,10 @@ import { ToastContainer, toast, Zoom } from "react-toastify";
 import moment from "moment";
 import style from "./OrderEditModal.module.css";
 import { connect } from "react-redux";
+import {
+  update_delivery,
+  get_available_vehciles,
+} from "../../store/actions/routesplan/actionCreator";
 class OrderEditModal extends Component {
   constructor(props) {
     super(props);
@@ -57,6 +61,15 @@ class OrderEditModal extends Component {
     if (this.state.tripDate !== prevState.tripDate) {
       this.getVehicleList();
     }
+    if (this.state.vehicleList !== this.props.vehicleList) {
+      this.setState({
+        vehicleList: this.props.vehicleList,
+        vehicleLoading: false,
+      });
+    }
+    if (this.props.message !== prevProps.message) {
+      this.showMessage(this.props.message, "success");
+    }
   }
   renderFadeLoader = () => {
     return (
@@ -74,34 +87,35 @@ class OrderEditModal extends Component {
   };
   getVehicleList = () => {
     let tripDate = moment(this.state.tripDate).format("YYYY-MM-DD");
-    axios
-      .get(
-        `storesupervisor/v1/${tripDate}/${this.props.warehouse_id}/availableVehicles`,
-        {
-          headers: {
-            Authorization: `bearer ${localStorage.getItem("authtoken")}`,
-          },
-        }
-      )
-      .then((res) => {
-        let response = res.data;
-        if (response.code === 200) {
-          let vehObj = {
-            vehicle_id: this.state.selectedVehicleId,
-            number_plate: this.state.vehiclePlatNo,
-          };
-          var data = response.data;
-          let allvehicles = [...data.availabeVehicles];
+    this.props.getAvailableVehiclesApi(this.props.selectedBranch, tripDate);
+    // axios
+    //   .get(
+    //     `storesupervisor/v1/${tripDate}/${this.props.warehouse_id}/availableVehicles`,
+    //     {
+    //       headers: {
+    //         Authorization: `bearer ${localStorage.getItem("authtoken")}`,
+    //       },
+    //     }
+    //   )
+    //   .then((res) => {
+    //     let response = res.data;
+    //     if (response.code === 200) {
+    //       let vehObj = {
+    //         vehicle_id: this.state.selectedVehicleId,
+    //         number_plate: this.state.vehiclePlatNo,
+    //       };
+    //       var data = response.data;
+    //       let allvehicles = [...data.availabeVehicles];
 
-          allvehicles.push(vehObj);
-          this.setState({
-            vehilcesList: allvehicles,
-          });
-        }
-      })
-      .catch((error) => {
-        this.showMessage(error.toString(), "error", false);
-      });
+    //       allvehicles.push(vehObj);
+    //       this.setState({
+    //         vehilcesList: allvehicles,
+    //       });
+    //     }
+    //   })
+    //   .catch((error) => {
+    //     this.showMessage(error.toString(), "error", false);
+    // });
   };
   onTripDateChange = (date) => {
     this.setState({ tripDate: date });
@@ -113,25 +127,28 @@ class OrderEditModal extends Component {
       vehicle_id: this.state.selectedVehicleId,
       trip_date: moment(this.state.tripDate).format("YYYY-MM-DD"),
     };
-
-    axios
-      .post(`storesupervisor/v1/editTrip`, JSON.stringify(data), {
-        headers: {
-          Authorization: `bearer ${localStorage.getItem("authtoken")}`,
-        },
-      })
-      .then((res) => {
-        let response = res.data;
-        if (response.code === 200) {
-          this.showMessage(response.mesaege, "success");
-          this.props.onHide();
-        } else {
-          this.showMessage(response.mesaege, "error");
-        }
-      })
-      .catch((error) => {
-        this.showMessage(error.toString(), "error", false);
-      });
+    this.props.updateDeliveryApi(
+      this.props.selectedBranch,
+      JSON.stringify(data)
+    );
+    // axios
+    //   .post(`storesupervisor/v1/editTrip`, JSON.stringify(data), {
+    //     headers: {
+    //       Authorization: `bearer ${localStorage.getItem("authtoken")}`,
+    //     },
+    //   })
+    //   .then((res) => {
+    //     let response = res.data;
+    //     if (response.code === 200) {
+    //       this.showMessage(response.mesaege, "success");
+    //       this.props.onHide();
+    //     } else {
+    //       this.showMessage(response.mesaege, "error");
+    //     }
+    //   })
+    //   .catch((error) => {
+    //     this.showMessage(error.toString(), "error", false);
+    //   });
   };
   showMessage = (message, type, autoClose = 2000) =>
     toast(message, {
@@ -253,24 +270,16 @@ class OrderEditModal extends Component {
 const mapStateToProps = (state) => {
   return {
     selectedBranch: state.navbar.selectedBranch,
-    routeOrders: state.routesplan.routeOrders,
-    orders: state.routesplan.orders,
+    message: state.navbar.message,
     vehicleList: state.routesplan.vehicleList,
-    constraints: state.routesplan.constraints,
-    summaryStats: state.routesplan.summaryStats,
-    apiLoaded: state.routesplan.routesPlanLoaded,
-    tripList: state.live.tripList,
-    defaultCenter: state.navbar.defaultCenter,
   };
 };
 const mapDispatchToProps = (dispatch) => {
   return {
-    getrouteandplanApi: (from_date, to_date, store_id) =>
-      dispatch(get_routes_and_capacity(from_date, to_date, store_id)),
     getAvailableVehiclesApi: (branchId, date) =>
       dispatch(get_available_vehciles(branchId, date)),
-    getTripsApi: (currentDate, id) => dispatch(get_trips_list(currentDate, id)),
-    createTripApi: (branchId, data) => dispatch(create_trip(branchId, data)),
+    updateDeliveryApi: (branchId, date) =>
+      dispatch(update_delivery(branchId, date)),
   };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(OrderEditModal);
