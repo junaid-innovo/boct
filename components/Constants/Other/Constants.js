@@ -1,0 +1,10 @@
+export const FOR_LIVE_PAGE_MESSAGES = "LIVEPAGEMESSAGES";
+export const FOR_CONTROL_TOWER_PAGE_MESSAGES = "CONTROLTOWERPAGEMESSAGES";
+export const FOR_ROUTES_PALN_PAGE_MESSAGES = "FORROUTESPALNPAGEMESSAGES";
+export const FOR_NAV_BAR_PAGE_MESSAGES = "NAVBARPAGEMESSAGES";
+export const SEQUENCE_ORDERS = "Sequence Orders";
+export const BALANCED_ALLOCATIONS = "Balanced Allocation";
+export const TIME_AND_FUEL_OPTIMIZATION = "Time And Fuel Optimization";
+export const MULTI_TRIP = "Multi Trip";
+export const INPUT_TYPE_RADIO = "radio";
+export const INPUT_TYPE_CHECKBOX = "checkbox";

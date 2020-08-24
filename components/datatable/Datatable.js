@@ -130,7 +130,6 @@ class BootstrapDataTable extends Component {
     if (this.props.dataFor === "orders") {
       expandRow = {
         renderer: (row, key) => {
-          console.log("CHECK ROW", row);
           return (
             <div key={key} className="row" style={{ fontSize: "10px" }}>
               <div className="col-6">
@@ -757,18 +756,6 @@ class BootstrapDataTable extends Component {
   render() {
     return (
       <React.Fragment>
-        <ToastContainer
-          transition={Zoom}
-          position="top-center"
-          // autoClose={1500}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnVisibilityChange
-          draggable
-          pauseOnHover
-        />
         {this.renderOrderModals()}
         {this.renderDataTable()}
       </React.Fragment>

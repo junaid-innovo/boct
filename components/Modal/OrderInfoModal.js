@@ -31,6 +31,7 @@ import AddDeliveryModal from "../Modal/AddDeliveryModal";
 import { LANG_AR } from "../Constants/Language/Language";
 import { add_delivery } from "../../store/actions/routesplan/actionCreator";
 import { connect } from "react-redux";
+import { FOR_ROUTES_PALN_PAGE_MESSAGES } from "../Constants/Other/Constants";
 class OrderInfoModal extends Component {
   constructor(props) {
     super(props);
@@ -96,11 +97,6 @@ class OrderInfoModal extends Component {
         },
         tripData: this.props.tripdata,
       });
-    }
-    if (this.props.message !== prevProps.message) {
-      if (this.props.message) {
-        this.showMessage(this.props.message, "success");
-      }
     }
   }
   renderFadeLoader = () => {
@@ -179,18 +175,6 @@ class OrderInfoModal extends Component {
     let t = this.props.t;
     return (
       <React.Fragment>
-        <ToastContainer
-          transition={Zoom}
-          position="top-center"
-          // autoClose={1500}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnVisibilityChange
-          draggable
-          pauseOnHover
-        />
         {this.state.showAddDeliveryModal && (
           <AddDeliveryModal
             show={this.state.showAddDeliveryModal}
@@ -457,13 +441,13 @@ class OrderInfoModal extends Component {
 
 const mapStateToProps = (state) => {
   return {
-    message: state.routesplan.message,
     selectedBranchId: state.navbar.selectedBranch,
   };
 };
 const mapDispatchToProps = (dispatch) => {
   return {
-    addDeliveryApi: (branchId, data) => dispatch(add_delivery(branchId, data)),
+    addDeliveryApi: (branchId, data) =>
+      dispatch(add_delivery(branchId, data, FOR_ROUTES_PALN_PAGE_MESSAGES)),
   };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(OrderInfoModal);

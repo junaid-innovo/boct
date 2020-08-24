@@ -33,6 +33,8 @@ import {
   get_routes_and_capacity,
 } from "../../store/actions/routesplan/actionCreator";
 import { connect } from "react-redux";
+import { FOR_ROUTES_PALN_PAGE_MESSAGES } from "../Constants/Other/Constants";
+import { SUCCESS_MESSAGE } from "../../store/actions/actionTypes";
 class AddDeliveryModal extends Component {
   constructor(props) {
     super(props);
@@ -71,15 +73,18 @@ class AddDeliveryModal extends Component {
     );
   }
   componentDidUpdate(prevProps, prevState) {
-    if (this.props.message !== prevProps.message) {
-      let getorder = _.filter(this.state.alldeliveries, ({ order_id }) => {
-        return !this.state.selectedOrderId.includes(order_id);
-      });
-      this.setState({
-        alldeliveries: getorder,
-      });
-      if (this.props.message) {
-        this.showMessage(this.props.message, "success");
+    if (this.props.toastMessages) {
+      const { forPage, messageId, type, message } = this.props.toastMessages;
+      if (
+        forPage === FOR_ROUTES_PALN_PAGE_MESSAGES &&
+        messageId !== prevProps.toastMessages.messageId
+      ) {
+        let getorder = _.filter(this.state.alldeliveries, ({ order_id }) => {
+          return !this.state.selectedOrderId.includes(order_id);
+        });
+        this.setState({
+          alldeliveries: getorder,
+        });
       }
     }
     if (
@@ -114,7 +119,7 @@ class AddDeliveryModal extends Component {
   };
   showMessage = (message, type, autoClose = 2000) => {
     toast(message, {
-      type: type,
+      type: type === SUCCESS_MESSAGE ? "success" : "error",
       // autoClose: false,
       autoClose: autoClose,
       className:
@@ -155,19 +160,6 @@ class AddDeliveryModal extends Component {
     let t = this.props.t;
     return (
       <React.Fragment>
-        <ToastContainer
-          transition={Zoom}
-          position="top-center"
-          // autoClose={1500}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnVisibilityChange
-          draggable
-          pauseOnHover
-        />
-
         <Modal
           show={this.props.show}
           onHide={this.onModalHide}
@@ -274,7 +266,7 @@ const mapStateToProps = (state) => {
   return {
     selectedBranch: state.navbar.selectedBranch,
     allavailableDeliveries: state.routesplan.foravailableDeliveries,
-    message: state.routesplan.message,
+    // toastMessages: state.toastmessages,
   };
 };
 const mapDispatchToProps = (dispatch) => {

@@ -75,18 +75,6 @@ class DeliveryTripOrderCancel extends Component {
     let t = this.props.t;
     return (
       <React.Fragment>
-        <ToastContainer
-          transition={Zoom}
-          position="top-center"
-          // autoClose={1500}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnVisibilityChange
-          draggable
-          pauseOnHover
-        />
         <Modal
           show={this.props.show}
           onHide={this.props.onHide}

@@ -61,7 +61,11 @@ import {
 } from "../Constants/Order/Constants";
 import { connect } from "react-redux";
 import { get_trips_list } from "../../store/actions/live/actionCreator";
-import { CLEAR_ROUTES_PLAN } from "../../store/actions/actionTypes";
+import {
+  CLEAR_ROUTES_PLAN,
+  SUCCESS_MESSAGE,
+} from "../../store/actions/actionTypes";
+import { FOR_ROUTES_PALN_PAGE_MESSAGES } from "../Constants/Other/Constants";
 class StaticRoutesPlan extends PureComponent {
   constructor(props) {
     super(props);
@@ -242,14 +246,39 @@ class StaticRoutesPlan extends PureComponent {
         });
       }
     }
-    if (this.props.message) {
-      if (this.props.message !== prevProps.message) {
-        this.showMessage(this.props.message, "success");
-        this.setState({
-          createTrip: false,
-          selectedOrderId: [],
-          selectedVehicle: null,
-        });
+    if (this.props.toastMessages) {
+      const { forPage, messageId, type, message } = this.props.toastMessages;
+      if (
+        forPage === FOR_ROUTES_PALN_PAGE_MESSAGES &&
+        messageId !== prevProps.toastMessages.messageId
+      ) {
+        if (this.state.routeOrders && this.state.routeOrders.deliveries) {
+          let selectedOrderIds = [...this.state.routeOrders.deliveries];
+          _.remove(selectedOrderIds, (order) =>
+            this.state.selectedOrderId.includes(order.order_id)
+          );
+          let store_address = { ...this.state.defaultCenter };
+
+          this.setState({
+            routeOrders: {
+              deliveries: selectedOrderIds,
+              store_address: {
+                latitude: store_address.lat,
+                longitude: store_address.lng,
+              },
+            },
+            createTrip: false,
+            tripDate: new Date(),
+            selectedVehicle: null,
+            selectedOrderId: [],
+            selectedOrdersDetail: [],
+            pageloading: false,
+            // generatedTripCode: newCode,
+          });
+        }
+        if (message) {
+          this.showMessage(message, type);
+        }
       }
     }
     if (this.props.tripList !== prevProps.tripList) {
@@ -427,13 +456,15 @@ class StaticRoutesPlan extends PureComponent {
     let startDate = moment(getDateRange[0]).format("YYYY-MM-DD");
     let endDate = moment(getDateRange[1]).format("YYYY-MM-DD");
     let data = {
-      route_ids: [this.selectedRoute],
-      order_ids: [this.state.selectedOrderId],
-      area_ids: [this.state.selectedArea],
+      route_ids: this.state.selectedRoute ? [this.selectedRoute] : [],
+      order_ids: this.state.selectedOrderId,
+      area_ids: this.state.selectedArea ? [this.state.selectedArea] : [],
       date_from: startDate,
       date_to: endDate,
     };
-
+    this.setState({
+      pageloading: true,
+    });
     this.props.createTripApi(this.props.selectedBranch, JSON.stringify(data));
   };
   //new
@@ -452,14 +483,17 @@ class StaticRoutesPlan extends PureComponent {
       generatedTripCode: null,
     });
   };
-  showMessage = (message, type, autoClose = 2000) =>
-    toast(message, {
-      type: type,
+  showMessage = (message, type, autoClose = 2000) => {
+    return toast(message, {
+      type: type === SUCCESS_MESSAGE ? "success" : "error",
       // autoClose: false,
       autoClose: autoClose,
-      className: style.toastContainer,
+      className:
+        type === SUCCESS_MESSAGE
+          ? style.toastContainerSuccess
+          : style.toastContainer,
     });
-
+  };
   handleRecurringOptions = () => {};
   //new
   onSearchClick = () => {
@@ -809,7 +843,7 @@ class StaticRoutesPlan extends PureComponent {
 
     return (
       <div className={`${style.routeplanDiv}`}>
-        <ToastContainer
+        {/* <ToastContainer
           transition={Zoom}
           position="top-center"
           // autoClose={1500}
@@ -820,7 +854,7 @@ class StaticRoutesPlan extends PureComponent {
           pauseOnVisibilityChange
           draggable
           pauseOnHover
-        />
+        /> */}
         <ClipLoader
           css={`
             position: fixed;
@@ -982,10 +1016,10 @@ class StaticRoutesPlan extends PureComponent {
               <div
                 className={` row mt-1 ${style.routePlanNav}  align-items-center`}
               >
-                {this.state.selectedBranchId ? null : (
+                {this.state.selectedBranchId ||
+                this.props.selectedBranch ? null : (
                   <div className="col-4 offset-5">
                     <span className="text-danger">
-                      {" "}
                       <Trans
                         i18nKey={"Please Select Branch To Continue"}
                       ></Trans>
@@ -1277,6 +1311,7 @@ const mapStateToProps = (state) => {
     tripCode: state.routesplan.tripCode,
     tripData: state.routesplan.staticTripData,
     routesAndPlanData: state.routesplan.routesAndPlanData,
+    toastMessages: state.toastmessages,
   };
 };
 const mapDispatchToProps = (dispatch) => {
@@ -1285,10 +1320,13 @@ const mapDispatchToProps = (dispatch) => {
       dispatch(get_routes_and_capacity(from_date, to_date, store_id)),
     getAvailableVehiclesApi: (branchId, date) =>
       dispatch(get_available_vehciles(branchId, date)),
-    getTripsApi: (currentDate, id) => dispatch(get_trips_list(currentDate, id)),
+    getTripsApi: (currentDate, id) =>
+      dispatch(get_trips_list(currentDate, id, FOR_ROUTES_PALN_PAGE_MESSAGES)),
     resetRoutesandPlanApi: () => dispatch({ type: CLEAR_ROUTES_PLAN }),
     createTripApi: (branchId, data) =>
-      dispatch(create_static_trip(branchId, data)),
+      dispatch(
+        create_static_trip(branchId, data, FOR_ROUTES_PALN_PAGE_MESSAGES)
+      ),
   };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(StaticRoutesPlan);

@@ -19,6 +19,7 @@ import {
   remove_delivery,
   delete_delivery,
 } from "../../store/actions/routesplan/actionCreator";
+import { FOR_ROUTES_PALN_PAGE_MESSAGES } from "../Constants/Other/Constants";
 class OrderCancelModal extends Component {
   constructor(props) {
     super(props);
@@ -39,11 +40,15 @@ class OrderCancelModal extends Component {
         });
       }
     }
-    if (this.props.message != prevProps.message) {
-      if (this.props.message) {
-        this.showMessage(this.props.message, "success");
+    if (this.props.toastMessages) {
+      const { forPage, messageId, type, message } = this.props.toastMessages;
+      if (
+        forPage === FOR_ROUTES_PALN_PAGE_MESSAGES &&
+        messageId !== prevProps.toastMessages.messageId
+      ) {
+        this.props.cancelleddelivery(this.props.canceldata.delivery_trip_id);
+        this.props.onHide();
       }
-      this.props.cancelleddelivery(this.props.canceldata.delivery_trip_id);
     }
   }
   handleSubmit = (e) => {
@@ -138,7 +143,7 @@ class OrderCancelModal extends Component {
 }
 const mapStateToProps = (state) => {
   return {
-    message: state.routesplan.message,
+    toastMessages: state.toastmessages,
     selectedBranchId: state.navbar.selectedBranch,
   };
 };

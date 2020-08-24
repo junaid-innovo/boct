@@ -15,6 +15,7 @@ import {
   get_routes_and_capacity,
   get_available_vehciles,
   create_trip,
+  get_dynamic_constraints,
 } from "../../store/actions/routesplan/actionCreator";
 import { OrderTableColumns } from "../Constants/TableColumns/OrderColumns";
 import { DeliveryTripColumns } from "../Constants/TableColumns/DeliveryTripColumns";
@@ -37,6 +38,17 @@ import _ from "lodash";
 import { connect } from "react-redux";
 import { get_trips_list } from "../../store/actions/live/actionCreator";
 import { DELIVERY_TRIPS, ALL_ORDERS } from "../Constants/Order/Constants";
+import {
+  INPUT_TYPE_CHECKBOX,
+  INPUT_TYPE_RADIO,
+} from "../Constants/Other/Constants";
+import {
+  SEQUENCE_ORDERS,
+  MULTI_TRIP,
+  TIME_AND_FUEL_OPTIMIZATION,
+  BALANCED_ALLOCATIONS,
+} from "../Constants/Other/Constants";
+
 class DynamicRoutesPlan extends PureComponent {
   constructor(props) {
     super(props);
@@ -46,11 +58,24 @@ class DynamicRoutesPlan extends PureComponent {
       vehicleRoutes: null,
       orders: [],
       plandate: "PLAN-04/15/2020 5:51:06PM",
-      listview: false,
+      listview: true,
       mapview: false,
       constraints: null,
+      selectedsequenceOrders: null,
+      selectedBalancedAllocation: null,
+      selectedTimeandFuelOptimization: null,
+      selectedMultiTrip: null,
+      defaultsequenceOrders: null,
+      defaultBalancedAllocation: null,
+      defaultTimeandFuelOptimization: null,
+      defaultMultiTrip: null,
       selectedConstraints: null,
-      selectedConstraintName: { type: "", names: [] },
+      selectedConstraintName: {
+        type: "",
+        names: [],
+        constaint_type: null,
+        defaultChecked: null,
+      },
       advancemenu: false,
       date: [new Date(), new Date()],
       DateTimeRange: [new Date(), new Date()],
@@ -62,7 +87,7 @@ class DynamicRoutesPlan extends PureComponent {
       rangedate: [new Date(), new Date()],
       summarystats: null,
       isActive: false,
-      pageloading: true,
+      pageloading: false,
       allOrders: [],
       routeOrders: null,
       mapfeatures: {
@@ -94,6 +119,128 @@ class DynamicRoutesPlan extends PureComponent {
     };
   }
 
+  handleRadioBox = (e, type) => {
+    let target = e.target;
+    let value = e.target.value;
+    let inputType = e.target.type;
+
+    if (type === SEQUENCE_ORDERS) {
+      if (this.state.selectedsequenceOrders && inputType !== INPUT_TYPE_RADIO) {
+        let getSequenceOrders = [...this.state.selectedsequenceOrders];
+        if (target.checked) {
+          if (!getSequenceOrders.includes(value)) {
+            getSequenceOrders.push(value);
+          }
+        } else {
+          if (getSequenceOrders.includes(value)) {
+            _.remove(getSequenceOrders, (item) => item === value);
+          }
+        }
+        this.setState({
+          selectedsequenceOrders: getSequenceOrders,
+        });
+      } else {
+        let getSequenceOrders = [];
+        if (inputType === INPUT_TYPE_RADIO) {
+          getSequenceOrders = value;
+        } else {
+          getSequenceOrders.push(value);
+        }
+        this.setState({
+          selectedsequenceOrders: getSequenceOrders,
+        });
+      }
+    }
+    if (type === BALANCED_ALLOCATIONS) {
+      if (
+        this.state.selectedBalancedAllocation &&
+        inputType !== INPUT_TYPE_RADIO
+      ) {
+        let balancedAllocation = [...this.state.selectedBalancedAllocation];
+        if (target.checked) {
+          if (!balancedAllocation.includes(value)) {
+            balancedAllocation.push(value);
+          }
+        } else {
+          if (balancedAllocation.includes(value)) {
+            _.remove(balancedAllocation, (item) => item === value);
+          }
+        }
+        console.log("CHECK BALANCED ALLOCATION1", balancedAllocation);
+        this.setState({
+          selectedBalancedAllocation: balancedAllocation,
+        });
+      } else {
+        let balancedAllocation = [];
+        if (inputType === INPUT_TYPE_RADIO) {
+          balancedAllocation = value;
+        } else {
+          balancedAllocation.push(value);
+        }
+
+        this.setState({
+          selectedBalancedAllocation: balancedAllocation,
+        });
+      }
+    }
+    if (type == TIME_AND_FUEL_OPTIMIZATION) {
+      if (
+        this.state.selectedTimeandFuelOptimization &&
+        inputType !== INPUT_TYPE_RADIO
+      ) {
+        let timeandFuelOpt = [...this.state.selectedTimeandFuelOptimization];
+        if (target.checked) {
+          if (!timeandFuelOpt.includes(value)) {
+            timeandFuelOpt.push(value);
+          }
+        } else {
+          if (timeandFuelOpt.includes(value)) {
+            _.remove(timeandFuelOpt, (item) => item === value);
+          }
+        }
+        this.setState({
+          selectedTimeandFuelOptimization: timeandFuelOpt,
+        });
+      } else {
+        let timeandFuelOpt = [];
+        if (inputType === INPUT_TYPE_RADIO) {
+          timeandFuelOpt = value;
+        } else {
+          timeandFuelOpt.push(value);
+        }
+        this.setState({
+          selectedTimeandFuelOptimization: timeandFuelOpt,
+        });
+      }
+    }
+    if (type === MULTI_TRIP) {
+      if (this.state.selectedMultiTrip && inputType !== INPUT_TYPE_RADIO) {
+        let multiTrip = [...this.state.selectedMultiTrip];
+        if (target.checked) {
+          if (!multiTrip.includes(value)) {
+            multiTrip.push(value);
+          }
+        } else {
+          if (multiTrip.includes(value)) {
+            _.remove(multiTrip, (item) => item === value);
+          }
+        }
+        this.setState({
+          selectedMultiTrip: multiTrip,
+        });
+      } else {
+        let multiTrip = [];
+        if (inputType === INPUT_TYPE_RADIO) {
+          multiTrip = value;
+        } else {
+          multiTrip.push(value);
+        }
+        this.setState({
+          selectedMultiTrip: multiTrip,
+        });
+      }
+    }
+  };
   onChange = (date) => this.setState({ date });
   componentDidMount() {
     this._isMounted = true;
@@ -105,14 +252,13 @@ class DynamicRoutesPlan extends PureComponent {
         this.props.selectedBranch,
         moment(this.state.tripDate).format("YYYY-MM-DD")
       );
+      this.props.getConstraintsApi(this.props.selectedBranch);
       this.getRoutesandCapacity();
     }
-
-    //
-    // }
   }
   componentDidUpdate(prevProps, prevState) {
     if (this.props.selectedBranch !== prevProps.selectedBranch) {
+      this.props.getConstraintsApi(this.props.selectedBranch);
       this.getRoutesandCapacity();
     }
     if (this.props.routesAndPlanData !== prevProps.routesAndPlanData) {
@@ -133,7 +279,7 @@ class DynamicRoutesPlan extends PureComponent {
         orders: modifiedOrders,
         allOrders: orders,
         isChanged: true,
-        constraints: _.sortBy(constraints, "constraint_id"),
+        // constraints: _.sortBy(constraints, "constraint_id"),
         summarystats: summarystats,
         pageloading: false,
         areaList: _.uniq(getAreaList),
@@ -184,6 +330,12 @@ class DynamicRoutesPlan extends PureComponent {
         defaultMenuText2: "Unassigned Trips",
         tripcallPending: false,
         dataTableloading: false,
+      });
+    }
+    if (this.props.constraints !== prevProps.constraints) {
+      const { Constraints } = this.props.constraints;
+      this.setState({
+        constraints: Constraints,
       });
     }
   }
@@ -270,16 +422,44 @@ class DynamicRoutesPlan extends PureComponent {
   };
 
   renderConstraints = () => {
+    const data = {
+      Constraints: [
+        {
+          Type: SEQUENCE_ORDERS,
+          constraint_id: 1,
+          constraint_names: ["Distance", "Time", "Weight"],
+          multiVal: "1",
+        },
+        {
+          Type: BALANCED_ALLOCATIONS,
+          constraint_id: 2,
+          constraint_names: ["Time Slot Preference", "Capacity"],
+          multiVal: "0",
+        },
+        {
+          Type: TIME_AND_FUEL_OPTIMIZATION,
+          constraint_id: 3,
+          constraint_names: ["Distance", "Time", "Weight"],
+          multiVal: "0",
+        },
+        {
+          Type: MULTI_TRIP,
+          constraint_id: 4,
+          constraint_names: ["True", "False"],
+          multiVal: "0",
+        },
+      ],
+    };
     return (
       this.state.constraints &&
-      this.state.constraints.map((constraint) => (
-        <React.Fragment key={constraint.constraint_id}>
+      this.state.constraints.map((constraint, key) => (
+        <React.Fragment key={key}>
           <Nav.Link
             className={`${style.navLink}`}
             variant="button"
             onClick={(e) => this.onConstraintClick(e, constraint)}
           >
-            {constraint.constraint_type}
+            {constraint.Type}
           </Nav.Link>
         </React.Fragment>
       ))
@@ -292,7 +472,7 @@ class DynamicRoutesPlan extends PureComponent {
       parentElement.children[i].classList.remove(style.active);
     }
     e.target.classList.add(style.active);
-    if (constraint.constraint_type === "Advance") {
+    if (constraint.Type === "Advance") {
       this.setState({
         advancemenu: true,
         plannow: false,
@@ -300,15 +480,17 @@ class DynamicRoutesPlan extends PureComponent {
       });
     } else {
       let type = "";
-      if (constraint.multival) {
-        type = "checkbox";
+      if (parseInt(constraint.multiVal)) {
+        type = INPUT_TYPE_CHECKBOX;
       } else {
-        type = "radio";
+        type = INPUT_TYPE_RADIO;
       }
       let altconstraint = {
         type: type,
         // names: JSON.parse(constraint.constraint_name),
-        names: constraint.constraint_name,
+        names: constraint.constraint_names,
+        constaint_type: constraint.Type,
+        defaultChecked: null,
       };
       this.setState({
         selectedConstraintName: altconstraint,
@@ -483,6 +665,69 @@ class DynamicRoutesPlan extends PureComponent {
       autoClose: autoClose,
       className: style.toastContainer,
     });
+  setDefaultValueBox = (name, inputType, constraint_type) => {
+    if (constraint_type === SEQUENCE_ORDERS) {
+      if (Array.isArray(this.state.selectedsequenceOrders)) {
+        if (this.state.selectedsequenceOrders.includes(name)) {
+          return true;
+        } else {
+          false;
+        }
+      } else {
+        if (name === this.state.selectedsequenceOrders) {
+          return true;
+        } else {
+          false;
+        }
+      }
+    }
+    if (constraint_type === BALANCED_ALLOCATIONS) {
+      if (Array.isArray(this.state.selectedBalancedAllocation)) {
+        if (this.state.selectedBalancedAllocation.includes(name)) {
+          return true;
+        } else {
+          false;
+        }
+      } else {
+        if (name === this.state.selectedBalancedAllocation) {
+          return true;
+        } else {
+          false;
+        }
+      }
+    }
+    if (constraint_type === TIME_AND_FUEL_OPTIMIZATION) {
+      if (Array.isArray(this.state.selectedTimeandFuelOptimization)) {
+        if (this.state.selectedTimeandFuelOptimization.includes(name)) {
+          return true;
+        } else {
+          false;
+        }
+      } else {
+        if (name === this.state.selectedTimeandFuelOptimization) {
+          return true;
+        } else {
+          false;
+        }
+      }
+    }
+    if (constraint_type === MULTI_TRIP) {
+      if (Array.isArray(this.state.selectedMultiTrip)) {
+        if (this.state.selectedMultiTrip.includes(name)) {
+          return true;
+        } else {
+          false;
+        }
+      } else {
+        if (name === this.state.selectedMultiTrip) {
+          return true;
+        } else {
+          false;
+        }
+      }
+    }
+    return false;
+  };
   handleRecurringOptions = () => {};
   render() {
     let mapComponent = (
@@ -519,6 +764,7 @@ class DynamicRoutesPlan extends PureComponent {
         mapElement={<div style={{ height: "71vh" }} />}
       />
     );
+
     return (
       <div className={`${this.state.pageloading ? style.loadmain : null}`}>
         <div className={`row ${style.routeplanDiv}`}>
@@ -695,15 +941,28 @@ class DynamicRoutesPlan extends PureComponent {
                           this.state.selectedConstraintName.names.map(
                             (name, key) => (
                               <Form.Check
-                                key={key}
+                                key={`default${this.state.selectedConstraintName.type}${this.state.selectedConstraintName.constaint_type}${key}`}
                                 className={`pr-3 ${style.formCheck}`}
                                 column="true"
                                 md={4}
                                 type={this.state.selectedConstraintName.type}
                                 ref={`routendcap${this.state.selectedConstraintName.type}`}
-                                value={1}
-                                name="routendcapradio"
-                                id={`default`}
+                                value={name}
+                                defaultChecked={this.setDefaultValueBox(
+                                  name,
+                                  this.state.selectedConstraintName.type,
+                                  this.state.selectedConstraintName
+                                    .constaint_type
+                                )}
+                                onClick={(e) =>
+                                  this.handleRadioBox(
+                                    e,
+                                    this.state.selectedConstraintName
+                                      .constaint_type
+                                  )
+                                }
+                                name={`default${this.state.selectedConstraintName.type}`}
+                                id={`default${this.state.selectedConstraintName.type}${key}`}
                                 label={name}
                               />
                             )
@@ -945,6 +1204,7 @@ const mapStateToProps = (state) => {
     tripCode: state.routesplan.tripCode,
     tripData: state.routesplan.staticTripData,
     routesAndPlanData: state.routesplan.routesAndPlanData,
+    constraints: state.routesplan.constraints,
     // selectedBranch: state.navbar.selectedBranch,
     // vehicleList: state.routesplan.vehicleList,
     // constraints: state.routesplan.constraints,
@@ -962,6 +1222,8 @@ const mapDispatchToProps = (dispatch) => {
       dispatch(get_available_vehciles(branchId, date)),
     getTripsApi: (currentDate, id) => dispatch(get_trips_list(currentDate, id)),
     createTripApi: (branchId, data) => dispatch(create_trip(branchId, data)),
+    getConstraintsApi: (branchId) =>
+      dispatch(get_dynamic_constraints(branchId)),
   };
 };
 

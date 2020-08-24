@@ -9,6 +9,7 @@ import {
   CLEAR_ROUTES_PLAN,
   UPDATE_DELIVERY,
   DELETE_DELIVERY,
+  GET_DYNAMIC_CONSTRAINTS,
 } from "../actions/actionTypes";
 
 const initialState = {
@@ -52,12 +53,12 @@ const reducers = (state = initialState, action) => {
     return currState;
   }
   if (action.type === CREATE_STATIC_TRIP) {
+    let currState = { ...state };
     currState.message = action.payload.message;
     currState.staticTripData = action.payload.statictripData;
     return currState;
   }
   if (action.type === ADD_DELIVERY) {
-    let currState = { ...state };
     currState.message = action.payload.message;
     return currState;
   }
@@ -80,6 +81,12 @@ const reducers = (state = initialState, action) => {
   if (action.type === DELETE_DELIVERY) {
     let currState = { ...state };
     currState.message = action.payload.message;
+    return currState;
+  }
+  if (action.type === GET_DYNAMIC_CONSTRAINTS) {
+    let currState = { ...state };
+    currState.message = action.payload.message;
+    currState.constraints = action.payload.constraints;
     return currState;
   }
   return state;

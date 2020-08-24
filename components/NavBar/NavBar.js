@@ -35,9 +35,13 @@ import { get_defaults } from "../../store/actions/actionsCreator";
 import { LANG_AR, LANG_EN } from "../Constants/Language/Language";
 import { ClipLoader } from "react-spinners";
 import { withRouter } from "next/router";
-import { SELECT_BRANCH } from "../../store/actions/actionTypes";
+import {
+  SELECT_BRANCH,
+  SUCCESS_MESSAGE,
+} from "../../store/actions/actionTypes";
 import { get_trips_list } from "../../store/actions/live/actionCreator";
 import { get_logout } from "../../store/actionsCreators/loginCreator";
+import { FOR_NAV_BAR_PAGE_MESSAGES } from "../Constants/Other/Constants";
 class NavBar extends Component {
   constructor(props) {
     super(props);
@@ -117,6 +121,17 @@ class NavBar extends Component {
     // }
     if (prevState.routesEnabled !== this.state.routesEnabled) {
       this.props.setRoutesStatus(this.state.routesEnabled);
+    }
+    if (this.props.toastMessages) {
+      const { forPage, messageId, type, message } = this.props.toastMessages;
+      if (
+        forPage === FOR_NAV_BAR_PAGE_MESSAGES &&
+        messageId !== prevProps.toastMessages.messageId
+      ) {
+        if (message) {
+          this.showMessage(message, type);
+        }
+      }
     }
     // if (this.state.storeList !== prevState.storeList) {
     //   if (this.state.storeList.length > 0) {
@@ -290,13 +305,15 @@ class NavBar extends Component {
       <LoadFadeLoader height={2} size="5" css={""}></LoadFadeLoader>
     );
   };
-  showMessage = (message, type, autoClose = 2000) =>
-    toast(message, {
-      type: type,
+  showMessage = (message, type, autoClose = 2000) => {
+    console.log("NAVBAR MESSSAGE");
+    return toast(message, {
+      type: type === SUCCESS_MESSAGE ? "success" : "error",
       // autoClose: false,
       autoClose: autoClose,
       className: style.toastContainer,
     });
+  };
   logoutUser = () => {
     this.setState({
       pageloading: true,
@@ -496,6 +513,7 @@ const mapStateToProps = (state) => {
   return {
     warehouses: state.navbar.warehouses,
     selectedBranchId: state.navbar.selectedBranch,
+    toastMessages: state.toastmessages,
   };
 };
 const mapDispatchToProps = (dispatch) => {

@@ -8,7 +8,7 @@ import {
   Form,
   FormGroup,
 } from "react-bootstrap";
-import { FadeLoader } from "react-spinners";
+import { FadeLoader, ClipLoader } from "react-spinners";
 import $ from "jquery";
 import axios from "../API/Axios";
 import { LOCAL_API_URL } from "../Constants/Enviroment/Enviroment";
@@ -21,6 +21,10 @@ import {
   update_delivery,
   get_available_vehciles,
 } from "../../store/actions/routesplan/actionCreator";
+import {
+  FOR_NAV_BAR_PAGE_MESSAGES,
+  FOR_ROUTES_PALN_PAGE_MESSAGES,
+} from "../Constants/Other/Constants";
 class OrderEditModal extends Component {
   constructor(props) {
     super(props);
@@ -65,10 +69,17 @@ class OrderEditModal extends Component {
       this.setState({
         vehicleList: this.props.vehicleList,
         vehicleLoading: false,
+        pageloading: false,
       });
     }
-    if (this.props.message !== prevProps.message) {
-      this.showMessage(this.props.message, "success");
+    if (this.props.toastMessages) {
+      const { forPage, messageId, type, message } = this.props.toastMessages;
+      if (
+        forPage === FOR_ROUTES_PALN_PAGE_MESSAGES &&
+        messageId !== prevProps.toastMessages.messageId
+      ) {
+        this.props.onHide()
+      }
     }
   }
   renderFadeLoader = () => {
@@ -118,7 +129,7 @@ class OrderEditModal extends Component {
     // });
   };
   onTripDateChange = (date) => {
-    this.setState({ tripDate: date });
+    this.setState({ tripDate: date, pageloading: true });
   };
   handleSubmit = (e) => {
     e.preventDefault();
@@ -150,14 +161,7 @@ class OrderEditModal extends Component {
     //     this.showMessage(error.toString(), "error", false);
     //   });
   };
-  showMessage = (message, type, autoClose = 2000) =>
-    toast(message, {
-      type: type,
-      // autoClose: false,
-      autoClose: autoClose,
-      className:
-        type === "success" ? style.toastContainerSuccess : style.toastContainer,
-    });
+
   renderVehicles = () => {
     let t = this.props.t;
     return (
@@ -197,18 +201,6 @@ class OrderEditModal extends Component {
     let lang = this.props.language;
     return (
       <React.Fragment>
-        <ToastContainer
-          transition={Zoom}
-          position="top-center"
-          // autoClose={1500}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnVisibilityChange
-          draggable
-          pauseOnHover
-        />
         <Modal
           show={this.props.show}
           onHide={this.props.onHide}
@@ -227,31 +219,50 @@ class OrderEditModal extends Component {
                 {t("Update Trip")}
               </Modal.Title>
             </Modal.Header>
-            <Modal.Body>
-              <Container>
-                <Row key className="show-grid">
-                  <Col xs={6} md={10}>
-                    <FormGroup>
-                      <Form.Label>{t("Trip Date")}</Form.Label>
-                      <div className={`test`}>
-                        <DatePicker
-                          showTimeSelect={false}
-                          title={t("Select Date")}
-                          currentDate={this.state.tripDate}
-                          dateFormat={this.state.dateFormat}
-                          minDate={new Date()}
-                          onChange={this.onTripDateChange}
-                          calendarClassName="row"
-                          className={`form-control`}
-                        ></DatePicker>
-                      </div>
-                    </FormGroup>
-                    <FormGroup></FormGroup>
-                    {this.state.vehilcesList.length > 0 &&
-                      this.renderVehicles()}
-                  </Col>
-                </Row>
-              </Container>
+            <Modal.Body className={this.state.pageloading && "text-center"}>
+              {this.state.pageloading ? (
+                <ClipLoader
+                  css={`
+                    position: inherit;
+                    margin: 0 auto;
+                    // opacity: 0.5;
+                    z-index: 500;
+                  `}
+                  size={"80px"}
+                  this
+                  also
+                  works
+                  color={"#196633"}
+                  height={200}
+                  // margin={2}
+                  loading={this.state.pageloading}
+                />
+              ) : (
+                <Container>
+                  <Row key className="show-grid">
+                    <Col xs={6} md={10}>
+                      <FormGroup>
+                        <Form.Label>{t("Trip Date")}</Form.Label>
+                        <div className={`test`}>
+                          <DatePicker
+                            showTimeSelect={false}
+                            title={t("Select Date")}
+                            currentDate={this.state.tripDate}
+                            dateFormat={this.state.dateFormat}
+                            minDate={new Date()}
+                            onChange={this.onTripDateChange}
+                            calendarClassName="row"
+                            className={`form-control`}
+                          ></DatePicker>
+                        </div>
+                      </FormGroup>
+                      <FormGroup></FormGroup>
+                      {this.state.vehilcesList.length > 0 &&
+                        this.renderVehicles()}
+                    </Col>
+                  </Row>
+                </Container>
+              )}
             </Modal.Body>
             <Modal.Footer>
               <Button type="submit" className="btn btnGreen">
@@ -270,8 +281,8 @@ class OrderEditModal extends Component {
 const mapStateToProps = (state) => {
   return {
     selectedBranch: state.navbar.selectedBranch,
-    message: state.navbar.message,
     vehicleList: state.routesplan.vehicleList,
+    toastMessages: state.toastmessages,
   };
 };
 const mapDispatchToProps = (dispatch) => {
@@ -279,7 +290,7 @@ const mapDispatchToProps = (dispatch) => {
     getAvailableVehiclesApi: (branchId, date) =>
       dispatch(get_available_vehciles(branchId, date)),
     updateDeliveryApi: (branchId, date) =>
-      dispatch(update_delivery(branchId, date)),
+      dispatch(update_delivery(branchId, date, FOR_ROUTES_PALN_PAGE_MESSAGES)),
   };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(OrderEditModal);
