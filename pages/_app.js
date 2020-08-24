@@ -1,6 +1,7 @@
 import "./styles/styles.css";
 import Header from "../components/Header/Header";
 import { createStore, combineReducers, applyMiddleware, compose } from "redux";
+
 import reducer from "../store/reducers/reducers";
 import liveReducer from "../store/reducers/liveReducers";
 import controltowerReducer from "../store/reducers/controltowerReducer";
@@ -18,6 +19,7 @@ import "react-calendar/dist/Calendar.css";
 import "@wojtekmaj/react-daterange-picker/dist/DateRangePicker.css";
 import "react-bootstrap-table-next/dist/react-bootstrap-table2.min.css";
 import "react-bootstrap-table2-paginator/dist/react-bootstrap-table2-paginator.min.css";
+import withRedux from "next-redux-wrapper";
 import Router from "next/router";
 // require("./index.css");
 
@@ -30,9 +32,8 @@ import { route } from "next/dist/next-server/server/router";
 const logger = (store) => {
   return (next) => {
     return (action) => {
-     
       const result = next(action);
-      console.log("CHECK ACTION RESULT", result);
+
       return result;
     };
   };
@@ -41,22 +42,36 @@ const composeEnhancers =
   (typeof window != "undefined" &&
     window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__) ||
   compose;
-const reducers = combineReducers({
+const combinedReducer = combineReducers({
   live: liveReducer,
   controltower: controltowerReducer,
-  ctr: reducer,
   navbar: navBarReducer,
   routesplan: routesPlanReducer,
   authorization: authorizationReducer,
 });
 const store = createStore(
-  reducers,
+  combinedReducer,
   composeEnhancers(applyMiddleware(logger, reduxThunk))
 );
-
 class MyApp extends App {
-  componentDidMount() {
-    const { router } = this.props;
+  render() {
+    const { Component, pageProps } = this.props;
+    // const token = Cookies.get("authtoken");
+    return (
+      <React.Fragment>
+        <Header />
+        <Provider store={store}>
+          <Component {...pageProps} />
+          {/* {typeof token !== "undefined" ? ( */}
+        </Provider>
+        <Header />
+      </React.Fragment>
+    );
+  }
+}
+
+MyApp.getInitialProps = async ({ Component, ctx }) => {
+  if (typeof navigator !== "undefined") {
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.getRegistrations().then(function (registrations) {
         for (let registration of registrations) {
@@ -69,27 +84,11 @@ class MyApp extends App {
           initializeFirebase();
         });
     }
-    const token = Cookies.get("authtoken");
-
-    if (typeof token === "undefined") {
-      Router.replace("/login");
-    }
   }
-  render() {
-    const { Component, pageProps } = this.props;
-    return (
-      <React.Fragment>
-        <Header />
-        <Provider store={store}>
-          <Component {...pageProps} />
-        </Provider>
-        <Header />
-      </React.Fragment>
-    );
-  }
-}
-MyApp.getInitialProps = async (appContext) => {
-  const appProps = await App.getInitialProps(appContext);
-  return { ...appProps };
+  const pageProps = Component.getInitialProps
+    ? await Component.getInitialProps(ctx)
+    : {};
+  return { pageProps };
 };
+// export default wrapper.withRedux(appWithTranslation(MyApp));
 export default appWithTranslation(MyApp);

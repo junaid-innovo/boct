@@ -1,9 +1,29 @@
 @media all and (min-width: 480px) {
-  .Login {
-  }
-
   .Login form {
     margin: 0 auto;
     max-width: 320px;
+  }
+  .loadmain {
+    /* background-color: red; */
+    filter: alpha(opacity=70);
+    opacity: 0.7;
+  }
+  .loadmain:before {
+    position: absolute;
+    opacity: 0.7;
+    top: 0;
+    content: "";
+    width: 100%;
+    background: grey;
+    height: 89.5%;
+    left: 0;
+    z-index: 1;
+  }
+  .toastContainer {
+    min-height: 37px !important;
+  }
+  .toastContainerSuccess {
+    min-height: 37px !important;
+    background-color: #1a6734;
   }
 }

@@ -16,6 +16,8 @@ import { ToastContainer, toast, Zoom } from "react-toastify";
 import moment from "moment";
 import style from "./ChangePassword.module.css";
 import { Trans } from "react-i18next";
+import { connect } from "react-redux";
+import { change_password } from "../../../store/actionsCreators/loginCreator";
 class ChangePassword extends Component {
   constructor(props) {
     super(props);
@@ -108,32 +110,11 @@ class ChangePassword extends Component {
       e.stopPropagation();
     } else {
       let data = {
+        old_password: this.state.oldPassword,
         password: this.state.newPassword,
         confirm_password: this.state.confirmPassword,
-        old_password: this.state.oldPassword,
       };
-
-      axios
-        .post(`storesupervisor/v1/user/update`, JSON.stringify(data), {
-          headers: {
-            Authorization: `bearer ${localStorage.getItem("authtoken")}`,
-          },
-        })
-        .then((res) => {
-          let response = res.data;
-          if (response.code === 406) {
-            this.showMessage(response.message, "error");
-          } else if (response.code === 200) {
-            this.showMessage(response.message, "success");
-            this.props.onHide();
-            this.props.history.push("/login");
-          } else {
-            this.showMessage(response.message, "error");
-          }
-        })
-        .catch((error) => {
-          this.showMessage(error.toString(), "error", false);
-        });
+      this.props.changePasswordApi(JSON.stringify(data));
     }
 
     this.setState({
@@ -326,4 +307,12 @@ class ChangePassword extends Component {
   }
 }
 
-export default ChangePassword;
+const mapStateToProps = (state) => {
+  return {};
+};
+const mapDispatchToProps = (dispatch) => {
+  return {
+    changePasswordApi: (data) => dispatch(change_password(data)),
+  };
+};
+export default connect(mapStateToProps, mapDispatchToProps)(ChangePassword);

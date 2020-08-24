@@ -67,6 +67,7 @@ import {
   col7,
   col11,
   col12,
+  col4,
 } from "../Constants/Classes/BoostrapClassses";
 import DatePicker from "../DatePicker/Simple";
 import NavBar from "../NavBar/NavBar";
@@ -109,6 +110,7 @@ import {
   get_trip_deliveries,
   get_cancel_reasons,
   get_delivery_slots,
+  get_trips_list,
 } from "../../store/actions/live/actionCreator";
 // import {Button} from 'semantic-ui-react';
 class Live extends PureComponent {
@@ -178,15 +180,12 @@ class Live extends PureComponent {
     });
   };
   componentDidUpdate = (prevProps, prevState) => {
-    // if (
-    //   parseInt(this.props.selectedwarehouse_id) !==
-    //   parseInt(this.state.selectedBranchId)
-    // ) {
-    //   this.setState({
-    //     selectedBranchId: this.props.selectedwarehouse_id,
-    //     // defaultCenter:props.defa
-    //   });
-    // }
+    if (this.props.selectedBranch !== this.state.selectedBranchId) {
+      this.props.getTripsApi("2020-04-24", this.props.selectedBranch);
+      this.setState({
+        selectedBranchId: this.props.selectedBranch,
+      });
+    }
     if (this.props.deliveriesList !== prevProps.deliveriesList) {
       this.setState({
         orders: this.props.deliveriesList.deliveries,
@@ -266,7 +265,14 @@ class Live extends PureComponent {
     // }
   };
 
-  componentDidMount() {}
+  componentDidMount() {
+    if (this.props.selectedBranch) {
+      this.props.getTripsApi("2020-04-24", this.props.selectedBranch);
+      this.setState({
+        selectedBranchId: this.props.selectedBranch,
+      });
+    }
+  }
 
   renderStoreList = (data) => {
     return this.state.storeList.length > 0 ? (
@@ -320,7 +326,7 @@ class Live extends PureComponent {
     this.setState({
       routeloading: true,
     });
-    this.props.getCancelReasonApi(order);
+    this.props.getCancelReasonApi(order, this.state.selectedBranchId);
     // axios
     //   .get(`storesupervisor/v1/cancelReasons`, {
     //     headers: {
@@ -348,7 +354,7 @@ class Live extends PureComponent {
     this.setState({
       routeloading: true,
     });
-    this.props.getDeliverySlotApi(order);
+    this.props.getDeliverySlotApi(order, this.state.selectedBranchId);
     // axios
     //   .get(`storesupervisor/v1/deliverySlots`, {
     //     headers: {
@@ -376,7 +382,7 @@ class Live extends PureComponent {
       activeTrip: dev_trip_id,
       routeloading: true,
     });
-    this.props.getTripDeliveriesApi(dev_trip_id);
+    this.props.getTripDeliveriesApi(dev_trip_id, this.state.selectedBranchId);
     // this.setState({
     //   vehicleTracking: [],
     //   routeloading: true,
@@ -500,7 +506,7 @@ class Live extends PureComponent {
         id="productpopover-basic"
         className={`${style.PopOverText}  row`}
       >
-        <Popover.Title as="h5" className="bg-light-brown text-center">
+        <Popover.Title as="h5" className="bg-light-purple text-center">
           <Trans i18nKey={"Order Information"} />
         </Popover.Title>
         <Popover.Content
@@ -762,7 +768,7 @@ class Live extends PureComponent {
     // console.log("CHECK LANG", lang);
     return (
       <Popover id="trippopup-basic" className={`${style.PopOverText}  row`}>
-        <Popover.Title as="h5" className="text-center bg-light-brown">
+        <Popover.Title as="h5" className="text-center bg-light-purple">
           <Trans i18nKey={"Trip Information"} />
         </Popover.Title>
         <Popover.Content
@@ -863,7 +869,7 @@ class Live extends PureComponent {
         </div>
         <div className="row">
           <div
-            className={`${col12} text-center text-light bg-brown shadow p-3 mb-1  `}
+            className={`${col12} text-center text-light  bg-purple shadow p-3 mb-1  `}
           >
             <CustomDropDown
               {...this.props}
@@ -949,15 +955,15 @@ class Live extends PureComponent {
                   dir={this.props.language === LANG_AR ? "rtl" : "ltr"}
                   className={` ${
                     data.delivery_trip_id === this.state.activeTrip
-                      ? `bg-brown`
-                      : "text-dark"
+                      ? `border-purple text-dark`
+                      : "border-light-purple text-dark"
                   } text-center  small ${col12} ${style.card}`}
                 >
                   <div
                     className={` ${
                       data.delivery_trip_id === this.state.activeTrip
-                        ? `bg-light-brown`
-                        : `bg-brown`
+                        ? `bg-purple`
+                        : `bg-light-purple`
                     } custom-card-header text-light font-weight-bold`}
                   >
                     <Trans i18nKey={"Trip Code"} />: {data.trip_code}
@@ -1052,7 +1058,7 @@ class Live extends PureComponent {
   changeSelectedDeliverySlotId = (order_id, slotid) => {
     let allorders = JSON.parse(JSON.stringify(this.state.allorders.deliveries));
     let selectedorderIndex = allorders.findIndex(
-      ({ order }) => order.order_id === order_id
+      (order) => order.order_id === order_id
     );
   };
   getMapSelectedOrderId = (order_ids) => {
@@ -1089,6 +1095,7 @@ class Live extends PureComponent {
               t={this.props.t}
               language={this.props.language}
               show={this.state.reasonmodal}
+              selectedstore={this.state.selectedBranchId}
               reasons={this.state.cancalReasons}
               onHide={() => this.setState({ reasonmodal: false })}
               orderid={this.state.selectedOrder.order_id}
@@ -1100,6 +1107,7 @@ class Live extends PureComponent {
               language={this.props.language}
               show={this.state.timeSlotModel}
               timeslots={this.state.timeSlots}
+              selectedstore={this.state.selectedBranchId}
               onHide={this.hideChangeDeliveryModal}
               changedeliveryslotid={this.changeSelectedDeliverySlotId}
               currenttimeslot={this.state.selectedOrder.delivery_slot_id}
@@ -1117,15 +1125,15 @@ class Live extends PureComponent {
             getMapError={this.onMapLoadError}
             t={this.props.t}
             vehicleTrackingData={this.state.vehicleTracking}
-            defaultCenter={this.state.defaultCenter}
+            defaultCenter={this.props.defaultCenter}
             sendSelectedOrderId={this.getMapSelectedOrderId}
             selectedOrderId={this.state.selectedOrderIds}
             mapfeatures={this.state.mapfeatures}
             language={this.state.language}
             googleMapURL={`https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing,places&key=${process.env.REACT_APP_GOOGLE_KEY}&language=en}`}
-            loadingElement={<div style={{ height: "87vh" }} />}
-            containerElement={<div style={{ height: "87vh" }} />}
-            mapElement={<div style={{ height: "87vh" }} />}
+            loadingElement={<div style={{ height: "86vh" }} />}
+            containerElement={<div style={{ height: "86vh" }} />}
+            mapElement={<div style={{ height: "86vh" }} />}
           />
           {/* //  ) : (
          //    <h1 style={{ margin: "25%" }}>No Internet Connection</h1>
@@ -1164,7 +1172,7 @@ class Live extends PureComponent {
   };
   onPendingOrderClick = () => {
     let allorders = [...this.state.orders];
-    let pendingorders = _.filter(allorders, ({ order }) => {
+    let pendingorders = _.filter(allorders, (order) => {
       let status_id = order.order_status_id;
       return (
         status_id !== ORDER_STATUS_DELIVERED &&
@@ -1179,7 +1187,7 @@ class Live extends PureComponent {
   };
   onDeliveredOrderClick = () => {
     let allorders = [...this.state.orders];
-    let deliveredorders = _.filter(allorders, ({ order }) => {
+    let deliveredorders = _.filter(allorders, (order) => {
       return parseInt(order.order_status_id) === ORDER_STATUS_DELIVERED;
     });
 
@@ -1190,7 +1198,7 @@ class Live extends PureComponent {
   };
   onCancelOrderClick = () => {
     let allorders = [...this.state.orders];
-    let cancelledorders = _.filter(allorders, ({ order }) => {
+    let cancelledorders = _.filter(allorders, (order) => {
       let status_id = order.order_status_id;
       return (
         status_id === ORDER_STATUS_CANCELLED ||
@@ -1281,18 +1289,18 @@ class Live extends PureComponent {
     }
   };
   renderRightSideBar = () => {
-    let lang = this.props.language;
+    let lang = this.props.i18n.language;
     let t = this.props.t;
     this.state.allorders &&
       this.state.allorders.deliveries.length > 0 &&
-      this.state.allorders.deliveries.map(({ order }, key) => {
+      this.state.allorders.deliveries.map((order, key) => {
         this[`${order.order_id}_ref`] = React.createRef();
       });
     return (
       <div className={`${col3} ${style.sideBar}`}>
         <div className="row"></div>
         <div className="row">
-          <div className="text-center text-light bg-brown shadow p-3 mb-1 col-md-12 col-md-12">
+          <div className="text-center text-light bg-purple shadow p-3 mb-1 col-md-12 col-md-12">
             <CustomDropDown
               {...this.props}
               dpFor={"allorders"}
@@ -1350,7 +1358,7 @@ class Live extends PureComponent {
           >
             {this.state.allorders &&
             this.state.allorders.deliveries.length > 0 ? (
-              this.state.allorders.deliveries.map(({ order }, key) => (
+              this.state.allorders.deliveries.map((order, key) => (
                 <div
                   ref={this[`${order.order_id}_ref`]}
                   className={
@@ -1361,7 +1369,7 @@ class Live extends PureComponent {
                   key={order.order_id}
                 >
                   <Card
-                    className={`text-center text-dark small bg-light-brown mb-1 ${
+                    className={`text-center text-dark small  mb-1 ${
                       style.card
                     }  ${
                       this.state.selectedOrderIds &&
@@ -1370,7 +1378,14 @@ class Live extends PureComponent {
                         : ""
                     }`}
                   >
-                    <div className="bg-brown text-light font-weight-bold">
+                    <div
+                      className={`${
+                        this.state.selectedOrderIds &&
+                        this.state.selectedOrderIds.includes(order.order_id)
+                          ? "bg-purple"
+                          : "bg-light-purple"
+                      } text-light font-weight-bold`}
+                    >
                       <div className="row p-1">
                         <div className="text-left col">
                           {order.order_number}
@@ -1390,7 +1405,7 @@ class Live extends PureComponent {
                         <span className="font-weight-bold pr-1">
                           {t("Delivery Time")}:{" "}
                         </span>
-                        :<span>{order.delivery_slot[lang]}</span>
+                        <span>{order.delivery_slot[lang]}</span>
                       </div>
                       <div>
                         <span className="font-weight-bold pr-1">
@@ -1415,9 +1430,9 @@ class Live extends PureComponent {
                           {t("Area Name")}:{" "}
                         </span>
                         <span>
-                          {/* {order.address.area_name !== "undefined"
+                          {order.address.area_name !== "undefined"
                             ? order.address.area_name[lang]
-                            : null} */}
+                            : null}
                         </span>
                       </div>
                     </div>
@@ -1437,15 +1452,25 @@ class Live extends PureComponent {
                               order
                             )}
                           >
-                            <i className="fa fa-info-circle text-success col-4"></i>
+                            <i
+                              className={`fa fa-info-circle text-success ${
+                                parseInt(order.order_status_id) !==
+                                ORDER_STATUS_DELIVERED
+                                  ? col4
+                                  : col12
+                              }`}
+                            ></i>
                           </OverlayTrigger>
-                          {order.order_status.en === ORDER_DELIVERED
-                            ? null
-                            : this.renderCancelButton(order)}{" "}
-                          <i
-                            className="fa fa-edit text-primary fa-1x col-4"
-                            onClick={() => this.getDeliveryTimeSlots(order)}
-                          ></i>
+                          {parseInt(order.order_status_id) !==
+                          ORDER_STATUS_DELIVERED ? (
+                            <React.Fragment>
+                              {this.renderCancelButton(order)}
+                              <i
+                                className="fa fa-edit text-primary fa-1x col-4"
+                                onClick={() => this.getDeliveryTimeSlots(order)}
+                              ></i>
+                            </React.Fragment>
+                          ) : null}{" "}
                         </div>
                       </div>
                     </div>
@@ -1637,14 +1662,20 @@ const mapStateToProps = (state) => {
     cancelReasonList: state.live.cancelReasons,
     deliverySlotList: state.live.deliverySlots,
     selectedOrder: state.live.selectedOrder,
+    selectedBranch: state.navbar.selectedBranch,
+    defaultCenter: state.navbar.defaultCenter,
   };
 };
 const mapDispatchToProps = (dispatch) => {
   return {
     // getTripsApi: (date, store_id) => dispatch(get_trips_list(date, store_id)),
-    getTripDeliveriesApi: (id) => dispatch(get_trip_deliveries(id)),
-    getCancelReasonApi: (order) => dispatch(get_cancel_reasons(order)),
-    getDeliverySlotApi: (order) => dispatch(get_delivery_slots(order)),
+    getTripDeliveriesApi: (id, store_id) =>
+      dispatch(get_trip_deliveries(id, store_id)),
+    getCancelReasonApi: (order, store_id) =>
+      dispatch(get_cancel_reasons(order, store_id)),
+    getDeliverySlotApi: (order, store_id) =>
+      dispatch(get_delivery_slots(order, store_id)),
+    getTripsApi: (date, store_id) => dispatch(get_trips_list(date, store_id)),
   };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(Live);

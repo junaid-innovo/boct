@@ -7,6 +7,8 @@ import {
   Button,
   Form,
   FormGroup,
+  OverlayTrigger,
+  Tooltip,
 } from "react-bootstrap";
 import { FadeLoader } from "react-spinners";
 import $ from "jquery";
@@ -16,7 +18,7 @@ import OrderDataTable from "../datatable/Datatable";
 import { OrderTableColumns } from "../Constants/TableColumns/OrderColumns";
 import style from "./OrderCancelModal.module.css";
 import { ToastContainer, toast, Zoom } from "react-toastify";
-import { Trans } from "react-i18next";
+import { Trans } from "../../i18n";
 import {
   ORDER_STATUS_PENDING,
   ORDER_DELIVERED,
@@ -25,7 +27,10 @@ import {
   ORDER_STATUS_ON_HOLD,
 } from "../Constants/Order/Constants";
 import { col12 } from "../Constants/Classes/BoostrapClassses";
+import AddDeliveryModal from "../Modal/AddDeliveryModal";
 import { LANG_AR } from "../Constants/Language/Language";
+import { add_delivery } from "../../store/actions/routesplan/actionCreator";
+import { connect } from "react-redux";
 class OrderInfoModal extends Component {
   constructor(props) {
     super(props);
@@ -39,6 +44,10 @@ class OrderInfoModal extends Component {
         deliveredOrders: null,
         cancelledOrders: null,
       },
+      show: false,
+      showAddDeliveryModal: false,
+      selectedOrderId: [],
+      selectedOrdersDetail: [],
       data: [],
       tripData: null,
     };
@@ -47,6 +56,7 @@ class OrderInfoModal extends Component {
     if (props.orderdata) {
       return {
         data: props.orderdata,
+        show: props.show,
       };
     }
     return state;
@@ -57,7 +67,7 @@ class OrderInfoModal extends Component {
       let pendingOrders = 0;
       let cancelledOrders = 0;
       let deliveredOrders = 0;
-      this.props.orderdata.map(({ order }) => {
+      this.props.orderdata.map((order) => {
         let Orderstatus = parseInt(order.order_status_id);
         if (
           Orderstatus !== ORDER_DELIVERED &&
@@ -86,6 +96,11 @@ class OrderInfoModal extends Component {
         },
         tripData: this.props.tripdata,
       });
+    }
+    if (this.props.message !== prevProps.message) {
+      if (this.props.message) {
+        this.showMessage(this.props.message, "success");
+      }
     }
   }
   renderFadeLoader = () => {
@@ -118,6 +133,47 @@ class OrderInfoModal extends Component {
         type === "success" ? style.toastContainerSuccess : style.toastContainer,
     });
   };
+  setDataTableSelectedId = (order_ids, orders_in_detail) => {
+    if (order_ids.length === 0) {
+      this.setState({
+        selectedVehicle: null,
+        tripDate: new Date(),
+        createTrip: false,
+        planCode: "PLAN-",
+      });
+    }
+    this.setState({
+      selectedOrderId: _.uniq(order_ids),
+      selectedOrdersDetail: orders_in_detail,
+      generatedTripCode: null,
+    });
+  };
+  onModalHide = () => {
+    this.setState({
+      tripData: null,
+    });
+    this.props.onHide();
+  };
+  onAddDelvieryClick = () => {
+    this.setState({
+      showAddDeliveryModal: true,
+    });
+    this.props.onHide();
+    // let data = {
+    //   trip_id: this.state.tripData.trip_code,
+    //   order_ids: this.state.selectedOrdersDetail,
+    // };
+    // this.props.addDeliveryApi(
+    //   this.props.selectedBranchId,
+    //   JSON.stringify(data)
+    // );
+  };
+  onAddDeliveryModalHide = () => {
+    this.setState({
+      showAddDeliveryModal: false,
+    });
+    this.props.showModalAgain();
+  };
   render() {
     let lang = this.props.language;
     let t = this.props.t;
@@ -135,10 +191,18 @@ class OrderInfoModal extends Component {
           draggable
           pauseOnHover
         />
-
+        {this.state.showAddDeliveryModal && (
+          <AddDeliveryModal
+            show={this.state.showAddDeliveryModal}
+            t={this.props.t}
+            tripId={this.state.tripData.delivery_trip_id}
+            language={this.props.language}
+            onHide={this.onAddDeliveryModalHide}
+          />
+        )}
         <Modal
-          show={this.props.show}
-          onHide={this.props.onHide}
+          show={this.state.show}
+          onHide={this.onModalHide}
           size="lg"
           aria-labelledby="contained-modal-title-vcenter"
         >
@@ -239,7 +303,7 @@ class OrderInfoModal extends Component {
                             }`}
                           >
                             {this.props.tripdata &&
-                              this.props.tripdata.driver.name}
+                              this.props.tripdata.driver.name[lang]}
                           </span>
                         </td>
                         <td scope="row">
@@ -334,11 +398,40 @@ class OrderInfoModal extends Component {
                     </tbody>
                   </table>
                 </Row>
+                <Row className="align-items-end">
+                  <div className={`text-right ${col12}}`}>
+                    <OverlayTrigger
+                      placement={"top"}
+                      overlay={
+                        <Tooltip
+                          id={`adddelivery`}
+                          style={{ fontSize: "10px" }}
+                        >
+                          <Trans i18nKey={"Add Deliveries"} />
+                        </Tooltip>
+                      }
+                    >
+                      <Button
+                        onClick={this.onAddDelvieryClick}
+                        className="btn btn-sm button-small btnBrown"
+                        style={{ fontSize: "95%" }}
+                      >
+                        Add Deliveries
+                      </Button>
+                    </OverlayTrigger>
+                  </div>
+                </Row>
                 <Row>
                   <div className={col12}>
                     <OrderDataTable
                       tripdata={this.props.tripdata}
+                      sendSelectedOrderId={this.setDataTableSelectedId}
+                      mapSelectedOrderId={this.state.selectedOrderId}
                       t={this.props.t}
+                      tripId={
+                        this.state.tripData &&
+                        this.state.tripData.delivery_trip_id
+                      }
                       language={this.props.language}
                       isEditable={this.props.isEditable}
                       getcancelledOrder={this.getOrderCancelledOrder}
@@ -355,7 +448,6 @@ class OrderInfoModal extends Component {
                 </Row>
               </Container>
             </Modal.Body>
-            <Modal.Footer></Modal.Footer>
           </Form>
         </Modal>
       </React.Fragment>
@@ -363,4 +455,15 @@ class OrderInfoModal extends Component {
   }
 }
 
-export default OrderInfoModal;
+const mapStateToProps = (state) => {
+  return {
+    message: state.routesplan.message,
+    selectedBranchId: state.navbar.selectedBranch,
+  };
+};
+const mapDispatchToProps = (dispatch) => {
+  return {
+    addDeliveryApi: (branchId, data) => dispatch(add_delivery(branchId, data)),
+  };
+};
+export default connect(mapStateToProps, mapDispatchToProps)(OrderInfoModal);

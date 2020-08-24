@@ -55,7 +55,7 @@ class CancleReasonsModal extends Component {
     };
 
     const newdata = JSON.stringify(data);
-    this.props.cancelReasonApi(newdata);
+    this.props.cancelReasonApi(newdata, this.props.selectedstore);
     // axios
     //   .post(`${LOCAL_API_URL}cancelOrders`, newdata)
     //   .then((res) => {
@@ -120,7 +120,7 @@ const mapStateToProps = (state) => {
 };
 const mapDispatchToProps = (dispatch) => {
   return {
-    cancelReasonApi: (data) => dispatch(cancel_order(data)),
+    cancelReasonApi: (data, store_id) => dispatch(cancel_order(data, store_id)),
   };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(CancleReasonsModal);

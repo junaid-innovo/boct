@@ -85,6 +85,9 @@ class Login extends Component {
     if (localStorage.getItem("username")) {
       localStorage.removeItem("username");
     }
+    if (this.props.message) {
+      this.showMessage(this.props.message, "success");
+    }
   }
   handleSubmit = (event) => {
     let lang = this.props.i18n.language;
@@ -135,6 +138,13 @@ class Login extends Component {
       this.getUserCompanies();
     }
   };
+
+  onMailChangeClick = () => {
+    this.setState({
+      showEmail: true,
+      showPassword: false,
+    });
+  };
   componentDidUpdate(prevProps, prevState) {
     if (this.props.userCompaniesList !== prevProps.userCompaniesList) {
       this.setState({
@@ -144,10 +154,13 @@ class Login extends Component {
         pageloading: false,
       });
     }
-    if (this.props.loggedIn !== prevProps.loggedIn) {
-      if (this.props.loggedIn) {
-        Router.replace("/");
-      }
+    // if (this.props.loggedIn !== prevProps.loggedIn) {
+    //   if (this.props.loggedIn) {
+    //     Router.push("/");
+    //   }
+    // }
+    if (this.props.message !== prevProps.message) {
+      this.showMessage(this.props.message, "success");
     }
   }
   rednerLoginDesign = () => {
@@ -239,6 +252,13 @@ class Login extends Component {
 
                 {this.state.showPassword && (
                   <React.Fragment>
+                    <a
+                      role="button"
+                      onClick={this.onMailChangeClick}
+                      className="text-primary changemailBtn"
+                    >
+                      Change Email
+                    </a>
                     <FormGroup controlId="password" bssize="large">
                       <FormLabel>Password</FormLabel>
                       <FormLabel className={"pull-right"}>كلمه السر</FormLabel>
@@ -372,6 +392,7 @@ const mapStateToProps = (state) => {
   return {
     loggedIn: state.authorization.logggedIn,
     userCompaniesList: state.authorization.companiesList,
+    message: state.authorization.message,
     // selectedBranchId: state.navbar.selectedBranch,
   };
 };

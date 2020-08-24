@@ -24,7 +24,7 @@
   content: "";
   width: 100%;
   background: grey;
-  height: 100%;
+  height: 89.5%;
   left: 0;
   z-index: 999;
 }
@@ -51,14 +51,14 @@
    -moz-box-shadow: 0 5px 0 #433b33; 
    box-shadow: 0 5px 0 #433b33 !important;
    font-weight: bold !important; */
-  border-bottom: 3px solid #433b33;
+  border-bottom: 3px solid #2b2742;
 }
 .basicNavBar .navLink:hover {
-  /* -webkit-box-shadow: 0 5px 0 #433b33;
-   -moz-box-shadow: 0 5px 0 #433b33;
-   box-shadow: 0 5px 0 #433b33 !important;
+  /* -webkit-box-shadow: 0 5px 0 #2b2742;
+   -moz-box-shadow: 0 5px 0 #2b2742;
+   box-shadow: 0 5px 0 #2b2742 !important;
    font-weight: bold !important; */
-  border-bottom: 3px solid #433b33;
+  border-bottom: 3px solid #2b2742;
 }
 .toastContainer {
   min-height: 37px !important;

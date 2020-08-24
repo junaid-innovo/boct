@@ -1,29 +1,72 @@
 .customDropDown a:hover {
-   background-color: #433b33 !important;
-   color: white !important;
-   border: 1px #433b33 !important;
+  background-color: #433b33 !important;
+  color: white !important;
+  border: 1px #433b33 !important;
 }
 .customDropDown {
-   cursor: pointer;
-   font-size: 12px;
+  cursor: pointer;
+  font-size: 12px;
 }
 .dropDownMenu {
-   border: 2px solid #433b33 !important;
-   /* margin-left: 4rem !important; */
+  border: 2px solid #433b33 !important;
+  max-height: 300px !important;
+  overflow-x: auto;
+  font-size: 60%;
+  font-weight: bold;
+  top: -1px;
+  /* margin-left: 4rem !important; */
+}
+.DropdownToggle {
+  font-size: 60%;
+  font-weight: bold;
+}
+
+.dropDownMenu {
+  scrollbar-width: thin; /* "auto" or "thin"  */
+  scrollbar-color: #433b33 #f5f5f5;
+}
+.dropDownMenu::-webkit-scrollbar {
+  -moz-appearance: none !important;
+  width: 8px;
+  /* color: brown; */
+  background-color: #f5f5f5;
+}
+.dropDownMenu::-webkit-scrollbar-thumb {
+  -moz-appearance: none !important;
+  border-radius: 10px;
+  -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+  background-color: #433b33;
+}
+
+.dropDownMenu::-webkit-scrollbar-track {
+  -moz-appearance: none !important;
+  -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+  background-color: #f5f5f5;
+  border: 1px solid #433b33;
 }
 .dropDownOrderMenu {
-   border: 2px solid #433b33 !important;
-   margin-left: 4rem !important;
+  border: 2px solid #433b33 !important;
+  margin-left: 4rem !important;
 }
+/* .dropDownAnchor.a:hover,
+a:focus {
+  color: inherit;
+  text-decoration: none;
+  transition: all 0.3s;
+} */
+
 .dropDownItem {
-   display: block;
-   width: 100%;
-   padding: 0.25rem 1.5rem;
-   clear: both;
-   font-weight: 400;
-   color: #212529;
-   text-align: inherit;
-   white-space: nowrap;
-   background-color: transparent;
-   border: 0;
+  display: block;
+  width: 100%;
+  padding: 0.25rem 1.5rem;
+  clear: both;
+  font-weight: 400;
+  color: #212529;
+  text-align: inherit;
+  white-space: nowrap;
+  background-color: transparent;
+  border: 0;
 }

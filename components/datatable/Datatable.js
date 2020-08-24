@@ -97,24 +97,27 @@ class BootstrapDataTable extends Component {
         selectedOrdersDetail: props.mapSelectedDetailOrders,
       };
     }
-    if (props.data) {
-      if (props.data.length > 1) {
-        return {
-          hideCancelOrder: true,
-          data: props.data,
-          update: true,
-        };
-      } else {
-        return {
-          hideCancelOrder: false,
-          data: props.data,
-          update: false,
-        };
-      }
-    }
+
     return state;
   }
   componentDidUpdate(prevProps, prevState) {}
+  componentDidMount() {
+    if (this.props.data) {
+      if (this.props.data.length > 1) {
+        this.setState({
+          hideCancelOrder: true,
+          data: this.props.data,
+          update: true,
+        });
+      } else {
+        this.setState({
+          hideCancelOrder: false,
+          data: this.props.data,
+          update: false,
+        });
+      }
+    }
+  }
   calulateTotalQuantity = (items) => {
     let sum = 0;
     items.map(({ quantity }) => (sum += parseInt(quantity)));
@@ -127,6 +130,7 @@ class BootstrapDataTable extends Component {
     if (this.props.dataFor === "orders") {
       expandRow = {
         renderer: (row, key) => {
+          console.log("CHECK ROW", row);
           return (
             <div key={key} className="row" style={{ fontSize: "10px" }}>
               <div className="col-6">
@@ -190,8 +194,10 @@ class BootstrapDataTable extends Component {
                       return (
                         <div key={key}>
                           {product.product_name[langauge]} <br />
-                          {`${product.material} x ${product.quantity} ${
-                            parseInt(product.foc) !== 0
+                          {`${product.material ? product.material : ""} x ${
+                            product.quantity
+                          } ${
+                            product.foc && parseInt(product.foc) !== 0
                               ? ` + ${product.foc}`
                               : ""
                           }`}
@@ -483,7 +489,7 @@ class BootstrapDataTable extends Component {
       let products = [];
 
       if (this.props.dataFor === "orders") {
-        products = _.map(this.props.data, "order");
+        products = this.props.data;
       }
       if (this.props.dataFor === "deliverytrips") {
         products = this.props.data;
@@ -735,6 +741,7 @@ class BootstrapDataTable extends Component {
           show={this.state.showDeliveryOrderCancelModal}
           orderid={this.state.cancelSelectedOrder}
           t={this.props.t}
+          tripId={this.props.tripId}
           language={this.props.language}
           onHide={() =>
             this.setState({

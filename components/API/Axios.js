@@ -14,5 +14,6 @@ const Axios = axios.create({
     //    : CURRENT_ENVIREMENT === IN_STAGGING_MODE
     //    ? STAGGING_API_URL
     LOCAL_API_URL,
+  timeout: 1000000,
 });
 export default Axios;

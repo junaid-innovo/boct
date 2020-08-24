@@ -22,6 +22,7 @@ const initialState = {
   cancelOrderData: null,
   updateOrderDeliveryResponse: null,
   updateOrderDeliveryData: null,
+  message: null,
 };
 const reducers = (state = initialState, action) => {
   if (action.type === GET_LIVE) {
@@ -50,15 +51,17 @@ const reducers = (state = initialState, action) => {
     livestate.selectedOrder = action.payload.selectedOrder;
     return { ...livestate };
   }
-  if (action === CANCEL_ORDER) {
+  if (action.type === CANCEL_ORDER) {
     let livestate = { ...state };
     livestate.cancelOrderResponse = action.payload.message;
     livestate.cancelOrderData = action.payload.cancelOrderData;
+    return { ...livestate };
   }
-  if (action === UPDATE_DELIVERY_TIME) {
+  if (action.type === UPDATE_DELIVERY_TIME) {
     let livestate = { ...state };
     livestate.updateOrderDeliveryResponse = action.payload.message;
     livestate.updateOrderDeliveryData = action.payload.updateOrderDeliveryData;
+    return { ...livestate };
   }
   return state;
 };

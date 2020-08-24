@@ -37,6 +37,7 @@ import { ClipLoader } from "react-spinners";
 import { withRouter } from "next/router";
 import { SELECT_BRANCH } from "../../store/actions/actionTypes";
 import { get_trips_list } from "../../store/actions/live/actionCreator";
+import { get_logout } from "../../store/actionsCreators/loginCreator";
 class NavBar extends Component {
   constructor(props) {
     super(props);
@@ -81,6 +82,11 @@ class NavBar extends Component {
 
   componentDidMount() {
     this._isMounted = true;
+    if (this.props.selectedBranchId) {
+      this.setState({
+        selectedStoreId: this.props.selectedBranchId,
+      });
+    }
     if (this._isMounted) {
       this.props.getDefaultsApi();
     }
@@ -104,7 +110,7 @@ class NavBar extends Component {
       //   );
       // }
     }
-    // if (this.props.selectedBranchId !== prevProps.selectedBranchId) {
+    // if (this.props.selectedBranchId !== this.state.selectedStoreId) {
     //   this.setState({
     //     selectedStoreId: this.props.selectedBranchId,
     //   });
@@ -112,20 +118,20 @@ class NavBar extends Component {
     if (prevState.routesEnabled !== this.state.routesEnabled) {
       this.props.setRoutesStatus(this.state.routesEnabled);
     }
-    if (this.state.storeList !== prevState.storeList) {
-      if (this.state.storeList.length > 0) {
-        if (this.props.cookies.get("AseelWareHouse")) {
-          this.setState({
-            selectedStoreId: this.props.cookies.get("AseelWareHouse"),
-          });
-        }
-        if (this.props.cookies.get("AseelWareHouseLocation")) {
-          this.setState({
-            defaultCenter: this.props.cookies.get("AseelWareHouseLocation"),
-          });
-        }
-      }
-    }
+    // if (this.state.storeList !== prevState.storeList) {
+    //   if (this.state.storeList.length > 0) {
+    //     if (this.props.cookies.get("AseelWareHouse")) {
+    //       this.setState({
+    //         selectedStoreId: this.props.cookies.get("AseelWareHouse"),
+    //       });
+    //     }
+    //     if (this.props.cookies.get("AseelWareHouseLocation")) {
+    //       this.setState({
+    //         defaultCenter: this.props.cookies.get("AseelWareHouseLocation"),
+    //       });
+    //     }
+    //   }
+    // }
   }
   getStoreByDefault = () => {
     axios
@@ -196,29 +202,29 @@ class NavBar extends Component {
     this.setState({
       selectedStoreId: warehouse_id,
     });
-    this.props.getTripsApi("2020-04-24", warehouse_id);
-    // this.props.setBranchId(parseInt(warehouse_id));
-    // if (warehouse_id.length > 0) {
-    //   let storeList = [...this.state.storeList];
-    //   let filterWareHouses = _.filter(storeList, (ware_house) => {
-    //     if (ware_house.warehouse_id === parseInt(warehouse_id)) {
-    //       return ware_house.loacation;
-    //     }
-    //   });
-    //   const { latitude, longitude } = filterWareHouses[0].loacation;
-    //   let defaultCenter = {
-    //     lat: parseFloat(latitude),
-    //     lng: parseFloat(longitude),
-    //   };
-    //   if (warehouse_id === "") {
-    //     // this.props.vehiclesList(null);
-    //   } else {
-    //     this.setState({
-    //       selectedStoreId: parseInt(warehouse_id),
-    //       defaultCenter: defaultCenter,
-    //     });
-    //   }
-    // }
+
+    if (warehouse_id.length > 0) {
+      let storeList = [...this.props.warehouses];
+      let filterWareHouses = _.filter(storeList, (ware_house) => {
+        if (ware_house.store_id === parseInt(warehouse_id)) {
+          return ware_house.loacation;
+        }
+      });
+      const { lat, lng } = filterWareHouses[0].loacation;
+      let defaultCenter = {
+        lat: parseFloat(lat),
+        lng: parseFloat(lng),
+      };
+      if (warehouse_id === "") {
+        // this.props.vehiclesList(null);
+      } else {
+        this.props.setBranchId(warehouse_id, defaultCenter);
+        // this.setState({
+        //   selectedStoreId: parseInt(warehouse_id),
+        //   defaultCenter: defaultCenter,
+        // });
+      }
+    }
   };
   getDefaultTex = () => {
     // return <Trans i18nKey={"Select Branch"} />;
@@ -295,42 +301,7 @@ class NavBar extends Component {
     this.setState({
       pageloading: true,
     });
-    axios
-      .post(
-        `v1/user/logout`,
-        {},
-        {
-          headers: {
-            // Authorization: `bearer ${localStorage.getItem("authtoken")}`,
-          },
-        }
-      )
-      .then((res) => {
-        let response = res.data;
-        if (response.code === 200) {
-          this.props.cookies.remove("LANGUAGE", { path: "/" });
-          this.props.cookies.remove("AseelWareHouse", { path: "/" });
-          this.props.cookies.remove("AseelWareHouseLocation", {
-            path: "/",
-          });
-          this.setState({
-            pageloading: false,
-          });
-          // this.props.history.push("/login");
-        }
-        if (response.code === 401) {
-          this.setState({
-            pageloading: false,
-          });
-          // this.props.history.push("/login");
-        }
-      })
-      .catch((error) => {
-        this.showMessage(error.toString(), "error", false);
-        this.setState({
-          pageloading: false,
-        });
-      });
+    this.props.getLogoutApi();
   };
   onLanguageChange = () => {
     this.props.i18n.changeLanguage("en");
@@ -524,15 +495,22 @@ class NavBar extends Component {
 const mapStateToProps = (state) => {
   return {
     warehouses: state.navbar.warehouses,
-    selectedBranchId: state.live.selectedBranch,
+    selectedBranchId: state.navbar.selectedBranch,
   };
 };
 const mapDispatchToProps = (dispatch) => {
   return {
     getDefaultsApi: () => dispatch(get_defaults()),
-    // setBranchId: (id) =>
-    //   dispatch({ type: SELECT_BRANCH, payload: { selectedBranchId: id } }),
+    setBranchId: (selectedStoreId, defaultCenter) =>
+      dispatch({
+        type: SELECT_BRANCH,
+        payload: {
+          selectedBranchId: selectedStoreId,
+          defaultCenter: defaultCenter,
+        },
+      }),
     getTripsApi: (date, store_id) => dispatch(get_trips_list(date, store_id)),
+    getLogoutApi: () => dispatch(get_logout()),
   };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(NavBar));
