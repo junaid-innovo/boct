@@ -112,6 +112,8 @@ import {
   get_delivery_slots,
   get_trips_list,
 } from "../../store/actions/live/actionCreator";
+import { FOR_LIVE_PAGE_MESSAGES } from "../Constants/Other/Constants";
+import { SUCCESS_MESSAGE } from "../../store/actions/actionTypes";
 // import {Button} from 'semantic-ui-react';
 class Live extends PureComponent {
   constructor(props) {
@@ -252,17 +254,17 @@ class Live extends PureComponent {
         routeloading: false,
       });
     }
-    // if (
-    //   this.state.selectedBranchId &&
-    //   parseInt(this.state.selectedBranchId) !==
-    //     parseInt(prevState.selectedBranchId)
-    // ) {
-    //   console.log("Check this now");
-    //   this.getVehiclesByStoreId(
-    //     this.state.selectedBranchId,
-    //     this.props.defaultCenter
-    //   );
-    // }
+    if (this.props.toastMessages) {
+      const { forPage, messageId, type, message } = this.props.toastMessages;
+      if (
+        forPage === FOR_LIVE_PAGE_MESSAGES &&
+        messageId !== prevProps.toastMessages.messageId
+      ) {
+        if (message) {
+          this.showMessage(message, type);
+        }
+      }
+    }
   };
 
   componentDidMount() {
@@ -1491,8 +1493,7 @@ class Live extends PureComponent {
   };
   showMessage = (message, type, autoClose = 2000) =>
     toast(message, {
-      type: type,
-      // autoClose: false,
+      type: type === SUCCESS_MESSAGE ? "success" : "error",
       autoClose: autoClose,
       className:
         type === "success" ? style.toastContainerSuccess : style.toastContainer,
@@ -1664,6 +1665,7 @@ const mapStateToProps = (state) => {
     selectedOrder: state.live.selectedOrder,
     selectedBranch: state.navbar.selectedBranch,
     defaultCenter: state.navbar.defaultCenter,
+    toastMessages: state.toastmessages,
   };
 };
 const mapDispatchToProps = (dispatch) => {

@@ -157,7 +157,7 @@
 .routePlanNav .navLink.active {
   /* background-color:darkred ; */
 
-  box-shadow: 0 7px 0 darkred;
+  box-shadow: 0 3px 0 darkred;
 }
 .routeplanDiv .setShadow1 {
   background-color: white;

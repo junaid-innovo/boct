@@ -75,6 +75,8 @@ import {
   create_trip,
 } from "../../store/actions/routesplan/actionCreator";
 import { connect } from "react-redux";
+import { FOR_ROUTES_PALN_PAGE_MESSAGES } from "../Constants/Other/Constants";
+import { SUCCESS_MESSAGE } from "../../store/actions/actionTypes";
 class CustomRoutesPlan extends Component {
   constructor(props) {
     super(props);
@@ -217,13 +219,18 @@ class CustomRoutesPlan extends Component {
         vehicleLoading: false,
       });
     }
-    if (this.props.message !== prevProps.message) {
-      if (this.props.message) {
-        this.showMessage(this.props.message, "success");
+    if (this.props.toastMessages) {
+      const { forPage, messageId, type, message } = this.props.toastMessages;
+      if (
+        forPage === FOR_ROUTES_PALN_PAGE_MESSAGES &&
+        messageId !== prevProps.toastMessages.messageId
+      ) {
+        if (message) {
+          this.showMessage(message, type);
+        }
       }
     }
     if (this.props.routesAndPlanData !== prevProps.routesAndPlanData) {
-      console.log("CHECK CUSTOME UDPATERION");
       let mapfeatures = { ...this.state.mapfeatures };
       mapfeatures.orderType = ORDERS_READYFORPICKUP;
       let data = this.props.routesAndPlanData;
@@ -676,11 +683,13 @@ class CustomRoutesPlan extends Component {
   showMessage = (message, type, autoClose = 2000) => {
     toast(message, {
       toastId: this.toastId,
-      type: type,
+      type: type === SUCCESS_MESSAGE ? "success" : "error",
       // autoClose: false,
       autoClose: autoClose,
       className:
-        type === "success" ? style.toastContainerSuccess : style.toastContainer,
+        type === SUCCESS_MESSAGE
+          ? style.toastContainerSuccess
+          : style.toastContainer,
     });
   };
 
@@ -1411,6 +1420,7 @@ const mapStateToProps = (state) => {
     tripList: state.live.tripList,
     defaultCenter: state.navbar.defaultCenter,
     routesAndPlanData: state.routesplan.routesAndPlanData,
+    toastMessages: state.toastmessages,
   };
 };
 const mapDispatchToProps = (dispatch) => {

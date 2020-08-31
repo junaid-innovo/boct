@@ -9,10 +9,13 @@ import {
   GET_DELIVERY_SLOTS,
   CANCEL_ORDER,
   UPDATE_DELIVERY_TIME,
+  ERROR_MESSAGE,
+  SUCCESS_MESSAGE,
 } from "../../actions/actionTypes";
 import Cookies from "js-cookie";
 import { GET_TRIPS } from "../actionTypes";
-export const get_trips_list = (currentDate, id) => {
+import { FOR_LIVE_PAGE_MESSAGES } from "../../../components/Constants/Other/Constants";
+export const get_trips_list = (currentDate, id, forPageType = null) => {
   return (dispatch) => {
     axios
       .get(`api/tower/v1/${currentDate}/${id}/trip-listing`, {
@@ -22,16 +25,10 @@ export const get_trips_list = (currentDate, id) => {
       })
       .then((res) => {
         let response = res.data;
+        let message = response.message;
         if (response.code === 200) {
+          showSuccessMessage(message, dispatch, forPageType);
           let data = response.data;
-          //   if (response.message) {
-          //     this.showMessage(response.message, "error");
-          //   }
-          //   if (data.length > 0) {
-          // this.showMessage(
-          //   this.props.t("Vehicle Listed Successfully"),
-          //   "success"
-          // );
           dispatch({
             type: GET_TRIPS,
             payload: {
@@ -40,37 +37,17 @@ export const get_trips_list = (currentDate, id) => {
               message: response.message,
             },
           });
-          // this.setState({
-          //   trips: data,
-          //   vehicles: data,
-          //   disablebtn: false,
-          //   routeloading: false,
-          //   defaultCenter: center,
-          //   pageBodyStyle: {},
-          // });
-          //   } else {
-          //     // this.showMessage(this.props.t("No Record Found"), "error");
-          //     dispatch({
-          //       type: GET_TRIPS,
-          //       payload: {
-          //         tripList: data,
-          //         message: response.message,
-          //       },
-          //     });
-          // this.setState({
-          //   disablebtn: false,
-          //   routeloading: false,
-          // });
-          //   }
+        } else {
+          showErrorMessage(message, dispatch, forPageType);
         }
       })
       .catch((error) => {
-        //    / this.showMessage(error.toString(), "error", false);
+        showErrorMessage(error.toString(), dispatch, forPageType);
       });
   };
 };
 
-export const get_trip_deliveries = (trip_id, store_id) => {
+export const get_trip_deliveries = (trip_id, store_id, forPage = null) => {
   return (dispatch) => {
     axios
       .get(`api/tower/v1/${trip_id}/trip-deliveries-listing/${store_id}`, {
@@ -80,9 +57,10 @@ export const get_trip_deliveries = (trip_id, store_id) => {
       })
       .then((res) => {
         let response = res.data;
+        let message = response.message;
         if (response.code === 200) {
+          showSuccessMessage(message, dispatch, forPage);
           let data = response.data;
-
           let result = dispatch({
             type: GET_TRIP_DELIVERIES,
             payload: {
@@ -90,8 +68,8 @@ export const get_trip_deliveries = (trip_id, store_id) => {
               message: response.message,
             },
           });
-          console.log("check data", result);
         } else {
+          showErrorMessage(message, dispatch, forPage);
           dispatch({
             type: GET_TRIP_DELIVERIES,
             payload: {
@@ -102,7 +80,7 @@ export const get_trip_deliveries = (trip_id, store_id) => {
         }
       })
       .catch((error) => {
-        //    / this.showMessage(error.toString(), "error", false);
+        showErrorMessage(error.toString(), dispatch, forPage);
       });
   };
 };
@@ -117,9 +95,10 @@ export const get_cancel_reasons = (order, store_id) => {
       })
       .then((res) => {
         let response = res.data;
+        let message = response.message;
         if (response.code === 200) {
+          showSuccessMessage(message, dispatch);
           let data = response.data;
-
           let result = dispatch({
             type: GET_CANCEL_REASONS,
             payload: {
@@ -128,8 +107,8 @@ export const get_cancel_reasons = (order, store_id) => {
               message: response.message,
             },
           });
-          console.log("check data", result);
         } else {
+          showErrorMessage(message, dispatch);
           dispatch({
             type: GET_CANCEL_REASONS,
             payload: {
@@ -141,7 +120,7 @@ export const get_cancel_reasons = (order, store_id) => {
         }
       })
       .catch((error) => {
-        //    / this.showMessage(error.toString(), "error", false);
+        showErrorMessage(error.toString(), dispatch);
       });
   };
 };
@@ -155,8 +134,10 @@ export const get_delivery_slots = (order, store_id) => {
       })
       .then((res) => {
         let response = res.data;
+        let message = response.message;
         if (response.code === 200) {
           let data = response.data;
+          showSuccessMessage(message, dispatch);
 
           let result = dispatch({
             type: GET_DELIVERY_SLOTS,
@@ -166,8 +147,8 @@ export const get_delivery_slots = (order, store_id) => {
               message: response.message,
             },
           });
-          console.log("check data", result);
         } else {
+          showErrorMessage(message, dispatch);
           dispatch({
             type: GET_DELIVERY_SLOTS,
             payload: {
@@ -179,7 +160,7 @@ export const get_delivery_slots = (order, store_id) => {
         }
       })
       .catch((error) => {
-        //    / this.showMessage(error.toString(), "error", false);
+        showErrorMessage(error.toString(), dispatch);
       });
   };
 };
@@ -194,7 +175,9 @@ export const cancel_order = (data, store_id) => {
       })
       .then((res) => {
         let response = res.data;
+        let message = response.message;
         if (response.code === 200) {
+          showSuccessMessage(message, dispatch);
           let data = response.data;
           dispatch({
             type: CANCEL_ORDER,
@@ -204,6 +187,7 @@ export const cancel_order = (data, store_id) => {
             },
           });
         } else {
+          showErrorMessage(message, dispatch);
           dispatch({
             type: CANCEL_ORDER,
             payload: {
@@ -214,7 +198,7 @@ export const cancel_order = (data, store_id) => {
         }
       })
       .catch((error) => {
-        //    / this.showMessage(error.toString(), "error", false);
+        showErrorMessage(error.toString(), dispatch);
       });
   };
 };
@@ -229,9 +213,10 @@ export const update_order_delivery_time = (data, store_id) => {
       })
       .then((res) => {
         let response = res.data;
+        let message = response.message;
         if (response.code === 200) {
           let data = response.data;
-
+          showSuccessMessage(message, dispatch);
           dispatch({
             type: UPDATE_DELIVERY_TIME,
             payload: {
@@ -240,6 +225,7 @@ export const update_order_delivery_time = (data, store_id) => {
             },
           });
         } else {
+          showErrorMessage(message, dispatch);
           dispatch({
             type: UPDATE_DELIVERY_TIME,
             payload: {
@@ -250,7 +236,27 @@ export const update_order_delivery_time = (data, store_id) => {
         }
       })
       .catch((error) => {
-        //    / this.showMessage(error.toString(), "error", false);
+        showErrorMessage(error.toString(), dispatch);
       });
   };
+};
+
+const showErrorMessage = (message, dispatch, forPage = null) => {
+  dispatch({
+    type: ERROR_MESSAGE,
+    payload: {
+      message: message,
+      forPage: FOR_LIVE_PAGE_MESSAGES,
+      forPage: forPage ? forPage : FOR_LIVE_PAGE_MESSAGES,
+    },
+  });
+};
+const showSuccessMessage = (message, dispatch, forPage = null) => {
+  dispatch({
+    type: SUCCESS_MESSAGE,
+    payload: {
+      message: message,
+      forPage: forPage ? forPage : FOR_LIVE_PAGE_MESSAGES,
+    },
+  });
 };

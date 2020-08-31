@@ -9,6 +9,7 @@ import routesPlanReducer from "../store/reducers/routesandPlanReducer";
 import navBarReducer from "../store/reducers/navbarReducer";
 import authorizationReducer from "../store/reducers/authorizationReducer";
 import reduxThunk from "redux-thunk";
+import toastReducer from "../store/reducers/toastReducer";
 import App from "next/app";
 import { Provider } from "react-redux";
 import { withRouter } from "next/router";
@@ -48,6 +49,7 @@ const combinedReducer = combineReducers({
   navbar: navBarReducer,
   routesplan: routesPlanReducer,
   authorization: authorizationReducer,
+  toastmessages: toastReducer,
 });
 const store = createStore(
   combinedReducer,

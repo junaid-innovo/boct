@@ -21,6 +21,7 @@ import axios from "../API/Axios";
 import { Trans } from "react-i18next";
 import { connect } from "react-redux";
 import { get_trip_deliveries } from "../../store/actions/live/actionCreator";
+import { FOR_ROUTES_PALN_PAGE_MESSAGES } from "../Constants/Other/Constants";
 
 class DeliveryTripDataTable extends Component {
   constructor(props) {
@@ -67,27 +68,19 @@ class DeliveryTripDataTable extends Component {
             showOrderInfoModal: true,
             deliveryOrders: data.deliveries,
             selectedTripIsEditable: is_editable,
-            // tripEditData: row,
           });
           this.props.getRouteOrders([]);
         } else {
           this.setState({
             showOrderInfoModal: false,
             deliveryOrders: data.deliveries,
-            // tripEditData: row,
           });
           this.props.getRouteOrders(data.deliveries);
         }
 
         this.props.isPageLoading(false);
-
-        // this.showMessage(
-        //    'Vehicle Route Mapping Successfully ',
-        //    'success'
-        // )
       } else {
         this.setState({
-          // vehicleRoutes: data,
           routeloading: false,
           deliveryOrders: data.deliveries,
         });
@@ -451,18 +444,6 @@ class DeliveryTripDataTable extends Component {
   renderOrderModals = () => {
     return (
       <div style={{ width: "95%", height: "auto" }}>
-        <ToastContainer
-          transition={Zoom}
-          position="top-center"
-          // autoClose={1500}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnVisibilityChange
-          draggable
-          pauseOnHover
-        />
         {this.state.showOrderEditModal && (
           <OrderEditModal
             t={this.props.t}
@@ -537,7 +518,9 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
   return {
     getTripDeliveriesApi: (trip_id, store_id) =>
-      dispatch(get_trip_deliveries(trip_id, store_id)),
+      dispatch(
+        get_trip_deliveries(trip_id, store_id, FOR_ROUTES_PALN_PAGE_MESSAGES)
+      ),
   };
 };
 export default connect(

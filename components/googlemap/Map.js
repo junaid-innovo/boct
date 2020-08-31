@@ -156,32 +156,7 @@ class Map extends PureComponent {
 
     let finalpoints = this.mapGeofenceObject(polygon.getPath().getArray());
     finalpoints = { geofence_locations: finalpoints };
-    this.sendGeofence(finalpoints);
-  };
-
-  sendGeofence = (finalpoints) => {
-    axios
-      .post(
-        `${LOCAL_API_URL}storesupervisor/v1/getGeofence/47.36025273799896/47.36025273799896`,
-        JSON.stringify(finalpoints),
-        {
-          headers: {
-            Authorization: `bearer ${localStorage.getItem("authtoken")}`,
-          },
-        }
-      )
-      .then((res) => {
-        let response = res.data;
-        if (res.status === 200) {
-          if (response.token) {
-            this.setState({ loggedin: true });
-            localStorage.setItem("authtoken", response.token);
-            localStorage.setItem("username", "Supervisor");
-            this.props.loggedin(true);
-          }
-        }
-      })
-      .catch((error) => console.log(error));
+    // this.sendGeofence(finalpoints);
   };
 
   onCircleHover = (e) => {};
@@ -1622,17 +1597,6 @@ class Map extends PureComponent {
     );
     return (
       <React.Fragment>
-        <ToastContainer
-          transition={Zoom}
-          position="top-center"
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnVisibilityChange
-          draggable
-          pauseOnHover
-        />
         {typeof this.state.map === "undefined" && gmapError}
         <GoogleMap
           key={this.props.language}
