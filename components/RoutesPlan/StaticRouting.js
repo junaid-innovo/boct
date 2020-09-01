@@ -66,7 +66,7 @@ import {
   SUCCESS_MESSAGE,
 } from "../../store/actions/actionTypes";
 import { FOR_ROUTES_PALN_PAGE_MESSAGES } from "../Constants/Other/Constants";
-class StaticRoutesPlan extends PureComponent {
+class StaticRoutesPlan extends Component {
   constructor(props) {
     super(props);
     this._isMounted = false;
@@ -108,6 +108,7 @@ class StaticRoutesPlan extends PureComponent {
         orderType: null,
         routesEnabled: false,
       },
+      // routesEnabled: true,
       showOrders: true,
       showByOrder: true,
       showByRoute: false,
@@ -163,7 +164,9 @@ class StaticRoutesPlan extends PureComponent {
           dataTableloading: true,
           showOrders: false,
         });
-        this.props.getTripsApi("2020-04-24", this.props.selectedBranch);
+        // let trip_date = moment(new Date()).format("YYYY-MM-DD");
+        let trip_date = "2020-09-01";
+        this.props.getTripsApi(trip_date, this.props.selectedBranch);
       }
     }
   };
@@ -186,6 +189,7 @@ class StaticRoutesPlan extends PureComponent {
       if (this.props.selectedBranch) {
         this.props.getAvailableVehiclesApi(
           this.props.selectedBranch,
+
           moment(this.state.tripDate).format("YYYY-MM-DD")
         );
       }
@@ -221,7 +225,7 @@ class StaticRoutesPlan extends PureComponent {
           isActive: 1,
           orders: modifiedOrders,
           allOrders: orders,
-          cityList: _.uniqBy(cityList, "loaction_id"),
+          cityList: _.uniqBy(cityList, "location_id"),
           areaList: _.uniqBy(getAreaList, "id"),
           pageloading: false,
           routes: routes,
@@ -240,20 +244,11 @@ class StaticRoutesPlan extends PureComponent {
       });
     }
     if (this.props.tripCode) {
-      if (this.props.tripCode !== this.state.generatedTripCode) {
-        this.setState({
-          generatedTripCode: this.props.tripCode,
-        });
-      }
-    }
-    if (this.props.toastMessages) {
-      const { forPage, messageId, type, message } = this.props.toastMessages;
-      if (
-        forPage === FOR_ROUTES_PALN_PAGE_MESSAGES &&
-        messageId !== prevProps.toastMessages.messageId
-      ) {
+      if (this.props.tripCode !== prevProps.tripCode) {
         if (this.state.routeOrders && this.state.routeOrders.deliveries) {
           let selectedOrderIds = [...this.state.routeOrders.deliveries];
+          4;
+          console.log("CHECK ORDER IDS", selectedOrderIds);
           _.remove(selectedOrderIds, (order) =>
             this.state.selectedOrderId.includes(order.order_id)
           );
@@ -273,9 +268,17 @@ class StaticRoutesPlan extends PureComponent {
             selectedOrderId: [],
             selectedOrdersDetail: [],
             pageloading: false,
-            // generatedTripCode: newCode,
+            generatedTripCode: this.props.tripCode,
           });
         }
+      }
+    }
+    if (this.props.toastMessages) {
+      const { forPage, messageId, type, message } = this.props.toastMessages;
+      if (
+        forPage === FOR_ROUTES_PALN_PAGE_MESSAGES &&
+        messageId !== prevProps.toastMessages.messageId
+      ) {
         if (message) {
           this.showMessage(message, type);
         }
@@ -303,7 +306,7 @@ class StaticRoutesPlan extends PureComponent {
         showOrdersInProduction: false,
         showOrders: false,
         deliveryTrips: data,
-        selectedRoute: ALL_ORDERS,
+        selectedRoute: null,
         defaultMenuText: "All Trips",
         defaultMenuText2: "Unassigned Trips",
         tripcallPending: false,
@@ -456,11 +459,11 @@ class StaticRoutesPlan extends PureComponent {
     let startDate = moment(getDateRange[0]).format("YYYY-MM-DD");
     let endDate = moment(getDateRange[1]).format("YYYY-MM-DD");
     let data = {
-      route_ids: this.state.selectedRoute ? [this.selectedRoute] : [],
+      route_ids: this.state.selectedRoute ? [this.state.selectedRoute] : [],
       order_ids: this.state.selectedOrderId,
       area_ids: this.state.selectedArea ? [this.state.selectedArea] : [],
-      date_from: startDate,
-      date_to: endDate,
+      date_from: this.state.selectedOrderId.length > 0 ? "" : startDate,
+      date_to: this.state.selectedOrderId.length > 0 ? "" : endDate,
     };
     this.setState({
       pageloading: true,
@@ -501,18 +504,15 @@ class StaticRoutesPlan extends PureComponent {
     let selectedRoute = this.state.selectedRoute
       ? parseInt(this.state.selectedRoute)
       : null;
-    console.log("CHECK ROUTES", selectedRoute);
     let startDate = getDateRange[0].getTime();
     let endDate = getDateRange[1].getTime();
     if (this.state.showByOrder) {
       let orders = this.state.allOrders ? [...this.state.allOrders] : [];
+      let deliveryTrips = this.state.deliveryTrips
+        ? [...this.state.deliveryTrips]
+        : [];
       let getfilteredOrders = _.filter(orders, (order) => {
         let order_date = new Date(order.created_at).getTime();
-        console.log(
-          order_date >= startDate && order_date <= endDate && selectedRoute
-            ? order.routes.map((val) => val.includes(selectedRoute))
-            : true
-        );
         if (selectedRoute) {
           return (
             order_date >= startDate &&
@@ -523,6 +523,18 @@ class StaticRoutesPlan extends PureComponent {
           return order_date >= startDate && order_date <= endDate;
         }
       });
+      let getfilteredTrips = _.filter(deliveryTrips, (trip) => {
+        let trip_date = new Date(trip.trip_date).getTime();
+        if (selectedRoute) {
+          return (
+            trip_date >= startDate &&
+            trip_date <= endDate &&
+            trip.route_id === selectedRoute
+          );
+        } else {
+          return trip_date >= startDate && trip_date <= endDate;
+        }
+      });
       if (getfilteredOrders.length > 0) {
         this.setState({
           routeOrders: { deliveries: getfilteredOrders },
@@ -530,6 +542,15 @@ class StaticRoutesPlan extends PureComponent {
       } else {
         this.setState({
           routeOrders: null,
+        });
+      }
+      if (getfilteredTrips.length > 0) {
+        this.setState({
+          routeTrips: getfilteredTrips,
+        });
+      } else {
+        this.setState({
+          routeTrips: null,
         });
       }
     } else if (this.state.showByRoute) {

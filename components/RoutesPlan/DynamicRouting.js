@@ -7,6 +7,7 @@ import {
   InputGroup,
   Button,
   ButtonGroup,
+  Col,
 } from "react-bootstrap";
 import Link from "next/link";
 // import DateTimeRangePicker from "@wojtekmaj/react-datetimerange-picker";
@@ -16,31 +17,52 @@ import {
   get_available_vehciles,
   create_trip,
   get_dynamic_constraints,
+  create_dynamic_trip,
 } from "../../store/actions/routesplan/actionCreator";
 import { OrderTableColumns } from "../Constants/TableColumns/OrderColumns";
 import { DeliveryTripColumns } from "../Constants/TableColumns/DeliveryTripColumns";
+import { VehicleColumns } from "../Constants/TableColumns/VehiclesColumns";
 import BoostrapDataTable from "../datatable/Datatable";
 import DeliveryTripDataTable from "../datatable/DeliveryTripDataTable";
+import CustomDatePickerInput from "../UI/Input/CustomDatePickerInput";
+import VehiclesDataTable from "../datatable/VehiclesDataTable";
 import axios from "axios";
 import { LOCAL_API_URL } from "../Constants/Enviroment/Enviroment";
 import paginationFactory from "react-bootstrap-table2-paginator";
-import { col6, col5, col12, col7 } from "../Constants/Classes/BoostrapClassses";
+import {
+  col6,
+  col5,
+  col12,
+  col7,
+  col10,
+  col2,
+  col4,
+  col8,
+  col3,
+  col1,
+} from "../Constants/Classes/BoostrapClassses";
 import RouteSummary from "../RoutesPlan/RouteSummary";
 import DateRangePicker from "@wojtekmaj/react-daterange-picker";
 import { ClipLoader } from "react-spinners";
 import { ToastContainer, toast, Zoom } from "react-toastify";
 import { LoadPropagateLoader } from "../Loaders/Loaders";
 import style from "./RoutesPlan.module.css";
+import DatePicker from "react-datepicker";
 import SampleData from "../SampleData/RoutesPlanData.json";
 import moment from "moment";
 import { Trans } from "../../i18n";
 import _ from "lodash";
 import { connect } from "react-redux";
 import { get_trips_list } from "../../store/actions/live/actionCreator";
-import { DELIVERY_TRIPS, ALL_ORDERS } from "../Constants/Order/Constants";
+import {
+  DELIVERY_TRIPS,
+  ALL_ORDERS,
+  ORDERS_READYFORPICKUP,
+} from "../Constants/Order/Constants";
 import {
   INPUT_TYPE_CHECKBOX,
   INPUT_TYPE_RADIO,
+  FOR_ROUTES_PALN_PAGE_MESSAGES,
 } from "../Constants/Other/Constants";
 import {
   SEQUENCE_ORDERS,
@@ -48,7 +70,8 @@ import {
   TIME_AND_FUEL_OPTIMIZATION,
   BALANCED_ALLOCATIONS,
 } from "../Constants/Other/Constants";
-
+import { SUCCESS_MESSAGE } from "../../store/actions/actionTypes";
+import TimePicker from "react-time-picker";
 class DynamicRoutesPlan extends PureComponent {
   constructor(props) {
     super(props);
@@ -60,7 +83,11 @@ class DynamicRoutesPlan extends PureComponent {
       plandate: "PLAN-04/15/2020 5:51:06PM",
       listview: true,
       mapview: false,
+      time: "10:00",
+      afterPlanDays: 0,
       constraints: null,
+      selectedRoute: null,
+      selectedSequenceOrder: null,
       selectedsequenceOrders: null,
       selectedBalancedAllocation: null,
       selectedTimeandFuelOptimization: null,
@@ -76,6 +103,9 @@ class DynamicRoutesPlan extends PureComponent {
         constaint_type: null,
         defaultChecked: null,
       },
+      showSummary: false,
+      showPlanSetting: false,
+      showVehiclesTable: false,
       advancemenu: false,
       date: [new Date(), new Date()],
       DateTimeRange: [new Date(), new Date()],
@@ -87,7 +117,7 @@ class DynamicRoutesPlan extends PureComponent {
       rangedate: [new Date(), new Date()],
       summarystats: null,
       isActive: false,
-      pageloading: false,
+      pageloading: true,
       allOrders: [],
       routeOrders: null,
       mapfeatures: {
@@ -97,7 +127,7 @@ class DynamicRoutesPlan extends PureComponent {
         drawing: true,
         polygon: false,
         orderType: null,
-        routesEnabled: false,
+        routesEnabled: true,
       },
       routeTrips: [],
       deliveryTrips: [],
@@ -116,9 +146,31 @@ class DynamicRoutesPlan extends PureComponent {
       AllFilter: "All Orders",
       dataTableloading: false,
       vehicleList: [],
+      selectedVehicleIds: [],
     };
   }
-
+  handleSequenceOrder = (e) => {
+    let target = e.target;
+    let value = e.target.value;
+    let inputType = e.target.type;
+    this.setState({
+      selectedSequenceOrder: value,
+    });
+  };
+  onSettingClick = (e) => {
+    let value = e.target.value;
+    if (value === "savesettings") {
+      this.setState({ showSaveSettingInput: true });
+    } else {
+      this.setState({ showSaveSettingInput: false });
+    }
+  };
+  onTimeChange = (time) => {
+    this.setState({
+      time: time,
+    });
+  };
+  onApprovedClick = () => {};
   handleRadioBox = (e, type) => {
     let target = e.target;
     let value = e.target.value;
@@ -166,7 +218,6 @@ class DynamicRoutesPlan extends PureComponent {
             _.remove(balancedAllocation, (item) => item === value);
           }
         }
-        console.log("CHECK BALANCED ALLOCATION1", balancedAllocation);
         this.setState({
           selectedBalancedAllocation: balancedAllocation,
         });
@@ -241,6 +292,43 @@ class DynamicRoutesPlan extends PureComponent {
       }
     }
   };
+
+  onOrderClick = () => {
+    this.setState({
+      isActive: 1,
+      showOrders: true,
+      showVehiclesTable: false,
+      listview: true,
+      showSummary: false,
+      showPlanSetting: false,
+    });
+  };
+  OnVehiclesClick = () => {
+    this.setState({
+      isActive: 2,
+      showOrders: false,
+      showVehiclesTable: true,
+      showSummary: false,
+      showPlanSetting: false,
+      listview: true,
+    });
+  };
+  OnSummaryClick = () => {
+    this.setState({
+      isActive: 3,
+      listview: false,
+      showSummary: true,
+      showPlanSetting: false,
+    });
+  };
+  OnPlanSettingClick = () => {
+    this.setState({
+      isActive: 4,
+      listview: false,
+      showSummary: false,
+      showPlanSetting: true,
+    });
+  };
   onChange = (date) => this.setState({ date });
   componentDidMount() {
     this._isMounted = true;
@@ -258,12 +346,20 @@ class DynamicRoutesPlan extends PureComponent {
   }
   componentDidUpdate(prevProps, prevState) {
     if (this.props.selectedBranch !== prevProps.selectedBranch) {
+      this.props.getAvailableVehiclesApi(
+        this.props.selectedBranch,
+        moment(this.state.tripDate).format("YYYY-MM-DD")
+      );
       this.props.getConstraintsApi(this.props.selectedBranch);
       this.getRoutesandCapacity();
     }
     if (this.props.routesAndPlanData !== prevProps.routesAndPlanData) {
+      let mapfeatures = { ...this.state.mapfeatures };
+      mapfeatures.orderType = ORDERS_READYFORPICKUP;
       let lang = this.props.i18n.language;
+
       let data = this.props.routesAndPlanData;
+      // let orders = data.orders.slice(0, 10);
       let orders = data.orders;
       let constraints = data.constraints;
       let summarystats = data.counters;
@@ -278,6 +374,8 @@ class DynamicRoutesPlan extends PureComponent {
         routeOrders: { deliveries: orders },
         orders: modifiedOrders,
         allOrders: orders,
+        isActive: 1,
+        mapfeatures: mapfeatures,
         isChanged: true,
         // constraints: _.sortBy(constraints, "constraint_id"),
         summarystats: summarystats,
@@ -291,16 +389,6 @@ class DynamicRoutesPlan extends PureComponent {
     if (this.state.vehicleList !== this.props.vehicleList) {
       this.setState({
         vehicleList: this.props.vehicleList,
-      });
-    }
-    if (this.props.message !== prevProps.message) {
-      if (this.props.message) {
-        this.showMessage(this.props.message, "success");
-      }
-      this.setState({
-        createTrip: false,
-        selectedOrderId: [],
-        selectedVehicle: null,
       });
     }
     if (this.props.tripList !== prevProps.tripList) {
@@ -334,11 +422,147 @@ class DynamicRoutesPlan extends PureComponent {
     }
     if (this.props.constraints !== prevProps.constraints) {
       const { Constraints } = this.props.constraints;
+      let constraint = Constraints[0];
+
       this.setState({
         constraints: Constraints,
+        pageloading: false,
       });
+      this.setConstraints(constraint, true);
+    }
+    if (this.props.tripCode !== prevProps.tripCode) {
+      if (this.state.routeOrders && this.state.routeOrders.deliveries) {
+        let selectedOrderIds = [...this.state.routeOrders.deliveries];
+        _.remove(selectedOrderIds, (order) =>
+          this.state.selectedOrderId.includes(order.order_id)
+        );
+        let store_address = { ...this.state.defaultCenter };
+
+        this.setState({
+          routeOrders: {
+            deliveries: selectedOrderIds,
+            store_address: {
+              latitude: store_address.lat,
+              longitude: store_address.lng,
+            },
+          },
+          createTrip: false,
+          tripDate: new Date(),
+          selectedVehicle: null,
+          selectedOrderId: [],
+          selectedOrdersDetail: [],
+          pageloading: false,
+          generatedTripCode: this.props.tripCode,
+          // generatedTripCode: newCode,
+        });
+      }
+    }
+    if (this.props.toastMessages) {
+      const { forPage, messageId, type, message } = this.props.toastMessages;
+      if (
+        forPage === FOR_ROUTES_PALN_PAGE_MESSAGES &&
+        messageId !== prevProps.toastMessages.messageId
+      ) {
+        if (message) {
+          // this.setState({
+          //   pageloading: false,
+          // });
+          this.showMessage(message, type);
+        }
+      }
     }
   }
+
+  setConstraints = (constraint, initialize = false) => {
+    if (constraint) {
+      let type = "";
+      if (parseInt(constraint.multiVal)) {
+        type = INPUT_TYPE_CHECKBOX;
+      } else {
+        type = INPUT_TYPE_RADIO;
+      }
+      if (constraint.default) {
+        if (constraint.Type === SEQUENCE_ORDERS) {
+          let getSelectedSequenceOrders = [];
+
+          if (type === INPUT_TYPE_CHECKBOX) {
+            if (this.state.selectedsequenceOrders) {
+              let getvalue = [...this.state.selectedsequenceOrders];
+              getSelectedSequenceOrders.push(...getvalue);
+            } else {
+              getSelectedSequenceOrders.push(constraint.default);
+            }
+          } else {
+            if (this.state.selectedsequenceOrders) {
+              getSelectedSequenceOrders = constraint.default;
+            } else {
+              let getvalue = { ...this.state.selectedsequenceOrders };
+              console.log("CHECK VALUE", getvalue);
+            }
+          }
+          this.setState({
+            selectedsequenceOrders: getSelectedSequenceOrders,
+          });
+        }
+        if (constraint.Type === BALANCED_ALLOCATIONS) {
+          let getSelectedBalancedAllocations = this.state
+            .selectedBalancedAllocation
+            ? [...this.state.selectedBalancedAllocation]
+            : [];
+          if (type === INPUT_TYPE_CHECKBOX) {
+            getSelectedBalancedAllocations.push(constraint.default);
+          } else {
+            if (!this.state.selectedBalancedAllocation) {
+              getSelectedBalancedAllocations = constraint.default;
+            }
+          }
+          this.setState({
+            selectedBalancedAllocation: getSelectedBalancedAllocations,
+          });
+        }
+        if (constraint.Type === TIME_AND_FUEL_OPTIMIZATION) {
+          let getSelectedTimeandFuelOpt = this.state
+            .selectedTimeandFuelOptimization
+            ? [...this.state.selectedTimeandFuelOptimization]
+            : [];
+          if (type === INPUT_TYPE_CHECKBOX) {
+            getSelectedTimeandFuelOpt.push(constraint.default);
+          } else {
+            getSelectedTimeandFuelOpt = constraint.default;
+          }
+          this.setState({
+            selectedTimeandFuelOptimization: getSelectedTimeandFuelOpt,
+          });
+        }
+        if (constraint.Type === MULTI_TRIP) {
+          let getSelectedMultiTrip = this.state.selectedMultiTrip
+            ? [...this.state.selectedMultiTrip]
+            : [];
+          if (type === INPUT_TYPE_CHECKBOX) {
+            getSelectedMultiTrip.push(constraint.default);
+          } else {
+            getSelectedMultiTrip = constraint.default;
+          }
+          this.setState({
+            selectedMultiTrip: getSelectedMultiTrip,
+          });
+        }
+      }
+      let altconstraint = {
+        type: type,
+        id: constraint.id,
+        // names: JSON.parse(constraint.constraint_name),
+        names: constraint.constraint_names,
+        constaint_type: constraint.Type,
+        defaultChecked: constraint.default,
+      };
+      this.setState({
+        selectedConstraintName: altconstraint,
+        advancemenu: false,
+        plannow: false,
+      });
+    }
+  };
   componentWillUnmount() {
     this._isMounted = false;
   }
@@ -422,56 +646,55 @@ class DynamicRoutesPlan extends PureComponent {
   };
 
   renderConstraints = () => {
-    const data = {
-      Constraints: [
-        {
-          Type: SEQUENCE_ORDERS,
-          constraint_id: 1,
-          constraint_names: ["Distance", "Time", "Weight"],
-          multiVal: "1",
-        },
-        {
-          Type: BALANCED_ALLOCATIONS,
-          constraint_id: 2,
-          constraint_names: ["Time Slot Preference", "Capacity"],
-          multiVal: "0",
-        },
-        {
-          Type: TIME_AND_FUEL_OPTIMIZATION,
-          constraint_id: 3,
-          constraint_names: ["Distance", "Time", "Weight"],
-          multiVal: "0",
-        },
-        {
-          Type: MULTI_TRIP,
-          constraint_id: 4,
-          constraint_names: ["True", "False"],
-          multiVal: "0",
-        },
-      ],
-    };
     return (
-      this.state.constraints &&
-      this.state.constraints.map((constraint, key) => (
-        <React.Fragment key={key}>
-          <Nav.Link
-            className={`${style.navLink}`}
-            variant="button"
-            onClick={(e) => this.onConstraintClick(e, constraint)}
-          >
-            {constraint.Type}
-          </Nav.Link>
-        </React.Fragment>
-      ))
+      <React.Fragment>
+        {this.state.constraints &&
+          this.state.constraints.map((constraint, key) => {
+            return (
+              <React.Fragment key={key}>
+                <Nav.Link
+                  className={`${style.navLink} ${
+                    this.state.selectedConstraintName &&
+                    this.state.selectedConstraintName.id === constraint.id
+                      ? style.active
+                      : null
+                  }`}
+                  variant="button"
+                  onClick={(e) => this.onConstraintClick(e, constraint)}
+                >
+                  {constraint.Type}
+                </Nav.Link>
+              </React.Fragment>
+            );
+          })}
+      </React.Fragment>
     );
   };
-
-  onConstraintClick = (e, constraint) => {
-    let parentElement = e.target.parentElement;
-    for (let i = 0; i < parentElement.children.length; i++) {
-      parentElement.children[i].classList.remove(style.active);
+  onNextClick = (constraint_type) => {
+    if (constraint_type === "Advance") {
+      this.setState({
+        advancemenu: true,
+        plannow: false,
+        planlater: false,
+      });
+    } else {
+      let i = _.findIndex(this.state.constraints, function ({ Type }) {
+        return Type === constraint_type;
+      });
+      let constraints = [...this.state.constraints];
+      let constraint = null;
+      if (i + 1 !== constraints.length) {
+        constraint = constraints[i + 1];
+      }
+      this.setConstraints(constraint);
     }
-    e.target.classList.add(style.active);
+  };
+  onConstraintClick = (e, constraint) => {
+    // let parentElement = e.target.parentElement;
+    // for (let i = 0; i < parentElement.children.length; i++) {
+    //   parentElement.children[i].classList.remove(style.active);
+    // }
+    // e.target.classList.add(style.active);
     if (constraint.Type === "Advance") {
       this.setState({
         advancemenu: true,
@@ -479,24 +702,7 @@ class DynamicRoutesPlan extends PureComponent {
         planlater: false,
       });
     } else {
-      let type = "";
-      if (parseInt(constraint.multiVal)) {
-        type = INPUT_TYPE_CHECKBOX;
-      } else {
-        type = INPUT_TYPE_RADIO;
-      }
-      let altconstraint = {
-        type: type,
-        // names: JSON.parse(constraint.constraint_name),
-        names: constraint.constraint_names,
-        constaint_type: constraint.Type,
-        defaultChecked: null,
-      };
-      this.setState({
-        selectedConstraintName: altconstraint,
-        advancemenu: false,
-        plannow: false,
-      });
+      this.setConstraints(constraint);
     }
   };
   // };
@@ -559,21 +765,42 @@ class DynamicRoutesPlan extends PureComponent {
           onChange={this.onDateTimeRangeChange}
           value={this.state.DateTimeRange}
         /> */}
-        <DatePicker
-          selected={this.state.startDate}
-          onChange={this.setStartDate}
-          selectsEnd
-          startDate={this.state.startDate}
-          endDate={this.state.endDate}
-        />
-        <DatePicker
-          selected={this.state.endDate}
-          onChange={this.setEndDate}
-          selectsStart
-          startDate={this.state.startDate}
-          endDate={this.state.endDate}
-          minDate={this.state.endDate}
-        />
+        <FormGroup>
+          <Form.Label>Plan Date: </Form.Label>
+          <br></br>
+          <DatePicker
+            selected={this.state.startDate}
+            // onChange={(date) => setStartDate(date)}
+            // customInput={<ExampleCustomInput />}
+            // showTimeSelect={false}
+            // title="Select Date"
+            // currentDate={this.state.tripDate}
+            // dateFormat={this.state.dateFormat}
+            // minDate={new Date()}
+            onChange={this.setStartDate}
+            customInput={<CustomDatePickerInput />}
+            className={`rounded-0 ${style.datePickerinputShadow}  textingred `}
+          ></DatePicker>
+          {/* <DatePicker
+            className="form-control"
+            selected={this.state.startDate}
+            onChange={this.setStartDate}
+            selectsEnd
+            startDate={this.state.startDate}
+            endDate={this.state.endDate}
+          /> */}
+        </FormGroup>
+        {/* <FormGroup>
+          <Form.Label>End Date: </Form.Label>
+          <DatePicker
+            selected={this.state.endDate}
+            onChange={this.setEndDate}
+            selectsStart
+            startDate={this.state.startDate}
+            endDate={this.state.endDate}
+            minDate={this.state.endDate}
+          />
+        </FormGroup> */}
       </React.Fragment>
     );
   };
@@ -590,11 +817,12 @@ class DynamicRoutesPlan extends PureComponent {
           dataTableloading: true,
           showOrders: false,
         });
-        this.props.getTripsApi("2020-04-24", this.props.selectedBranch);
+        let trip_date = moment(new Date()).format("YYYY-MM-DD");
+        this.props.getTripsApi(trip_date, this.props.selectedBranch);
       }
     }
   };
-  advanceRadioClick = (e) => {
+  onPlanNowClick = (e) => {
     this.setState({
       plannow: true,
       planlater: false,
@@ -628,19 +856,19 @@ class DynamicRoutesPlan extends PureComponent {
       generatedTripCode: null,
     });
   };
-  onOrderClick = () => {
-    this.setState({
-      // tripcallPending: true,
-      dataTableloading: !this.state.dataTableloading,
-      pageloading: false,
-      // showOrders: false,
-      showDeliveryTrip: false,
-      showOrdersInProduction: false,
-      polygonPaths: null,
-      deliveryTrips: [],
-    });
-    this.getRoutesandCapacity();
-  };
+  // onOrderClick = () => {
+  //   this.setState({
+  //     // tripcallPending: true,
+  //     dataTableloading: !this.state.dataTableloading,
+  //     pageloading: false,
+  //     // showOrders: false,
+  //     showDeliveryTrip: false,
+  //     showOrdersInProduction: false,
+  //     polygonPaths: null,
+  //     deliveryTrips: [],
+  //   });
+  //   this.getRoutesandCapacity();
+  // };
   getMapSelectedOrderId = (order_id, orders_in_detail) => {
     let order_detail = orders_in_detail;
     if (order_id.length === 0) {
@@ -660,7 +888,7 @@ class DynamicRoutesPlan extends PureComponent {
   };
   showMessage = (message, type, autoClose = 2000) =>
     toast(message, {
-      type: type,
+      type: type === SUCCESS_MESSAGE ? "success" : "error",
       // autoClose: false,
       autoClose: autoClose,
       className: style.toastContainer,
@@ -729,14 +957,115 @@ class DynamicRoutesPlan extends PureComponent {
     return false;
   };
   handleRecurringOptions = () => {};
+  removeGeofenceOrders = () => {
+    this.getRoutesandCapacity();
+  };
+  removeDeletedRoute = (route_id) => {
+    let allroutes = [...this.state.routes];
+    _.remove(allroutes, { route_id: route_id });
+    this.setState({
+      routes: allroutes,
+    });
+  };
+  onProceedBtnClick = () => {
+    this.setState({
+      pageloading: true,
+    });
+    let trip_date = moment(new Date()).format("YYYY-MM-DD");
+    // let data = {
+    //   order_ids: [],
+    //   balanced_orders: this.state.selectedBalancedAllocation,
+    //   time_and_fuel: this.state.selectedTimeandFuelOptimization,
+    //   multiTrip: this.state.selectedMultiTrip,
+    //   sequence_order: {
+    //     order: this.state.selectedSequenceOrder,
+    //     values: this.state.selectedsequenceOrders,
+    //   },
+    //   trip_date: trip_date,
+    //   set_now: "false",
+    //   is_approved: "true",
+    // };
+    let data = {
+      order_ids: this.state.selectedOrderId,
+      set_now: "true",
+      is_approved: "true",
+      trip_date: trip_date,
+      constraints: {
+        Allocation: this.state.selectedBalancedAllocation,
+        Optmization: this.state.selectedTimeandFuelOptimization,
+        multiTrip: this.state.selectedMultiTrip,
+        sequence_order: {
+          order: this.state.selectedSequenceOrder,
+          values: [...this.state.selectedsequenceOrders],
+        },
+      },
+    };
+
+    this.props.createDynamicTrip(
+      this.props.selectedBranch,
+      JSON.stringify(data)
+    );
+    // this.setState({
+    //   advancemenu: false,
+    //   selectedConstraintName: null,
+    // });
+  };
+  onSearchClick = () => {
+    if (this.state.date) {
+      let getDateRange = [...this.state.date];
+      let startDate = getDateRange[0].getTime();
+      let endDate = getDateRange[1].getTime();
+      let orders = this.state.allOrders ? [...this.state.allOrders] : [];
+      let deliveryTrips = this.state.deliveryTrips
+        ? [...this.state.deliveryTrips]
+        : [];
+      let getfilteredOrders = _.filter(orders, (order) => {
+        let order_date = new Date(order.created_at).getTime();
+        return order_date >= startDate && order_date <= endDate;
+      });
+      console.log("CHECK FILTERED ORDERS", getfilteredOrders);
+      let getfilteredTrips = _.filter(deliveryTrips, (trip) => {
+        let trip_date = new Date(trip.trip_date).getTime();
+        return trip_date >= startDate && trip_date <= endDate;
+      });
+      if (getfilteredOrders.length > 0) {
+        this.setState({
+          routeOrders: { deliveries: getfilteredOrders },
+        });
+      } else {
+        this.setState({
+          routeOrders: null,
+        });
+      }
+    } else {
+      let getAllOrders = [...this.state.allOrders];
+      this.setState({
+        routeOrders: { deliveries: getAllOrders },
+      });
+    }
+  };
+  onAfterPlanDays = (input) => {
+    this.setState({
+      afterPlanDays: input,
+    });
+  };
+  setDataTableSelectedVechilesId = (vehicle_ids) => {
+    console.log("CHECK Vehicle  IDS", vehicle_ids);
+    if (vehicle_ids.length !== 0) {
+      this.setState({
+        selectedVehicleIds: _.uniq(vehicle_ids),
+      });
+    }
+  };
+
   render() {
     let mapComponent = (
       <Map
-        language={this.props.language}
+        language={this.props.i18n.language}
         routelist={
-          // this.state.routeOrders && this.state.routeOrders.deliveries
-          //   ? this.state.routeOrders:
-          []
+          this.state.routeOrders && this.state.routeOrders.deliveries
+            ? this.state.routeOrders
+            : []
         }
         t={this.props.t}
         getMapError={this.mapLoadError}
@@ -744,7 +1073,7 @@ class DynamicRoutesPlan extends PureComponent {
         selectedRouteId={this.state.selectedRoute}
         getDeltedRouteId={this.removeDeletedRoute}
         mapfeatures={this.state.mapfeatures}
-        defaultCenter={this.state.defaultCenter}
+        defaultCenter={this.props.defaultCenter}
         orderType={this.state.mapfeatures.orderType}
         getDeletedOrders={this.removeGeofenceOrders}
         polygonPaths={
@@ -753,15 +1082,15 @@ class DynamicRoutesPlan extends PureComponent {
           this.state.polygonPaths
         }
         googleMapURL={this.state.mapUrl}
-        loadingElement={<div style={{ height: "71vh" }} />}
-        containerElement={<div style={{ height: "71vh" }} />}
+        loadingElement={<div style={{ height: "76vh" }} />}
+        containerElement={<div style={{ height: "76vh" }} />}
         selectedOrderId={
           this.state.selectedOrderId.length > 0
             ? this.state.selectedOrderId
             : []
         }
         sendSelectedOrderId={this.getMapSelectedOrderId}
-        mapElement={<div style={{ height: "71vh" }} />}
+        mapElement={<div style={{ height: "76vh" }} />}
       />
     );
 
@@ -863,6 +1192,7 @@ class DynamicRoutesPlan extends PureComponent {
                     </div>
                     <div className="col-md-3">
                       <Button
+                        onClick={this.onSearchClick}
                         className={`btn btn-primary btn-xs ${style.buttonShadow}`}
                       >
                         <i
@@ -908,142 +1238,15 @@ class DynamicRoutesPlan extends PureComponent {
                       className={`col-md-12 col-sm-12 col-xs-12 ${style.routePlanNav}  align-items-center`}
                     >
                       <div className="row">
-                        <div
-                          className="col-md-5 col-sm-5 col-xs-5"
-                          id="basic-navbar-nav"
-                        >
-                          <Nav className="mr-auto mb-1">
-                            {this.renderConstraints()}
-                          </Nav>
-                        </div>
-                        <div
-                          className="col-md-5 col-sm-5 col-xs-5 offset-2"
-                          id="basic-navbar-nav"
-                        >
-                          <div className="row align-items-center">
-                            <div className="offset-1 col-md-5 text-right"></div>
-                            <Link href="/">
-                              <a
-                                className={`${style.navLink} nav-link  col-md-6 text-center`}
-                              >
-                                <i className="fa fa-eye"> Show Profile</i>
-                              </a>
-                            </Link>
+                        {this.state.generatedTripCode && (
+                          <div className={col2}>
+                            <b>
+                              Trips {this.state.generatedTripCode.join(",")}{" "}
+                              Created Successfully
+                            </b>
                           </div>
-                        </div>
+                        )}
                       </div>
-                    </div>
-
-                    <div className={`col-md-12 ${style.setShadow1}`}>
-                      <FormGroup className="ml-3 p-2" as={Row}>
-                        {this.state.selectedConstraintName.names &&
-                          !this.state.advancemenu &&
-                          this.state.selectedConstraintName.names.map(
-                            (name, key) => (
-                              <Form.Check
-                                key={`default${this.state.selectedConstraintName.type}${this.state.selectedConstraintName.constaint_type}${key}`}
-                                className={`pr-3 ${style.formCheck}`}
-                                column="true"
-                                md={4}
-                                type={this.state.selectedConstraintName.type}
-                                ref={`routendcap${this.state.selectedConstraintName.type}`}
-                                value={name}
-                                defaultChecked={this.setDefaultValueBox(
-                                  name,
-                                  this.state.selectedConstraintName.type,
-                                  this.state.selectedConstraintName
-                                    .constaint_type
-                                )}
-                                onClick={(e) =>
-                                  this.handleRadioBox(
-                                    e,
-                                    this.state.selectedConstraintName
-                                      .constaint_type
-                                  )
-                                }
-                                name={`default${this.state.selectedConstraintName.type}`}
-                                id={`default${this.state.selectedConstraintName.type}${key}`}
-                                label={name}
-                              />
-                            )
-                          )}
-                        {this.state.advancemenu && (
-                          <React.Fragment>
-                            <Form.Check
-                              className={`pr-3 ${style.formCheck}`}
-                              column="true"
-                              md={4}
-                              type="radio"
-                              onClick={this.advanceRadioClick}
-                              ref="plannow"
-                              value="plannow"
-                              name="advance"
-                              id={`default1`}
-                              label={"Plan Now"}
-                            />
-                            <Form.Check
-                              className={`pr-3 ${style.formCheck}`}
-                              column="true"
-                              md={4}
-                              onClick={this.planlaterRadioClick}
-                              type="radio"
-                              ref="planlater"
-                              value="planlater"
-                              name="advance"
-                              id={`default2`}
-                              label={"Plan Later"}
-                            />
-                          </React.Fragment>
-                        )}
-                        {this.state.plannow && (
-                          <div className="col-md-4">
-                            {this.renderDateRangePicker()}
-                          </div>
-                        )}
-                      </FormGroup>
-
-                      {!this.state.plannow && this.state.planlater && (
-                        <div className="col-md-4">
-                          <FormGroup className="mt-2 ml-3 p-2" as={Row}>
-                            <Form.Check
-                              className={`pr-3 ${style.formCheck}`}
-                              column="true"
-                              md={4}
-                              onClick={this.handleRecurringOptions}
-                              type="radio"
-                              ref="recurringoption"
-                              value="recurringoption"
-                              name="recurringoption"
-                              id={`default2`}
-                              label={"Daily"}
-                            />
-                            <Form.Check
-                              className={`pr-3 ${style.formCheck}`}
-                              column="true"
-                              md={4}
-                              onClick={this.handleRecurringOptions}
-                              type="radio"
-                              ref="recurringoption"
-                              value="recurringoption"
-                              name="recurringoption"
-                              id={`default2`}
-                              label={"Weekly"}
-                            />
-                            <Form.Check
-                              className={`pr-3 ${style.formCheck}`}
-                              column="true"
-                              md={4}
-                              onClick={this.handleRecurringOptions}
-                              type="radio"
-                              ref="recurringoption"
-                              value="recurringoption"
-                              name="recurringoption"
-                              id={`default2`}
-                              label={"Monthly"}
-                            />
-                          </FormGroup>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -1104,7 +1307,7 @@ class DynamicRoutesPlan extends PureComponent {
                         {this.state.showDeliveryTrip && (
                           <DeliveryTripDataTable
                             t={this.props.t}
-                            language={this.props.language}
+                            language={this.props.i18n.language}
                             sendSelectedOrderId={this.setDataTableSelectedId}
                             warehouse_id={this.state.selectedBranchId}
                             getRouteOrders={this.getSelectedDeliveryTripOrder}
@@ -1125,62 +1328,374 @@ class DynamicRoutesPlan extends PureComponent {
                             dataFor="deliverytrips"
                             keyField="delivery_trip_id"
                           />
-                        )}{" "}
+                        )}
+                        {this.state.showVehiclesTable && (
+                          <VehiclesDataTable
+                            t={this.props.t}
+                            language={this.props.i18n.language}
+                            sendSelectedVehcileIds={
+                              this.setDataTableSelectedVechilesId
+                            }
+                            warehouse_id={this.state.selectedBranchId}
+                            // getRouteOrders={this.getSelectedDeliveryTripOrder}
+                            // isPageLoading={this.onModalsLoading}
+                            rowSelection={true}
+                            rowExpansion={false}
+                            columns={VehicleColumns}
+                            data={this.state.vehicleList}
+                            mapSelectedOrderId={
+                              this.state.selectedOrderId.length > 0
+                                ? this.state.selectedOrderId
+                                : []
+                            }
+                            getCancelDeliveries={this.removeCancelDeliveries}
+                            ordersdata={this.state.allorders}
+                            vehiclesdata={this.state.vehicleList}
+                            wrapperClasses={"routePlanBoostrapTable"}
+                            dataFor="forvehicles"
+                            keyField="vehicle_id"
+                          />
+                        )}
                       </div>
                     </div>
                   </div>
                 ) : null}
-
-                <div className={`${this.state.listview ? col7 : col5}`}>
-                  {mapComponent}
-                </div>
-
-                {!this.state.listview && (
-                  <div className={col7}>
+                {this.state.listview || this.state.showSummary ? (
+                  <div className={this.state.listview ? col7 : col5}>
+                    {mapComponent}
+                  </div>
+                ) : null}
+                {this.state.showSummary || this.state.showPlanSetting ? (
+                  <div className={this.state.showSummary ? col7 : col6}>
                     <RouteSummary
                       summary={this.state.summarystats}
                     ></RouteSummary>
                   </div>
+                ) : null}
+                {this.state.showPlanSetting && (
+                  <div className={`offset-1 ${col5}`}>
+                    <div className={`${style.constraintsDiv} container ml-0`}>
+                      <div className="row">
+                        <div
+                          className={style.routePlanNav}
+                          id="basic-navbar-nav"
+                        >
+                          <Nav className="mr-auto mb-1">
+                            {this.renderConstraints()}
+                          </Nav>
+                        </div>
+                      </div>
+                      {/* <div className={`col-md-12 ${style.setShadow1}`}> */}
+                      <FormGroup className="mt-2" as={Row}>
+                        {this.state.selectedConstraintName &&
+                          this.state.selectedConstraintName.names &&
+                          !this.state.advancemenu &&
+                          this.state.selectedConstraintName.names.map(
+                            (name, key) => {
+                              return (
+                                <React.Fragment
+                                  key={`default${this.state.selectedConstraintName.type}${this.state.selectedConstraintName.constaint_type}${key}`}
+                                >
+                                  <Form.Check
+                                    key={`default${this.state.selectedConstraintName.type}${this.state.selectedConstraintName.constaint_type}${key}`}
+                                    className={`pr-3 ${style.formCheck}`}
+                                    column="true"
+                                    md={4}
+                                    type={
+                                      this.state.selectedConstraintName.type
+                                    }
+                                    ref={`routendcap${this.state.selectedConstraintName.type}`}
+                                    value={name}
+                                    defaultChecked={this.setDefaultValueBox(
+                                      name,
+                                      this.state.selectedConstraintName.type,
+                                      this.state.selectedConstraintName
+                                        .constaint_type
+                                    )}
+                                    onClick={(e) =>
+                                      this.handleRadioBox(
+                                        e,
+                                        this.state.selectedConstraintName
+                                          .constaint_type
+                                      )
+                                    }
+                                    name={`default${this.state.selectedConstraintName.type}`}
+                                    id={`default${this.state.selectedConstraintName.type}${key}`}
+                                    label={name}
+                                  />
+                                  {this.state.selectedConstraintName.names
+                                    .length ===
+                                    key + 1 &&
+                                  this.state.selectedConstraintName &&
+                                  this.state.selectedConstraintName
+                                    .constaint_type === SEQUENCE_ORDERS ? (
+                                    <React.Fragment>
+                                      <Form.Check
+                                        key={`default123`}
+                                        className={`pr-3 ${style.formCheck}`}
+                                        column="true"
+                                        md={4}
+                                        type={"radio"}
+                                        ref={`routendcap1`}
+                                        value={"asc"}
+                                        defaultChecked={false}
+                                        onClick={(e) =>
+                                          this.handleSequenceOrder(e)
+                                        }
+                                        name={`orderby`}
+                                        id={`defaultasc`}
+                                        label={"Asc"}
+                                      />
+                                      <Form.Check
+                                        key={`default1234`}
+                                        className={`pr-3 ${style.formCheck}`}
+                                        column="true"
+                                        md={4}
+                                        type={"radio"}
+                                        ref={`routendcap123`}
+                                        value={"Desc"}
+                                        defaultChecked={false}
+                                        onClick={(e) =>
+                                          this.handleSequenceOrder(e)
+                                        }
+                                        name={`orderby`}
+                                        id={`defaultDesc`}
+                                        label={"Desc"}
+                                      />
+                                    </React.Fragment>
+                                  ) : null}
+                                </React.Fragment>
+                              );
+                            }
+                          )}
+                      </FormGroup>
+                    </div>
+                    <FormGroup>
+                      <Form.Check
+                        inline
+                        className={`pr-3 ${style.formCheck}`}
+                        column="true"
+                        md={4}
+                        type="radio"
+                        onClick={(e) => this.onSettingClick(e)}
+                        ref="savesett"
+                        value="savesettings"
+                        name="setting"
+                        id={`setting1`}
+                        label={"Save Setting"}
+                      ></Form.Check>
+                      <Form.Check
+                        inline
+                        className={`pr-3 ${style.formCheck}`}
+                        column="true"
+                        md={4}
+                        type="radio"
+                        onClick={(e) => this.onSettingClick(e)}
+                        ref="savesett"
+                        value="nosavesettings"
+                        name="setting"
+                        id={`setting2`}
+                        label={"Without Save"}
+                      ></Form.Check>
+                    </FormGroup>
+                    {this.state.showSaveSettingInput && (
+                      <FormGroup>
+                        <Form.Label>Setting Name: </Form.Label>
+                        <Form.Control
+                          className={`rounded-0 ${style.inputShadow} textingred ${col7}`}
+                          type="text"
+                          name="settingname"
+                          value={this.state.plandate}
+                          isValid={false}
+                        />
+                      </FormGroup>
+                    )}
+                    <FormGroup>
+                      <Form.Check
+                        className={`pr-3 ${style.formCheck}`}
+                        column="true"
+                        md={4}
+                        type="checkbox"
+                        onClick={this.onApprovedClick}
+                        ref="approved"
+                        value="approved"
+                        name="Approved"
+                        id={`approved1`}
+                        label={"Approved"}
+                      />
+                    </FormGroup>
+                    <FormGroup>
+                      <Form.Check
+                        inline
+                        className={`pr-3 ${style.formCheck}`}
+                        column="true"
+                        md={4}
+                        type="radio"
+                        onClick={this.onPlanNowClick}
+                        ref="plannow"
+                        value="plannow"
+                        name="advance"
+                        id={`default1`}
+                        label={"Plan Now"}
+                      />
+                      <Form.Check
+                        inline
+                        className={`pr-3 ${style.formCheck}`}
+                        column="true"
+                        md={4}
+                        onClick={this.planlaterRadioClick}
+                        type="radio"
+                        ref="planlater"
+                        value="planlater"
+                        name="advance"
+                        id={`default2`}
+                        label={"Plan Later"}
+                      />
+                    </FormGroup>
+                    {this.state.planlater && this.renderDateRangePicker()}
+                    {this.state.plannow || this.state.planlater ? (
+                      <FormGroup>
+                        <Form.Row>
+                          {/* <Col c> */}
+                          <Form.Label className={col1}>After</Form.Label>
+                          <Form.Control
+                            className={`rounded-0 ${style.inputShadow} textingred ${col2}`}
+                            type="text"
+                            defaultValue={this.state.afterPlanDays}
+                            onChange={this.onAfterPlanDays}
+                            placeholder=""
+                            // value={0}
+                          />
+                          <Form.Label className={col3}>
+                            {" "}
+                            Days and Time
+                          </Form.Label>
+                          <TimePicker
+                            className={col4}
+                            format={"hh:mm"}
+                            onChange={this.onTimeChange}
+                            value={this.state.time}
+                          />
+                          {/* </Col> */}
+                        </Form.Row>
+                        {/* <Form.Check
+                          inline
+                          className={`pr-3 ${style.formCheck}`}
+                          column="true"
+                          md={4}
+                          onClick={this.handleRecurringOptions}
+                          type="radio"
+                          ref="recurringoption"
+                          value="recurringoption"
+                          name="recurringoption"
+                          id={`default2`}
+                          label={"Daily"}
+                        />
+                        <Form.Check
+                          inline
+                          className={`pr-3 ${style.formCheck}`}
+                          column="true"
+                          md={4}
+                          onClick={this.handleRecurringOptions}
+                          type="radio"
+                          ref="recurringoption"
+                          value="recurringoption"
+                          name="recurringoption"
+                          id={`default2`}
+                          label={"Weekly"}
+                        />
+                        <Form.Check
+                          inline
+                          className={`pr-3 ${style.formCheck}`}
+                          column="true"
+                          md={4}
+                          onClick={this.handleRecurringOptions}
+                          type="radio"
+                          ref="recurringoption"
+                          value="recurringoption"
+                          name="recurringoption"
+                          id={`default2`}
+                          label={"Monthly"}
+                        /> */}
+                      </FormGroup>
+                    ) : null}
+                    <FormGroup>
+                      <Form.Label>Expire On: </Form.Label>
+                      <br></br>
+                      <DatePicker
+                        selected={this.state.startDate}
+                        // onChange={(date) => setStartDate(date)}
+                        // customInput={<ExampleCustomInput />}
+                        // showTimeSelect={false}
+                        // title="Select Date"
+                        // currentDate={this.state.tripDate}
+                        // dateFormat={this.state.dateFormat}
+                        // minDate={new Date()}
+                        onChange={this.setStartDate}
+                        customInput={<CustomDatePickerInput />}
+                        className={`rounded-0 ${style.datePickerinputShadow}  textingred `}
+                      ></DatePicker>
+                    </FormGroup>
+                  </div>
                 )}
               </div>
-              {!this.state.pageloading && this.state.listview && (
+              {!this.state.pageloading && (
                 <div className="row mt-1 align-items-center fixed-bottom">
                   <div className={col12}>
-                    <div className={`row`}>
-                      <div className={col6}>
-                        <ul className={`nav nav-tabs ${style.routePlanTabs}`}>
-                          <li className={style.navItem}>
-                            <a
-                              style={{
-                                height: "100%",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                              }}
-                              id="1"
-                              onClick={(e) => this.onOrderClick(e)}
-                              className={`${style.navLink} ${
-                                this.state.isActive == 1 ? style.active : ""
-                              } nav-link`}
-                              role="button"
-                            >
-                              <Trans i18nKey={"Orders"} />
-                            </a>
-                          </li>
-                          <li className={style.navItem}>
-                            <a
-                              onClick={(e) => this.getDeliveryTrips(e)}
-                              id="2"
-                              className={`${style.navLink} ${
-                                this.state.isActive == 2 ? style.active : ""
-                              } nav-link`}
-                              role="button"
-                            >
-                              <Trans i18nKey={"Delivery Trips"} />
-                            </a>
-                          </li>
-                        </ul>
-                      </div>
+                    <div className="c_breadcrumb">
+                      <ul
+                        className={` ${style.dynamicroutePlanTabs} nav nav-pills nav-tabs nav-fill`}
+                        role="tablist"
+                      >
+                        <li className={`${style.navItem}`}>
+                          <a
+                            onClick={(e) => this.onOrderClick(e)}
+                            id="2"
+                            className={`${style.navLink} ${
+                              this.state.isActive == 1 ? style.active : ""
+                            } nav-link`}
+                            role="button"
+                          >
+                            <Trans i18nKey={"Orders"} />
+                          </a>
+                        </li>
+                        <li className={`${style.navItem}`}>
+                          <a
+                            onClick={(e) => this.OnVehiclesClick(e)}
+                            id="2"
+                            className={`${style.navLink} ${
+                              this.state.isActive == 2 ? style.active : ""
+                            } nav-link`}
+                            role="button"
+                          >
+                            <Trans i18nKey={"Fleet"} />
+                          </a>
+                        </li>
+                        <li className={`${style.navItem}`}>
+                          <a
+                            onClick={(e) => this.OnSummaryClick(e)}
+                            id="2"
+                            className={`${style.navLink} ${
+                              this.state.isActive == 3 ? style.active : ""
+                            } nav-link`}
+                            role="button"
+                          >
+                            <Trans i18nKey={"Summary"} />
+                          </a>
+                        </li>
+                        <li className={`${style.navItem}`}>
+                          <a
+                            onClick={(e) => this.OnPlanSettingClick(e)}
+                            id="2"
+                            className={`${style.navLink} ${
+                              this.state.isActive == 4 ? style.active : ""
+                            } nav-link`}
+                            role="button"
+                          >
+                            <Trans i18nKey={"Plan Setting"} />
+                          </a>
+                        </li>
+                      </ul>
                     </div>
                   </div>
                 </div>
@@ -1205,6 +1720,8 @@ const mapStateToProps = (state) => {
     tripData: state.routesplan.staticTripData,
     routesAndPlanData: state.routesplan.routesAndPlanData,
     constraints: state.routesplan.constraints,
+    defaultCenter: state.navbar.defaultCenter,
+    toastMessages: state.toastmessages,
     // selectedBranch: state.navbar.selectedBranch,
     // vehicleList: state.routesplan.vehicleList,
     // constraints: state.routesplan.constraints,
@@ -1224,6 +1741,8 @@ const mapDispatchToProps = (dispatch) => {
     createTripApi: (branchId, data) => dispatch(create_trip(branchId, data)),
     getConstraintsApi: (branchId) =>
       dispatch(get_dynamic_constraints(branchId)),
+    createDynamicTrip: (branchId, data) =>
+      dispatch(create_dynamic_trip(branchId, data)),
   };
 };
 

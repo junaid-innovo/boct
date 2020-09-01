@@ -725,7 +725,7 @@ class CustomRoutesPlan extends Component {
               <div className={col12}>
                 <div className={`row`}>
                   <div className={col6}>
-                    <ul className={`nav nav-tabs ${style.routePlanTabs}`}>
+                    <ul className={`nav nav-tabs ${style.routePlanTabs1}`}>
                       <li className={style.navItem}>
                         <a
                           style={{

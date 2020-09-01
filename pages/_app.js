@@ -1,4 +1,8 @@
+import "react-clock/dist/Clock.css";
+import "react-time-picker/dist/TimePicker.css";
 import "./styles/styles.css";
+
+// require("./");
 import Header from "../components/Header/Header";
 import { createStore, combineReducers, applyMiddleware, compose } from "redux";
 
@@ -10,6 +14,7 @@ import navBarReducer from "../store/reducers/navbarReducer";
 import authorizationReducer from "../store/reducers/authorizationReducer";
 import reduxThunk from "redux-thunk";
 import toastReducer from "../store/reducers/toastReducer";
+import mapReducer from "../store/reducers/mapReducer";
 import App from "next/app";
 import { Provider } from "react-redux";
 import { withRouter } from "next/router";
@@ -50,6 +55,7 @@ const combinedReducer = combineReducers({
   routesplan: routesPlanReducer,
   authorization: authorizationReducer,
   toastmessages: toastReducer,
+  map: mapReducer,
 });
 const store = createStore(
   combinedReducer,

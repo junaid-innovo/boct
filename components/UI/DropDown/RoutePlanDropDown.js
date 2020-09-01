@@ -89,10 +89,10 @@ const CustomDropDown = (props) => {
                   <Dropdown.Item
                     as="button"
                     key={key}
-                    eventKey={menu.route_name[lang]}
+                    eventKey={menu.route_name && menu.route_name[lang]}
                     value={menu.route_id}
                   >
-                    {menu.route_name[lang]}
+                    {menu.route_name && menu.route_name[lang]}
                   </Dropdown.Item>
                 );
               })}

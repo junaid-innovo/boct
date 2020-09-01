@@ -10,6 +10,7 @@ import {
   UPDATE_DELIVERY,
   DELETE_DELIVERY,
   GET_DYNAMIC_CONSTRAINTS,
+  CREATE_DYNAMIC_TRIP,
 } from "../actions/actionTypes";
 
 const initialState = {
@@ -24,6 +25,7 @@ const initialState = {
   code: null,
   tripCode: null,
   staticTripData: null,
+  dynamicTripData: null,
   routesAndPlanData: null,
   foravailableDeliveries: null,
 };
@@ -56,6 +58,14 @@ const reducers = (state = initialState, action) => {
     let currState = { ...state };
     currState.message = action.payload.message;
     currState.staticTripData = action.payload.statictripData;
+    currState.tripCode = action.payload.statictripData.trip_code;
+    return currState;
+  }
+  if (action.type === CREATE_DYNAMIC_TRIP) {
+    let currState = { ...state };
+    currState.message = action.payload.message;
+    currState.dynamicTripData = action.payload.dynamicTripData;
+    currState.tripCode = action.payload.dynamicTripData.trip_code;
     return currState;
   }
   if (action.type === ADD_DELIVERY) {

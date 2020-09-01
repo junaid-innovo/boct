@@ -1,3 +1,4 @@
+/* ==================== KALEEM ULLAH ================== */
 .testmike {
   color: red;
 }
@@ -227,7 +228,7 @@ rect {
   border: 1px solid #1a6734;
 }
 .routePlanBoostrapTable {
-  max-height: 400px !important;
+  max-height: 68vh !important;
   overflow: auto;
   /* overflow-y: scroll; */
   overflow-x: hidden;
@@ -294,3 +295,106 @@ rect {
 #collasible-nav-dropdown:hover {
   color: white;
 }
+
+/* Tabs style  */
+
+.nav-tabs > li.active > a,
+.nav-tabs > li.active > a:focus,
+.nav-tabs > li.active > a:hover {
+  border: 0;
+  background-color: #433b33;
+}
+/* .nav-tabs > li > a {
+  padding: 10px 30px;
+} */
+/* .nav-tabs > li.active {
+  border-bottom: 3px solid #433b33;
+} */
+
+/* .c_breadcrumb {
+  -webkit-clip-path: polygon(
+    0 0,
+    calc(100% - 15px) 0,
+    100% 50%,
+    calc(100% - 15px) 100%,
+    0 100%,
+    15px 50%
+  );
+  clip-path: polygon(
+    0 0,
+    calc(100% - 15px) 0,
+    100% 50%,
+    calc(100% - 15px) 100%,
+    0 100%,
+    15px 50%
+  );
+} */
+.c_breadcrumb li {
+  background: white;
+  text-decoration: none;
+  -webkit-clip-path: polygon(
+    0 0,
+    calc(100% - 15px) 0,
+    100% 50%,
+    calc(100% - 15px) 100%,
+    0 100%,
+    15px 50%
+  );
+  clip-path: polygon(
+    0 0,
+    calc(100% - 15px) 0,
+    100% 50%,
+    calc(100% - 15px) 100%,
+    0 100%,
+    15px 50%
+  );
+  padding: 0;
+  position: relative;
+}
+
+.c_breadcrumb li:last-child {
+  -webkit-clip-path: polygon(
+    0 0,
+    calc(100% - 0px) 0,
+    100% 50%,
+    calc(100% - 0px) 100%,
+    0 100%,
+    15px 50%
+  );
+  clip-path: polygon(
+    0 0,
+    calc(100% - 0px) 0,
+    100% 50%,
+    calc(100% - 0px) 100%,
+    0 100%,
+    15px 50%
+  );
+  position: relative;
+  padding: 0;
+}
+
+.c_breadcrumb li a:hover {
+  color: white;
+  /* background: #433b33; */
+  border: 1px solid #433b33 !important;
+}
+
+/* first link should not have anything cliped on the left side */
+.c_breadcrumb li:first-child {
+  -webkit-clip-path: polygon(
+    0 0,
+    calc(100% - 15px) 0,
+    100% 50%,
+    calc(100% - 15px) 100%,
+    0 100%
+  );
+  clip-path: polygon(
+    0 0,
+    calc(100% - 15px) 0,
+    100% 50%,
+    calc(100% - 15px) 100%,
+    0 100%
+  );
+}
+/* ENd Tab Style */
+/* ==================== END ==================== */
