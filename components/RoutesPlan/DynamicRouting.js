@@ -426,13 +426,38 @@ class DynamicRoutesPlan extends PureComponent {
     }
     if (this.props.constraints !== prevProps.constraints) {
       const { Constraints } = this.props.constraints;
-      let constraint = Constraints[0];
+      // let constraint = Constraints[0];
 
       this.setState({
         constraints: Constraints,
         pageloading: false,
       });
-      this.setConstraints(constraint, true);
+      Constraints.map((constraint, key) => {
+        if (key === 0) {
+          let type = "";
+          if (parseInt(constraint.multiVal)) {
+            type = INPUT_TYPE_CHECKBOX;
+          } else {
+            type = INPUT_TYPE_RADIO;
+          }
+          if (constraint.default) {
+            this.setConstraintsValues(constraint, type);
+          }
+          let altconstraint = {
+            type: type,
+            id: constraint.id,
+            // names: JSON.parse(constraint.constraint_name),
+            names: constraint.constraint_names,
+            constaint_type: constraint.Type,
+            default: constraint.default,
+          };
+          this.setState({
+            selectedConstraintName: altconstraint,
+          });
+        } else {
+          this.setConstraints(constraint, true);
+        }
+      });
     }
     if (this.props.tripCode !== prevProps.tripCode) {
       if (this.state.routeOrders && this.state.routeOrders.deliveries) {
@@ -477,6 +502,52 @@ class DynamicRoutesPlan extends PureComponent {
     }
   }
 
+  setConstraintsValues = (constraint, type) => {
+    if (constraint.Type === SEQUENCE_ORDERS) {
+      let getSelectedSequenceOrders = [];
+      if (type === INPUT_TYPE_CHECKBOX) {
+        getSelectedSequenceOrders.push(constraint.default);
+      } else {
+        getSelectedSequenceOrders = constraint.default;
+      }
+      this.setState({
+        selectedsequenceOrders: getSelectedSequenceOrders,
+      });
+    }
+    if (constraint.Type === BALANCED_ALLOCATIONS) {
+      let getSelectedBalancedAllocations = [];
+      if (type === INPUT_TYPE_CHECKBOX) {
+        getSelectedBalancedAllocations.push(constraint.default);
+      } else {
+        getSelectedBalancedAllocations = constraint.default;
+      }
+      this.setState({
+        selectedBalancedAllocation: getSelectedBalancedAllocations,
+      });
+    }
+    if (constraint.Type === MULTI_TRIP) {
+      let getSelectedMultiTrip = [];
+      if (type === INPUT_TYPE_CHECKBOX) {
+        getSelectedMultiTrip.push(constraint.default);
+      } else {
+        getSelectedMultiTrip = constraint.default;
+      }
+      this.setState({
+        selectedMultiTrip: getSelectedMultiTrip,
+      });
+    }
+    if (constraint.Type === TIME_AND_FUEL_OPTIMIZATION) {
+      let getSelectedTimeandFuelOpt = [];
+      if (type === INPUT_TYPE_CHECKBOX) {
+        getSelectedTimeandFuelOpt.push(constraint.default);
+      } else {
+        getSelectedTimeandFuelOpt = constraint.default;
+      }
+      this.setState({
+        selectedTimeandFuelOptimization: getSelectedTimeandFuelOpt,
+      });
+    }
+  };
   setConstraints = (constraint, initialize = false) => {
     if (constraint) {
       let type = "";
@@ -486,86 +557,14 @@ class DynamicRoutesPlan extends PureComponent {
         type = INPUT_TYPE_RADIO;
       }
       if (constraint.default) {
-        if (constraint.Type === SEQUENCE_ORDERS) {
-          let getSelectedSequenceOrders = [];
-
-          if (type === INPUT_TYPE_CHECKBOX) {
-            if (this.state.selectedsequenceOrders) {
-              let getvalue = [...this.state.selectedsequenceOrders];
-              getSelectedSequenceOrders.push(...getvalue);
-            } else {
-              getSelectedSequenceOrders.push(constraint.default);
-            }
-          } else {
-            if (this.state.selectedsequenceOrders) {
-              getSelectedSequenceOrders = constraint.default;
-            } else {
-              let getvalue = { ...this.state.selectedsequenceOrders };
-              console.log("CHECK VALUE", getvalue);
-            }
-          }
-          this.setState({
-            selectedsequenceOrders: getSelectedSequenceOrders,
-          });
-        }
-        if (constraint.Type === BALANCED_ALLOCATIONS) {
-          let getSelectedBalancedAllocations = this.state
-            .selectedBalancedAllocation
-            ? [...this.state.selectedBalancedAllocation]
-            : [];
-          if (type === INPUT_TYPE_CHECKBOX) {
-            getSelectedBalancedAllocations.push(constraint.default);
-          } else {
-            if (!this.state.selectedBalancedAllocation) {
-              getSelectedBalancedAllocations = constraint.default;
-            }
-          }
-          this.setState({
-            selectedBalancedAllocation: getSelectedBalancedAllocations,
-          });
-        }
-        if (constraint.Type === TIME_AND_FUEL_OPTIMIZATION) {
-          let getSelectedTimeandFuelOpt = this.state
-            .selectedTimeandFuelOptimization
-            ? [...this.state.selectedTimeandFuelOptimization]
-            : [];
-          if (type === INPUT_TYPE_CHECKBOX) {
-            getSelectedTimeandFuelOpt.push(constraint.default);
-          } else {
-            getSelectedTimeandFuelOpt = constraint.default;
-          }
-          this.setState({
-            selectedTimeandFuelOptimization: getSelectedTimeandFuelOpt,
-          });
-        }
-        if (constraint.Type === MULTI_TRIP) {
-          let getSelectedMultiTrip = this.state.selectedMultiTrip
-            ? [...this.state.selectedMultiTrip]
-            : [];
-          if (type === INPUT_TYPE_CHECKBOX) {
-            getSelectedMultiTrip.push(constraint.default);
-          } else {
-            getSelectedMultiTrip = constraint.default;
-          }
-          this.setState({
-            selectedMultiTrip: getSelectedMultiTrip,
-          });
-        }
+        this.setConstraintsValues(constraint, type);
       }
-      let altconstraint = {
-        type: type,
-        id: constraint.id,
-        // names: JSON.parse(constraint.constraint_name),
-        names: constraint.constraint_names,
-        constaint_type: constraint.Type,
-        defaultChecked: constraint.default,
-      };
-      this.setState({
-        selectedConstraintName: altconstraint,
-        advancemenu: false,
-        plannow: false,
-      });
     }
+    this.setState({
+      advancemenu: false,
+      plannow: false,
+    });
+    // }
   };
   componentWillUnmount() {
     this._isMounted = false;
@@ -690,24 +689,28 @@ class DynamicRoutesPlan extends PureComponent {
       if (i + 1 !== constraints.length) {
         constraint = constraints[i + 1];
       }
-      this.setConstraints(constraint);
+
+      this.setConstraints(constraint, false);
     }
   };
   onConstraintClick = (e, constraint) => {
-    // let parentElement = e.target.parentElement;
-    // for (let i = 0; i < parentElement.children.length; i++) {
-    //   parentElement.children[i].classList.remove(style.active);
-    // }
-    // e.target.classList.add(style.active);
-    if (constraint.Type === "Advance") {
-      this.setState({
-        advancemenu: true,
-        plannow: false,
-        planlater: false,
-      });
+    let type = "";
+    if (parseInt(constraint.multiVal)) {
+      type = INPUT_TYPE_CHECKBOX;
     } else {
-      this.setConstraints(constraint);
+      type = INPUT_TYPE_RADIO;
     }
+    let altconstraint = {
+      type: type,
+      id: constraint.id,
+      names: constraint.constraint_names,
+      constaint_type: constraint.Type,
+      default: false,
+    };
+    this.setState({
+      selectedConstraintName: altconstraint,
+    });
+    this.setConstraints(altconstraint, false);
   };
   // };
   setStartDate = (date) => {
@@ -1007,11 +1010,11 @@ class DynamicRoutesPlan extends PureComponent {
         },
       },
     };
-
-    this.props.createDynamicTrip(
-      this.props.selectedBranch,
-      JSON.stringify(data)
-    );
+    console.log("CHECK DATA", data);
+    // this.props.createDynamicTrip(
+    //   this.props.selectedBranch,
+    //   JSON.stringify(data)
+    // );
     // this.setState({
     //   advancemenu: false,
     //   selectedConstraintName: null,
@@ -1030,7 +1033,6 @@ class DynamicRoutesPlan extends PureComponent {
         let order_date = new Date(order.created_at).getTime();
         return order_date >= startDate && order_date <= endDate;
       });
-      console.log("CHECK FILTERED ORDERS", getfilteredOrders);
       let getfilteredTrips = _.filter(deliveryTrips, (trip) => {
         let trip_date = new Date(trip.trip_date).getTime();
         return trip_date >= startDate && trip_date <= endDate;
@@ -1395,7 +1397,6 @@ class DynamicRoutesPlan extends PureComponent {
                       <FormGroup className="mt-2" as={Row}>
                         {this.state.selectedConstraintName &&
                           this.state.selectedConstraintName.names &&
-                          !this.state.advancemenu &&
                           this.state.selectedConstraintName.names.map(
                             (name, key) => {
                               return (
@@ -1444,7 +1445,12 @@ class DynamicRoutesPlan extends PureComponent {
                                         type={"radio"}
                                         ref={`routendcap1`}
                                         value={"asc"}
-                                        defaultChecked={false}
+                                        defaultChecked={
+                                          this.state.selectedSequenceOrder ===
+                                          "asc"
+                                            ? true
+                                            : false
+                                        }
                                         onClick={(e) =>
                                           this.handleSequenceOrder(e)
                                         }
@@ -1459,8 +1465,13 @@ class DynamicRoutesPlan extends PureComponent {
                                         md={4}
                                         type={"radio"}
                                         ref={`routendcap123`}
-                                        value={"Desc"}
-                                        defaultChecked={false}
+                                        value={"desc"}
+                                        defaultChecked={
+                                          this.state.selectedSequenceOrder ===
+                                          "desc"
+                                            ? true
+                                            : false
+                                        }
                                         onClick={(e) =>
                                           this.handleSequenceOrder(e)
                                         }
