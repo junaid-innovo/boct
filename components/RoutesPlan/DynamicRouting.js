@@ -1001,7 +1001,9 @@ class DynamicRoutesPlan extends PureComponent {
         multiTrip: this.state.selectedMultiTrip,
         sequence_order: {
           order: this.state.selectedSequenceOrder,
-          values: [...this.state.selectedsequenceOrders],
+          values: this.state.selectedSequenceOrder
+            ? [...this.state.selectedsequenceOrders]
+            : [],
         },
       },
     };
@@ -1010,10 +1012,10 @@ class DynamicRoutesPlan extends PureComponent {
       this.props.selectedBranch,
       JSON.stringify(data)
     );
-    this.setState({
-      advancemenu: false,
-      selectedConstraintName: null,
-    });
+    // this.setState({
+    //   advancemenu: false,
+    //   selectedConstraintName: null,
+    // });
   };
   onSearchClick = () => {
     if (this.state.date) {
