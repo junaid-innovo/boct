@@ -188,7 +188,7 @@ class DeliveryTripDataTable extends Component {
   actionsFormatter = (cell, row, index) => {
     let t = this.props.t;
     let status = row.trip_status;
-    // console.log("CHECK ROW NOW", row);
+    let approve_status = row.is_Approved === "True" ? true : false;
     let is_editable = row.is_cancellable === "True" ? true : false;
     let is_cancleable = row.is_editable === "True" ? true : false;
     let lang = this.props.language;
@@ -259,7 +259,7 @@ class DeliveryTripDataTable extends Component {
               onClick={() => this.onMapClick(row)}
             ></i>
           </OverlayTrigger>
-          {status[lang] === "Assigned" ? (
+          {!approve_status ? (
             <OverlayTrigger
               key={1}
               placement={"top"}
@@ -295,12 +295,22 @@ class DeliveryTripDataTable extends Component {
     );
   };
   onApprovedClick = (row) => {
+    // let isApproved = row.is_Approved === "True" ? true : false;
+    // if (!isApproved) {
     let branch_id = this.props.selectedBranch;
     let trip_id = row.delivery_trip_id;
     let data = {
       trip_id: trip_id.toString(),
     };
     this.props.approveDeliveryTripApi(data, branch_id);
+    // } else {
+    //   this.setState({
+    //     tripEditData: row,
+    //     showOrderEditModal: true,
+    //     showOrderInfoModal: false,
+    //     showOrderCancelModal: false,
+    //   });
+    // }
   };
   onMapClick = (row) => {
     let selectedRows = [];
