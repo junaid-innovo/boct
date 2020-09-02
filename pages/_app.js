@@ -87,7 +87,7 @@ export const redirect = (path, ctx) => {
       // typeof window !== "undefined"
       //   ? Router.push("/login")
       // :
-      res.redirect("/login");
+      res.writeHead(302, { Location: "/login" }).end();
       res.end();
     } else {
       console.log("LOGIN PAGE");
