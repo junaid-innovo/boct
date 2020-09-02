@@ -1010,11 +1010,11 @@ class DynamicRoutesPlan extends PureComponent {
         },
       },
     };
-    console.log("CHECK DATA", data);
-    // this.props.createDynamicTrip(
-    //   this.props.selectedBranch,
-    //   JSON.stringify(data)
-    // );
+
+    this.props.createDynamicTrip(
+      this.props.selectedBranch,
+      JSON.stringify(data)
+    );
     // this.setState({
     //   advancemenu: false,
     //   selectedConstraintName: null,
