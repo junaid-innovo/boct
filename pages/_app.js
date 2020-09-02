@@ -5,7 +5,6 @@ import "./styles/styles.css";
 // require("./");
 import Header from "../components/Header/Header";
 import { createStore, combineReducers, applyMiddleware, compose } from "redux";
-
 import reducer from "../store/reducers/reducers";
 import liveReducer from "../store/reducers/liveReducers";
 import controltowerReducer from "../store/reducers/controltowerReducer";
@@ -35,6 +34,7 @@ import { initializeFirebase } from "../components/notifications/Push";
 import Cookies from "js-cookie";
 import { getInitialProps } from "react-i18next";
 import { route } from "next/dist/next-server/server/router";
+import { type } from "jquery";
 const logger = (store) => {
   return (next) => {
     return (action) => {
@@ -61,6 +61,7 @@ const store = createStore(
   combinedReducer,
   composeEnhancers(applyMiddleware(logger, reduxThunk))
 );
+
 class MyApp extends App {
   render() {
     const { Component, pageProps } = this.props;
@@ -77,8 +78,45 @@ class MyApp extends App {
     );
   }
 }
-
+export const redirect = (path, ctx) => {
+  const { res, req } = ctx;
+  let pathname = ctx.pathname;
+  console.log("RESPONSE CTX", res);
+  if (res) {
+    if (pathname !== "/login") {
+      // typeof window !== "undefined"
+      //   ? Router.push("/login")
+      // :
+      res.redirect("/login");
+      res.end();
+    } else {
+      console.log("LOGIN PAGE");
+    }
+  }
+};
+// export const redirectTo = (destination, ctx) => {
+//   // typeof window !== "undefined"
+//   //   ? Router.push("/login")
+//   //   : ctx.res.writeHead(302, { Location: "/login" }).end();
+//   if (ctx.res) {
+//     ctx.res.writeHead(301, { Location: destination });
+//     ctx.res.end();
+//   } else {
+//     window.location = destination;
+//   }
+// };
 MyApp.getInitialProps = async ({ Component, ctx }) => {
+  let pathname = ctx.pathname;
+  // const cookie =
+  let list = {};
+  let rc = ctx.req ? ctx.req.headers.cookie : null;
+
+  if (rc && typeof rc !== "undefined") {
+    rc.split(";").forEach(function (cookie) {
+      var parts = cookie.split("=");
+      list[parts.shift().trim()] = decodeURI(parts.join("="));
+    });
+  }
   if (typeof navigator !== "undefined") {
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.getRegistrations().then(function (registrations) {
@@ -93,9 +131,22 @@ MyApp.getInitialProps = async ({ Component, ctx }) => {
         });
     }
   }
+  // if (typeof window === "undefined" && !ctx.res.writeHead) {
+  //   // This is the SSR mode
+  //   return { metaRedirect: true };
+  // }
+  // if (typeof window !== "undefined") {
+  //   alert("TEST");
+  //   console.log("COOKIESJHKSJHDJSHDJSHDJSHDJSHDJ");
+  // }
+  // console.log("CHECK TOKEN123", list["authtoken"]);
+  if (typeof list["authtoken"] === "undefined") {
+    redirect("/login", ctx);
+  }
   const pageProps = Component.getInitialProps
     ? await Component.getInitialProps(ctx)
     : {};
+
   return { pageProps };
 };
 // export default wrapper.withRedux(appWithTranslation(MyApp));

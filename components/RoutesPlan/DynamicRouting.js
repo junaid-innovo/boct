@@ -128,6 +128,7 @@ class DynamicRoutesPlan extends PureComponent {
         polygon: false,
         orderType: null,
         routesEnabled: true,
+        showVehiclesMarker: false,
       },
       routeTrips: [],
       deliveryTrips: [],
@@ -304,12 +305,15 @@ class DynamicRoutesPlan extends PureComponent {
     });
   };
   OnVehiclesClick = () => {
+    let mapfeatures = { ...this.state.mapfeatures };
+    mapfeatures.showVehiclesMarker = true;
     this.setState({
       isActive: 2,
       showOrders: false,
       showVehiclesTable: true,
       showSummary: false,
       showPlanSetting: false,
+      mapfeatures: mapfeatures,
       listview: true,
     });
   };
@@ -990,6 +994,7 @@ class DynamicRoutesPlan extends PureComponent {
       set_now: "true",
       is_approved: "true",
       trip_date: trip_date,
+      vehicle_ids: this.state.selectedVehicleIds,
       constraints: {
         Allocation: this.state.selectedBalancedAllocation,
         Optmization: this.state.selectedTimeandFuelOptimization,
@@ -1005,10 +1010,10 @@ class DynamicRoutesPlan extends PureComponent {
       this.props.selectedBranch,
       JSON.stringify(data)
     );
-    // this.setState({
-    //   advancemenu: false,
-    //   selectedConstraintName: null,
-    // });
+    this.setState({
+      advancemenu: false,
+      selectedConstraintName: null,
+    });
   };
   onSearchClick = () => {
     if (this.state.date) {
@@ -1050,7 +1055,6 @@ class DynamicRoutesPlan extends PureComponent {
     });
   };
   setDataTableSelectedVechilesId = (vehicle_ids) => {
-    console.log("CHECK Vehicle  IDS", vehicle_ids);
     if (vehicle_ids.length !== 0) {
       this.setState({
         selectedVehicleIds: _.uniq(vehicle_ids),
@@ -1635,6 +1639,15 @@ class DynamicRoutesPlan extends PureComponent {
                         customInput={<CustomDatePickerInput />}
                         className={`rounded-0 ${style.datePickerinputShadow}  textingred `}
                       ></DatePicker>
+                    </FormGroup>
+                    <FormGroup>
+                      <Button
+                        className={style.buttonShadow}
+                        onClick={this.onProceedBtnClick}
+                      >
+                        {" "}
+                        Create Trip
+                      </Button>
                     </FormGroup>
                   </div>
                 )}

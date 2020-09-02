@@ -39,23 +39,28 @@ app.prepare().then(() => {
 });
 
 server.use(function (req, res, next) {
+  // let list = {};
+  // let rc = req ? req.headers.cookie : null;
+  // console.log("SERVER>JDS", req);
+  // console.log("SERVER>JDS123", res);
+
+  // if (rc && typeof rc !== "undefined") {
+  //   rc.split(";").forEach(function (cookie) {
+  //     var parts = cookie.split("=");
+  //     list[parts.shift().trim()] = decodeURI(parts.join("="));
+  //   });
+  // }
+  // if (typeof list["authtoken"] === "undefined") {
+  //   res.writeHead(302, { Location: path });
+  // }
   // Allow Origins
   // res.header("Access-Control-Allow-Origin", "*");
   // Allow Methods
-  res.header(
-    "Access-Control-Allow-Methods",
-    "GET, POST, PATCH, PUT, DELETE, OPTIONS"
-  );
-  // Allow Headers
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, Accept, Content-Type, Authorization"
-  );
   // Handle preflight, it must return 200
-  if (req.method === "OPTIONS") {
-    // Stop the middleware chain
-    return res.status(200).end();
-  }
+  // if (req.method === "OPTIONS") {
+  //   // Stop the middleware chain
+  //   return res.status(200).end();
+  // }
   // Next middleware
   next();
 });

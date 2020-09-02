@@ -27,6 +27,7 @@ import ChangePasswordModal from "../Modal/ChangePassword/ChangePassword";
 import { ClipLoader } from "react-spinners";
 import { ONLY_FOR_SUPERVISOR } from "../Constants/Messages/Messages";
 import { dispatch } from "d3";
+import cookie from "js-cookie";
 import { connect } from "react-redux";
 class Login extends Component {
   constructor(props) {
@@ -79,12 +80,13 @@ class Login extends Component {
   };
 
   async componentDidMount() {
-    if (localStorage.getItem("authtoken")) {
-      localStorage.removeItem("authtoken");
-    }
-    if (localStorage.getItem("username")) {
-      localStorage.removeItem("username");
-    }
+    // cookie.remove("authtoken");
+    // if (localStorage.getItem("authtoken")) {
+    //   localStorage.removeItem("authtoken");
+    // }
+    // if (localStorage.getItem("username")) {
+    //   localStorage.removeItem("username");
+    // }
     if (this.props.message) {
       this.showMessage(this.props.message, "success");
     }

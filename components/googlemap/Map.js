@@ -910,6 +910,7 @@ class Map extends PureComponent {
 
     return MarkerComp;
   };
+
   calulateTotalQuantity = (items) => {
     let sum = 0;
     items.map(({ quantity }) => (sum += parseInt(quantity)));
