@@ -22,6 +22,7 @@ import { Trans } from "react-i18next";
 import { connect } from "react-redux";
 import { get_trip_deliveries } from "../../store/actions/live/actionCreator";
 import { FOR_ROUTES_PALN_PAGE_MESSAGES } from "../Constants/Other/Constants";
+import { approve_delivery_trip } from "../../store/actions/routesplan/actionCreator";
 
 class DeliveryTripDataTable extends Component {
   constructor(props) {
@@ -186,10 +187,11 @@ class DeliveryTripDataTable extends Component {
   };
   actionsFormatter = (cell, row, index) => {
     let t = this.props.t;
-    // let status = row.trip_status
-    // console.log("CHECK ROW NOW", row);
+    let status = row.trip_status;
+    let approve_status = row.is_Approved === "True" ? true : false;
     let is_editable = row.is_cancellable === "True" ? true : false;
     let is_cancleable = row.is_editable === "True" ? true : false;
+    let lang = this.props.language;
     return (
       <React.Fragment>
         <div key={index} className="inline-block setMousePointer">
@@ -257,12 +259,59 @@ class DeliveryTripDataTable extends Component {
               onClick={() => this.onMapClick(row)}
             ></i>
           </OverlayTrigger>
+          {!approve_status ? (
+            <OverlayTrigger
+              key={1}
+              placement={"top"}
+              overlay={
+                <Tooltip id={`tooltip-12`} style={{ fontSize: "10px" }}>
+                  <Trans i18nKey={"Approved"} />
+                </Tooltip>
+              }
+            >
+              <i
+                className={`fa fa-thumbs-up  fa-1x ${style.mapButton} `}
+                onClick={() => this.onApprovedClick(row)}
+              ></i>
+            </OverlayTrigger>
+          ) : null}
+          {/* <OverlayTrigger
+            key={1}
+            placement={"top"}
+            overlay={
+              <Tooltip id={`tooltip-12`} style={{ fontSize: "10px" }}>
+                <Trans i18nKey={"Not Approved"} />
+              </Tooltip>
+            }
+          >
+            <i
+              className={`fa fa-thumbs-down  fa-1x ${style.mapButton} `}
+              // onClick={() => this.onMapClick(row)}
+            ></i>
+          </OverlayTrigger> */}
           {/* </React.Fragment> */}
         </div>
       </React.Fragment>
     );
   };
-
+  onApprovedClick = (row) => {
+    // let isApproved = row.is_Approved === "True" ? true : false;
+    // if (!isApproved) {
+    let branch_id = this.props.selectedBranch;
+    let trip_id = row.delivery_trip_id;
+    let data = {
+      trip_id: trip_id.toString(),
+    };
+    this.props.approveDeliveryTripApi(data, branch_id);
+    // } else {
+    //   this.setState({
+    //     tripEditData: row,
+    //     showOrderEditModal: true,
+    //     showOrderInfoModal: false,
+    //     showOrderCancelModal: false,
+    //   });
+    // }
+  };
   onMapClick = (row) => {
     let selectedRows = [];
     selectedRows.push(row.delivery_trip_id);
@@ -520,6 +569,10 @@ const mapDispatchToProps = (dispatch) => {
     getTripDeliveriesApi: (trip_id, store_id) =>
       dispatch(
         get_trip_deliveries(trip_id, store_id, FOR_ROUTES_PALN_PAGE_MESSAGES)
+      ),
+    approveDeliveryTripApi: (data, store_id) =>
+      dispatch(
+        approve_delivery_trip(data, store_id, FOR_ROUTES_PALN_PAGE_MESSAGES)
       ),
   };
 };

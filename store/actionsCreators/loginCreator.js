@@ -77,8 +77,6 @@ export const get_logout = () => {
       .then((res) => {
         let response = res.data;
         if (res.status === 200) {
-          localStorage.removeItem("authtoken");
-          localStorage.removeItem("username");
           cookie.remove("authtoken", response.token);
           Router.push("/login");
           dispatch({

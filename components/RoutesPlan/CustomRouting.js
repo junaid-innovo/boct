@@ -76,7 +76,10 @@ import {
 } from "../../store/actions/routesplan/actionCreator";
 import { connect } from "react-redux";
 import { FOR_ROUTES_PALN_PAGE_MESSAGES } from "../Constants/Other/Constants";
-import { SUCCESS_MESSAGE } from "../../store/actions/actionTypes";
+import {
+  SUCCESS_MESSAGE,
+  CLEAR_ROUTES_PLAN,
+} from "../../store/actions/actionTypes";
 class CustomRoutesPlan extends Component {
   constructor(props) {
     super(props);
@@ -101,7 +104,7 @@ class CustomRoutesPlan extends Component {
         drawing: true,
         polygon: false,
         orderType: null,
-        routesEnabled: false,
+        routesEnabled: true,
       },
       selectedOrderId: [],
       selectedBranchId: null,
@@ -117,7 +120,7 @@ class CustomRoutesPlan extends Component {
       routes: [],
       routeOrders: null,
       polygonPaths: null,
-      routesEnabled: false,
+      routesEnabled: true,
       showOrders: false,
       showDeliveryTrip: false,
       showOrdersInProduction: false,
@@ -169,13 +172,18 @@ class CustomRoutesPlan extends Component {
         );
       }
     }
-    if (this.props.routeStatus !== prevProps.routeStatus) {
-      let mapFeatures = { ...this.state.mapfeatures };
-      mapFeatures.routesEnabled = this.props.routeStatus;
+    if (this.props.defaultCenter !== prevProps.defaultCenter) {
       this.setState({
-        routesEnabled: this.props.routeStatus,
-        mapfeatures: mapFeatures,
+        defaultCenter: this.props.defaultCenter,
       });
+    }
+    if (this.props.routeStatus !== prevProps.routeStatus) {
+      // let mapFeatures = { ...this.state.mapfeatures };
+      // // mapFeatures.routesEnabled = this.props.routeStatus;
+      // this.setState({
+      //   // routesEnabled: this.props.routeStatus,
+      //   mapfeatures: mapFeatures,
+      // });
     }
     if (this.state.tripDate !== prevState.tripDate) {
       if (this.props.selectedBranch) {
@@ -231,49 +239,98 @@ class CustomRoutesPlan extends Component {
       }
     }
     if (this.props.routesAndPlanData !== prevProps.routesAndPlanData) {
-      let mapfeatures = { ...this.state.mapfeatures };
-      mapfeatures.orderType = ORDERS_READYFORPICKUP;
-      let data = this.props.routesAndPlanData;
+      if (this.props.routesAndPlanData) {
+        let mapfeatures = { ...this.state.mapfeatures };
+        mapfeatures.orderType = ORDERS_READYFORPICKUP;
+        let data = this.props.routesAndPlanData;
+        let orders = data.orders.filter((order) => {
+          return (
+            parseInt(order.order_status_id) === ORDER_STATUS_READY_FOR_PICKUP
+          );
+        });
+        let allOrders = data.orders;
+        let ordersInProduction = data.orders.filter((order) => {
+          return parseInt(order.order_status_id) === ORDER_STATUS_CONFIRMED; // confirmed
+        });
 
-      let orders = data.orders.filter((order) => {
-        return (
-          parseInt(order.order_status_id) === ORDER_STATUS_READY_FOR_PICKUP
-        );
-      });
-      let allOrders = data.orders;
-      let ordersInProduction = data.orders.filter((order) => {
-        return parseInt(order.order_status_id) === ORDER_STATUS_CONFIRMED; // confirmed
-      });
+        let store_address = { ...this.state.defaultCenter };
 
-      let store_address = { ...this.state.defaultCenter };
-
-      this.setState({
-        allorders: allOrders,
-        orders: orders,
-        isActive: 1,
-        mapfeatures: mapfeatures,
-        defaultMenuText: "All Orders",
-        defaultMenuText2: "Unassigned Orders",
-        selectedRoute: ALL_ORDERS,
-        routeIsActive: "all_orders",
-        routeOrders: {
-          deliveries: orders,
-          store_address: {
-            latitude: store_address.lat,
-            longitude: store_address.lng,
+        this.setState({
+          allorders: allOrders,
+          orders: orders,
+          isActive: 1,
+          mapfeatures: mapfeatures,
+          defaultMenuText: "All Orders",
+          defaultMenuText2: "Unassigned Orders",
+          selectedRoute: ALL_ORDERS,
+          routeIsActive: "all_orders",
+          routeOrders: {
+            deliveries: orders,
+            store_address: {
+              latitude: store_address.lat,
+              longitude: store_address.lng,
+            },
           },
-        },
-        ordersInProduction: [...ordersInProduction],
-        routesOrdersInProduction: [...ordersInProduction],
-        showOrders: true,
-        showDeliveryTrip: false,
-        showOrdersInProduction: false,
-        routes: data.Routes,
-        isChanged: true,
-        pageloading: false,
-        showBackdrop: false,
-        dataTableloading: false,
-      });
+          ordersInProduction: [...ordersInProduction],
+          routesOrdersInProduction: [...ordersInProduction],
+          showOrders: true,
+          showDeliveryTrip: false,
+          showOrdersInProduction: false,
+          routes: data.Routes,
+          isChanged: true,
+          pageloading: false,
+          showBackdrop: false,
+          dataTableloading: false,
+        });
+      } else {
+        this.setState({
+          allorders: [],
+          orders: [],
+          isActive: 1,
+          defaultMenuText: "All Orders",
+          defaultMenuText2: "Unassigned Orders",
+          selectedRoute: ALL_ORDERS,
+          routeIsActive: "all_orders",
+          routeOrders: null,
+          ordersInProduction: [],
+          routesOrdersInProduction: [],
+          showOrders: false,
+          showDeliveryTrip: false,
+          showOrdersInProduction: false,
+          routes: [],
+          isChanged: false,
+          pageloading: true,
+          showBackdrop: false,
+          dataTableloading: false,
+        });
+      }
+    }
+    if (this.props.tripCode !== prevProps.tripCode) {
+      if (this.state.routeOrders && this.state.routeOrders.deliveries) {
+        let selectedOrderIds = [...this.state.routeOrders.deliveries];
+        _.remove(selectedOrderIds, (order) =>
+          this.state.selectedOrderId.includes(order.order_id)
+        );
+        let store_address = { ...this.state.defaultCenter };
+
+        this.setState({
+          routeOrders: {
+            deliveries: selectedOrderIds,
+            store_address: {
+              latitude: store_address.lat,
+              longitude: store_address.lng,
+            },
+          },
+          createTrip: false,
+          tripDate: new Date(),
+          selectedVehicle: null,
+          selectedOrderId: [],
+          selectedOrdersDetail: [],
+          pageloading: false,
+          generatedTripCode: this.props.tripCode,
+          // generatedTripCode: newCode,
+        });
+      }
     }
   }
 
@@ -307,21 +364,21 @@ class CustomRoutesPlan extends Component {
         this.getVehicleList(true, this.props.selectedwarehouse_id);
       }
     }
-    if (this.props.routeStatus) {
-      let mapFeatures = { ...this.state.mapfeatures };
-      mapFeatures.routesEnabled = this.props.routeStatus;
-      this.setState({
-        routesEnabled: this.props.routeStatus,
-        mapfeatures: mapFeatures,
-      });
-    } else {
-      let mapFeatures = { ...this.state.mapfeatures };
-      mapFeatures.routesEnabled = this.props.routeStatus;
-      this.setState({
-        routesEnabled: this.props.routeStatus,
-        mapfeatures: mapFeatures,
-      });
-    }
+    // if (this.props.routeStatus) {
+    //   let mapFeatures = { ...this.state.mapfeatures };
+    //   mapFeatures.routesEnabled = this.props.routeStatus;
+    //   this.setState({
+    //     // routesEnabled: this.props.routeStatus,
+    //     mapfeatures: mapFeatures,
+    //   });
+    // } else {
+    //   let mapFeatures = { ...this.state.mapfeatures };
+    //   mapFeatures.routesEnabled = this.props.routeStatus;
+    //   this.setState({
+    //     // routesEnabled: this.props.routeStatus,
+    //     mapfeatures: mapFeatures,
+    //   });
+    // }
   }
   componentWillUnmount() {
     this._isMounted = false;
@@ -491,7 +548,8 @@ class CustomRoutesPlan extends Component {
           showOrders: false,
           showOrdersInProduction: false,
         });
-        this.props.getTripsApi("2020-04-24", this.props.selectedBranch);
+        let trip_date = moment(new Date()).format("YYYY-MM-DD");
+        this.props.getTripsApi(trip_date, this.props.selectedBranch);
       }
       //   let start_date = moment(this.state.date[0]).format("YYYY-MM-DD");
       //   let end_date = moment(this.state.date[1]).format("YYYY-MM-DD");
@@ -746,30 +804,30 @@ class CustomRoutesPlan extends Component {
     if (status === ORDER_STATUS_READY_FOR_PICKUP) {
       if (this.state.orders.length > 0) {
         if (selectedRoute === UNASSIGNED_ORDERS) {
-          getRouteOrders = _.filter(this.state.orders, (col, i) => {
-            let order = col.order;
+          getRouteOrders = _.filter(this.state.orders, (order, i) => {
+            // let order = col.order;
             return order.routes.length === 0;
           });
         } else if (selectedRoute === ALL_ORDERS) {
           getRouteOrders = [...this.state.orders];
         } else {
-          getRouteOrders = _.filter(this.state.orders, (col, i) => {
-            let order = col.order;
+          getRouteOrders = _.filter(this.state.orders, (order, i) => {
+            // let order = col.order;
             return order.routes.includes(selectedRoute);
           });
         }
       }
     } else if (status === ORDER_STATUS_CONFIRMED) {
       if (selectedRoute === UNASSIGNED_ORDERS) {
-        getRouteOrders = _.filter(this.state.ordersInProduction, (col, i) => {
-          let order = col.order;
+        getRouteOrders = _.filter(this.state.ordersInProduction, (order, i) => {
+          // let order = col.order;
           return order.routes.length === 0;
         });
       } else if (selectedRoute === ALL_ORDERS) {
         getRouteOrders = [...this.state.ordersInProduction];
       } else {
-        getRouteOrders = _.filter(this.state.ordersInProduction, (col, i) => {
-          let order = col.order;
+        getRouteOrders = _.filter(this.state.ordersInProduction, (order, i) => {
+          // let order = col.order;
           return order.routes.includes(selectedRoute);
         });
       }
@@ -797,8 +855,8 @@ class CustomRoutesPlan extends Component {
     if (this.state.ordersInProduction.length > 0) {
       getRouteOrdersInProduction = _.filter(
         this.state.ordersInProduction,
-        (col, i) => {
-          let order = col.order;
+        (order, i) => {
+          // let order = col.order;
           return order.routes.includes(selectedRoute);
         }
       );
@@ -850,7 +908,7 @@ class CustomRoutesPlan extends Component {
       createTrip: false,
       selectedVehicle: null,
       // selectedRoute: selectedRoute,
-      // polygonPaths: finalpath,
+      polygonPaths: finalpath,
       routeIsActive: route_id,
     });
   };
@@ -876,6 +934,7 @@ class CustomRoutesPlan extends Component {
     });
   };
   removeGeofenceOrders = () => {
+    this.props.resetRoutesandPlanApi();
     this.getRoutesandCapacity();
   };
   ordersInProductionClick = () => {
@@ -1052,18 +1111,18 @@ class CustomRoutesPlan extends Component {
                               <option data-content="<i class='fa fa-cutlery'></i> Cutlery">
                                 --- {this.props.t("Select Route")} ---
                               </option>
-                              {/* <option value={ALL_ORDERS}>
+                              <option value={ALL_ORDERS}>
                                 {this.props.t(this.state.defaultMenuText)}
                               </option>
                               <option value={UNASSIGNED_ORDERS}>
                                 {this.props.t(this.state.defaultMenuText2)}
-                              </option> */}
+                              </option>
                               {this.state.routes.map((route) => (
                                 <option
                                   key={route.route_id}
                                   value={route.route_id}
                                 >
-                                  {route.route_name}
+                                  {route.route_name && route.route_name[lang]}
                                 </option>
                               ))}
                             </Form.Control>
@@ -1399,6 +1458,18 @@ class CustomRoutesPlan extends Component {
                             <Trans i18nKey={"Delivery Trips"} />
                           </a>
                         </li>
+                        {/* <li className={style.navItem}>
+                          <a
+                            id="3"
+                            onClick={() => this.ordersInProductionClick()}
+                            className={`${style.navLink} ${
+                              this.state.isActive == 3 ? style.active : ""
+                            } nav-link`}
+                            role="button"
+                          >
+                            <Trans i18nKey={"Orders In Production"} />
+                          </a>
+                        </li> */}
                       </ul>
                     </div>
                   </div>
@@ -1418,6 +1489,7 @@ const mapStateToProps = (state) => {
     vehicleList: state.routesplan.vehicleList,
     apiLoaded: state.routesplan.routesPlanLoaded,
     tripList: state.live.tripList,
+    tripCode: state.routesplan.tripCode,
     defaultCenter: state.navbar.defaultCenter,
     routesAndPlanData: state.routesplan.routesAndPlanData,
     toastMessages: state.toastmessages,
@@ -1430,6 +1502,7 @@ const mapDispatchToProps = (dispatch) => {
     getAvailableVehiclesApi: (branchId, date) =>
       dispatch(get_available_vehciles(branchId, date)),
     getTripsApi: (currentDate, id) => dispatch(get_trips_list(currentDate, id)),
+    resetRoutesandPlanApi: () => dispatch({ type: CLEAR_ROUTES_PLAN }),
     createTripApi: (branchId, data) => dispatch(create_trip(branchId, data)),
   };
 };

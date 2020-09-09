@@ -24,7 +24,7 @@ class RoutesSummary extends Component {
     return (
       <React.Fragment>
         <div className={style.summaryDiv}>
-          <div className="row mt-1">
+          <div className="row">
             <div className={col12}>
               <div className="row">
                 <div className="col-3">
@@ -128,10 +128,6 @@ class RoutesSummary extends Component {
                   </Card>
                 </div>
               </div>
-            </div>
-          </div>
-          <div className="row mt-3">
-            <div className={col12}>
               <div className="row">
                 <div className="col-3">
                   <Card className={style.card}>
@@ -232,10 +228,6 @@ class RoutesSummary extends Component {
                   </Card>
                 </div>
               </div>
-            </div>
-          </div>
-          <div className="row mt-3">
-            <div className={col12}>
               <div className="row">
                 <div className="col-3">
                   <Card className={style.card}>

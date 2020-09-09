@@ -39,7 +39,7 @@ export const get_defaults = () => {
               forPage: FOR_NAV_BAR_PAGE_MESSAGES,
             },
           });
-          Router.push("/login");
+          // Router.push("/login");
         }
       })
       .catch((error) => {

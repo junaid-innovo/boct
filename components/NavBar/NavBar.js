@@ -318,7 +318,7 @@ class NavBar extends Component {
     this.setState({
       pageloading: true,
     });
-    this.props.getLogoutApi();
+    // this.props.getLogoutApi();
   };
   onLanguageChange = () => {
     this.props.i18n.changeLanguage("en");

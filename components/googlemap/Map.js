@@ -13,7 +13,7 @@ import {
 } from "recompose";
 import { MAP } from "react-google-maps/lib/constants";
 import { ToastContainer, toast, Zoom } from "react-toastify";
-
+import { FOR_ROUTES_PALN_PAGE_MESSAGES } from "../Constants/Other/Constants";
 import _ from "lodash";
 import style from "./Map.module.css";
 import {
@@ -55,6 +55,12 @@ import { json } from "d3";
 import moment from "moment";
 import { Form } from "react-bootstrap";
 import { LANG_AR } from "../Constants/Language/Language";
+import { connect } from "react-redux";
+import {
+  save_geo_fence,
+  remove_geo_fence,
+} from "../../store/actions/routesplan/actionCreator";
+import { SUCCESS_MESSAGE } from "../../store/actions/actionTypes";
 // const {
 //    SearchBox,
 // } = require('react-google-maps/lib/components/places/SearchBox')
@@ -88,6 +94,7 @@ class Map extends PureComponent {
       wayPoints: null,
       linescoords: [],
       ordercaltime: [],
+      selectedOverlay: null,
       mapfeatures: {
         showMarker: false,
         showRoutes: false,
@@ -522,6 +529,31 @@ class Map extends PureComponent {
         }
       }
     }
+    if (this.props.geoFenceData !== prevProps.geoFenceData) {
+      let data = this.props.geoFenceData.data;
+      let overlay = this.state.selectedOverlay;
+      let accessKey = this.props.geoFenceData.accessKey;
+      this.props.getDeletedOrders(this.state.isActive);
+      if (overlay) {
+        overlay.setMap(null);
+      }
+      this.removeCustomControl(accessKey);
+      this.removeAllShapes();
+      this.setState({
+        isActive: [],
+      });
+    }
+    // if (this.props.toastMessages) {
+    //   const { forPage, messageId, type, message } = this.props.toastMessages;
+    //   if (
+    //     forPage === FOR_ROUTES_PALN_PAGE_MESSAGES &&
+    //     messageId !== prevProps.toastMessages.messageId
+    //   ) {
+    //     if (message) {
+    //       this.showMessage(message, type);
+    //     }
+    //   }
+    // }
   }
   addRemoveIconInDrawingManager = () => {
     let map = this._map.context[MAP];
@@ -679,7 +711,7 @@ class Map extends PureComponent {
       //   this.props.routelist.store_address
       // );
       let chunkarray = _.chunk(routelist, 24);
-      console.log("CHUNK ARRAY", chunkarray);
+
       for (let i = 0; i < chunkarray.length; i++) {
         if (i !== 0) {
           let firstchunkitem = chunkarray[i][0];
@@ -767,54 +799,54 @@ class Map extends PureComponent {
     ));
   };
   onMarkerClick = (e, order, i) => {
-    if (parseInt(order.order_status_id) === ORDER_STATUS_READY_FOR_PICKUP) {
-      let isActive = [...this.state.isActive];
-      let orders_in_detail = [...this.state.selectedOrdersDetail];
-      let selectedMarkers = this.state.selectedmarkersdata;
-      if (order) {
-        if (
-          this.state.mapfeatures.orderType !== ORDERS_IN_PRODUCTION &&
-          this.state.mapfeatures.orderType !== DELIVERY_TRIPS
-        ) {
-          if (!isActive.includes(order.order_id)) {
-            isActive.push(order.order_id);
-            orders_in_detail.push({
-              id: order.order_id,
-              location: {
-                latitude: order.address.latitude,
-                longitude: order.address.longitude,
-              },
-            });
-          } else {
-            _.remove(isActive, (item) => item == order.order_id);
-            _.remove(orders_in_detail, ({ id }) => id == order.order_id);
-          }
-          if (_.find(selectedMarkers, order)) {
-            _.remove(selectedMarkers, (item) => item == order);
-          } else {
-            selectedMarkers.push(order);
-          }
+    // if (parseInt(order.order_status_id) === ORDER_STATUS_READY_FOR_PICKUP) {
+    let isActive = [...this.state.isActive];
+    let orders_in_detail = [...this.state.selectedOrdersDetail];
+    let selectedMarkers = this.state.selectedmarkersdata;
+    if (order) {
+      if (
+        this.state.mapfeatures.orderType !== ORDERS_IN_PRODUCTION &&
+        this.state.mapfeatures.orderType !== DELIVERY_TRIPS
+      ) {
+        if (!isActive.includes(order.order_id)) {
+          isActive.push(order.order_id);
+          orders_in_detail.push({
+            id: order.order_id,
+            location: {
+              latitude: order.address.latitude,
+              longitude: order.address.longitude,
+            },
+          });
+        } else {
+          _.remove(isActive, (item) => item == order.order_id);
+          _.remove(orders_in_detail, ({ id }) => id == order.order_id);
         }
-        this.setState({
-          isActive: isActive,
-          selectedOrder: order,
-          selectedOrdersDetail: orders_in_detail,
-          selectedmarkersdata: selectedMarkers,
-          showInfowWindow: false,
-          update: !this.state.update,
-        });
-        if (
-          this.state.mapfeatures.orderType !== ORDERS_IN_PRODUCTION &&
-          this.state.mapfeatures.orderType !== DELIVERY_TRIPS
-        ) {
-          if (this.props.sendSelectedOrderId) {
-            this.props.sendSelectedOrderId(isActive, orders_in_detail);
-          }
+        if (_.find(selectedMarkers, order)) {
+          _.remove(selectedMarkers, (item) => item == order);
+        } else {
+          selectedMarkers.push(order);
         }
       }
-    } else {
-      console.log("Order Status Is Not READYFORPICKUP");
+      this.setState({
+        isActive: isActive,
+        selectedOrder: order,
+        selectedOrdersDetail: orders_in_detail,
+        selectedmarkersdata: selectedMarkers,
+        showInfowWindow: false,
+        update: !this.state.update,
+      });
+      if (
+        this.state.mapfeatures.orderType !== ORDERS_IN_PRODUCTION &&
+        this.state.mapfeatures.orderType !== DELIVERY_TRIPS
+      ) {
+        if (this.props.sendSelectedOrderId) {
+          this.props.sendSelectedOrderId(isActive, orders_in_detail);
+        }
+      }
     }
+    // } else {
+    //   console.log("Order Status Is Not READYFORPICKUP");
+    // }
   };
   onMarkerClustererClick = (markercluster) => {
     let allmarkers = markercluster.getMarkers();
@@ -878,6 +910,7 @@ class Map extends PureComponent {
 
     return MarkerComp;
   };
+
   calulateTotalQuantity = (items) => {
     let sum = 0;
     items.map(({ quantity }) => (sum += parseInt(quantity)));
@@ -1256,61 +1289,76 @@ class Map extends PureComponent {
         : "Test Custome Route2",
       geofence_locations: [...geofencePoints],
     };
-    axios
-      .post(`${LOCAL_API_URL}storesupervisor/v1/saveGeofence`, data, {
-        headers: {
-          Authorization: `bearer ${localStorage.getItem("authtoken")}`,
-        },
-      })
-      .then((res) => {
-        let response = res.data;
-        if (response.code === 200) {
-          this.props.getDeletedOrders(this.state.isActive);
-          overlay.setMap(null);
-          this.removeCustomControl(accessKey);
-          this.removeAllShapes();
-          this.setState({
-            isActive: [],
-          });
-          this.showMessage("Route Saved Successfully", "success");
-        } else {
-          this.showMessage(response.mesaege, "error");
-        }
-      })
-      .catch((error) => {
-        this.showMessage(error.toString(), "error", false);
-      });
+    this.setState({
+      selectedOverlay: overlay,
+    });
+    this.props.saveGeoFenceApi(
+      this.props.selectedBranch,
+      JSON.stringify(data),
+      overlay,
+      accessKey
+    );
+    // axios
+    //   .post(`${LOCAL_API_URL}storesupervisor/v1/saveGeofence`, data, {
+    //     headers: {
+    //       Authorization: `bearer ${localStorage.getItem("authtoken")}`,
+    //     },
+    //   })
+    //   .then((res) => {
+    //     let response = res.data;
+    //     if (response.code === 200) {
+    //       this.props.getDeletedOrders(this.state.isActive);
+    //       overlay.setMap(null);
+    //       this.removeCustomControl(accessKey);
+    //       this.removeAllShapes();
+    //       this.setState({
+    //         isActive: [],
+    //       });
+    //       this.showMessage("Route Saved Successfully", "success");
+    //     } else {
+    //       this.showMessage(response.mesaege, "error");
+    //     }
+    //   })
+    //   .catch((error) => {
+    //     this.showMessage(error.toString(), "error", false);
+    //   });
   };
 
   removeGeofenceRoute = (geofencePoints, accessKey = "") => {
     let data = {
       route_id: this.state.selectedRouteId,
+      geofence_locations: [...geofencePoints],
     };
-    axios
-      .post(`${LOCAL_API_URL}storesupervisor/v1/removeRoute`, data, {
-        headers: {
-          Authorization: `bearer ${localStorage.getItem("authtoken")}`,
-        },
-      })
-      .then((res) => {
-        let response = res.data;
-        if (response.code === 200) {
-          if (accessKey !== "") {
-            this.removeCustomControl(accessKey);
-          }
-          this.setState({
-            polygonPaths: null,
-          });
-          this.props.getDeltedRouteId(this.state.selectedRouteId);
+    // console.log("CHECK DAT REMOVE", data);
+    this.props.removeGeoFenceApi(
+      this.props.selectedBranch,
+      JSON.stringify(data)
+    );
+    // axios
+    //   .post(`${LOCAL_API_URL}storesupervisor/v1/removeRoute`, data, {
+    //     headers: {
+    //       Authorization: `bearer ${localStorage.getItem("authtoken")}`,
+    //     },
+    //   })
+    //   .then((res) => {
+    //     let response = res.data;
+    //     if (response.code === 200) {
+    //       if (accessKey !== "") {
+    //         this.removeCustomControl(accessKey);
+    //       }
+    //       this.setState({
+    //         polygonPaths: null,
+    //       });
+    //       this.props.getDeltedRouteId(this.state.selectedRouteId);
 
-          this.showMessage("Route Deleted Successfully", "success");
-        } else {
-          this.showMessage(response.mesaege, "error");
-        }
-      })
-      .catch((error) => {
-        this.showMessage(error.toString(), "error", false);
-      });
+    //       this.showMessage("Route Deleted Successfully", "success");
+    //     } else {
+    //       this.showMessage(response.mesaege, "error");
+    //     }
+    //   })
+    //   .catch((error) => {
+    //     this.showMessage(error.toString(), "error", false);
+    //   });
   };
   removeCustomControl = (accessKey, position = "") => {
     let map = this._map.context[MAP];
@@ -1438,7 +1486,7 @@ class Map extends PureComponent {
   };
   showMessage = (message, type, autoClose = 2000) =>
     toast(message, {
-      type: type,
+      type: type === SUCCESS_MESSAGE ? "success" : "error",
       // autoClose: false,
       autoClose: autoClose,
       className:
@@ -1650,27 +1698,49 @@ Map.contextTypes = {
   [MAP]: PropTypes.object,
   value: PropTypes.object,
 };
+const mapStateToProps = (state) => {
+  return {
+    selectedBranch: state.navbar.selectedBranch,
+    toastMessages: state.toastmessages,
+    geoFenceData: state.map.data,
+  };
+};
+const mapDispatchToProps = (dispatch) => {
+  return {
+    saveGeoFenceApi: (store_id, data, overlay, accessKey) =>
+      dispatch(save_geo_fence(store_id, data, overlay, accessKey)),
+    removeGeoFenceApi: (store_id, data) =>
+      dispatch(remove_geo_fence(store_id, data)),
+    //   dispatch(get_routes_and_capacity(from_date, to_date, store_id)),
+    // getrouteandplanApi: (from_date, to_date, store_id) =>
+    //   dispatch(get_routes_and_capacity(from_date, to_date, store_id)),
+  };
+};
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(
+  compose(
+    withProps((props) => {
+      return {
+        googleMapURL: props.googleMapURL,
+      };
+    }),
+    withHandlers(() => {
+      const refs = {
+        map: undefined,
+      };
 
-export default compose(
-  withProps((props) => {
-    return {
-      googleMapURL: props.googleMapURL,
-    };
-  }),
-  withHandlers(() => {
-    const refs = {
-      map: undefined,
-    };
-
-    return {
-      onMapMounted: () => (ref) => {
-        refs.map = ref;
-      },
-      onZoomChanged: ({ onZoomChange }) => () => {
-        onZoomChange(refs.map.getZoom());
-      },
-    };
-  }),
-  withScriptjs,
-  withGoogleMap
-)(Map);
+      return {
+        onMapMounted: () => (ref) => {
+          refs.map = ref;
+        },
+        onZoomChanged: ({ onZoomChange }) => () => {
+          onZoomChange(refs.map.getZoom());
+        },
+      };
+    }),
+    withScriptjs,
+    withGoogleMap
+  )(Map)
+);

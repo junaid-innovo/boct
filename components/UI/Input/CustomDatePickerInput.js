@@ -18,7 +18,6 @@ const ExampleCustomInput = React.forwardRef((props, ref) => {
       type="text"
       {...props}
       //   onClick={onClick}
-      placeholder="Enter email"
     />
   );
 });

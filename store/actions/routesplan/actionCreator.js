@@ -10,6 +10,10 @@ import {
   ERROR_MESSAGE,
   UPDATE_DELIVERY,
   GET_DYNAMIC_CONSTRAINTS,
+  SAVE_GEO_FENCE,
+  REMOVE_GEO_FENCE,
+  CREATE_DYNAMIC_TRIP,
+  APPROVE_DELIVERY_TRIP,
 } from "../actionTypes";
 import axios from "../../../components/API/Axios";
 import { data } from "jquery";
@@ -355,6 +359,160 @@ export const get_dynamic_constraints = (branchId) => {
             payload: {
               message: response.message,
               constraints: data,
+            },
+          });
+        }
+      })
+      .catch((error) => {
+        showErrorMessage(error.toString(), dispatch);
+      });
+  };
+};
+export const save_geo_fence = (branchId, data, overlay, accessKey) => {
+  return (dispatch) => {
+    axios
+      .post(`api/tower/v1/save-geo-fence/${branchId}`, data, {
+        headers: {
+          Authorization: `bearer ${localStorage.getItem("authtoken")}`,
+        },
+      })
+      .then((res) => {
+        let response = res.data;
+        let message = response.message;
+        let data = response.data;
+        let shapeData = {
+          data: data,
+          // overlay: overlay,
+          accessKey: accessKey,
+        };
+        if (response.code === 200) {
+          showSuccessMessage(message, dispatch);
+
+          dispatch({
+            type: SAVE_GEO_FENCE,
+            payload: {
+              message: response.message,
+              geofenceData: shapeData,
+            },
+          });
+        } else {
+          showErrorMessage(message, dispatch);
+          dispatch({
+            type: SAVE_GEO_FENCE,
+            payload: {
+              message: response.message,
+              geofenceData: shapeData,
+            },
+          });
+        }
+      })
+      .catch((error) => {
+        showErrorMessage(error.toString(), dispatch);
+      });
+  };
+};
+export const remove_geo_fence = (branchId, data) => {
+  return (dispatch) => {
+    axios
+      .post(`api/tower/v1/remove-geo-fence/${branchId}`, data, {
+        headers: {
+          Authorization: `bearer ${localStorage.getItem("authtoken")}`,
+        },
+      })
+      .then((res) => {
+        let response = res.data;
+        let message = response.message;
+        if (response.code === 200) {
+          showSuccessMessage(message, dispatch);
+          let data = response.data;
+          dispatch({
+            type: REMOVE_GEO_FENCE,
+            payload: {
+              message: response.message,
+              geofenceData: data,
+            },
+          });
+        } else {
+          showErrorMessage(message, dispatch);
+          dispatch({
+            type: REMOVE_GEO_FENCE,
+            payload: {
+              message: response.message,
+              geofenceData: data,
+            },
+          });
+        }
+      })
+      .catch((error) => {
+        showErrorMessage(error.toString(), dispatch);
+      });
+  };
+};
+export const create_dynamic_trip = (branchId, data) => {
+  return (dispatch) => {
+    axios
+      .post(`api/tower/v1/create-dynamic-trip/${branchId}`, data, {
+        headers: {
+          Authorization: `bearer ${localStorage.getItem("authtoken")}`,
+        },
+      })
+      .then((res) => {
+        let response = res.data;
+        let message = response.message;
+        if (parseInt(response.code) === 200) {
+          showSuccessMessage(message, dispatch);
+          let data = response.data;
+          dispatch({
+            type: CREATE_DYNAMIC_TRIP,
+            payload: {
+              message: response.message,
+              dynamicTripData: data,
+            },
+          });
+        } else {
+          showErrorMessage(message, dispatch);
+          dispatch({
+            type: CREATE_DYNAMIC_TRIP,
+            payload: {
+              message: response.message,
+              dynamicTripData: data,
+            },
+          });
+        }
+      })
+      .catch((error) => {
+        showErrorMessage(error.toString(), dispatch);
+      });
+  };
+};
+export const approve_delivery_trip = (data, branchId) => {
+  return (dispatch) => {
+    axios
+      .post(`api/tower/v1/approve-reject-delivery_trip/${branchId}`, data, {
+        headers: {
+          Authorization: `bearer ${localStorage.getItem("authtoken")}`,
+        },
+      })
+      .then((res) => {
+        let response = res.data;
+        let message = response.message;
+        if (parseInt(response.code) === 200) {
+          showSuccessMessage(message, dispatch);
+          let data = response.data;
+          dispatch({
+            type: APPROVE_DELIVERY_TRIP,
+            payload: {
+              message: response.message,
+              // dynamicTripData: data,
+            },
+          });
+        } else {
+          showErrorMessage(message, dispatch);
+          dispatch({
+            type: APPROVE_DELIVERY_TRIP,
+            payload: {
+              message: response.message,
+              // dynamicTripData: data,
             },
           });
         }

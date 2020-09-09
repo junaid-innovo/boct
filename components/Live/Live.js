@@ -167,8 +167,6 @@ class Live extends PureComponent {
     };
   }
   componentWillUnmount() {
-    //  this.props.parentCallback(null, null);
-
     const { client } = this.state;
     if (typeof client !== "undefined") {
       if (client.isConnected()) {
@@ -183,7 +181,8 @@ class Live extends PureComponent {
   };
   componentDidUpdate = (prevProps, prevState) => {
     if (this.props.selectedBranch !== this.state.selectedBranchId) {
-      this.props.getTripsApi("2020-04-24", this.props.selectedBranch);
+      let trip_date = moment(new Date()).format("YYYY-MM-DD");
+      this.props.getTripsApi(trip_date, this.props.selectedBranch);
       this.setState({
         selectedBranchId: this.props.selectedBranch,
       });
@@ -246,7 +245,7 @@ class Live extends PureComponent {
           this.props.defaultCenter
         );
       }
-      this.props.currentDateCallBack(this.state.currentDate);
+      // this.props.currentDateCallBack(this.state.currentDate);
     }
     if (this.props.tripList !== prevProps.tripList) {
       this.setState({
@@ -269,7 +268,8 @@ class Live extends PureComponent {
 
   componentDidMount() {
     if (this.props.selectedBranch) {
-      this.props.getTripsApi("2020-04-24", this.props.selectedBranch);
+      let trip_date = moment(new Date()).format("YYYY-MM-DD");
+      this.props.getTripsApi(trip_date, this.props.selectedBranch);
       this.setState({
         selectedBranchId: this.props.selectedBranch,
       });
@@ -857,18 +857,18 @@ class Live extends PureComponent {
             pauseOnHover
           />
         )}
-        <div className={`row mb-1`}>
-          {/* <div className={`${col11} mb-1`}> */}
-          <DatePicker
+        {/* <div className={`row mb-1`}> */}
+        {/* <div className={`${col11} mb-1`}> */}
+        {/* <DatePicker
             showTimeSelect={false}
             title="Select Date"
             currentDate={this.state.currentDate}
             dateFormat={this.state.dateFormat}
             onChange={this.handleDateChange}
             className={col12}
-          ></DatePicker>
-          {/* </div> */}
-        </div>
+          ></DatePicker> */}
+        {/* </div> */}
+        {/* </div> */}
         <div className="row">
           <div
             className={`${col12} text-center text-light  bg-purple shadow p-3 mb-1  `}
