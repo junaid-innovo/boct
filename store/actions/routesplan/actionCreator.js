@@ -22,11 +22,12 @@ export const get_routes_and_capacity = (
   form_date,
   to_date,
   branchId,
+  type,
   pageFor = ""
 ) => {
   return (dispatch) => {
     axios
-      .get(`api/tower/v1/routing/${form_date}/${to_date}/${branchId}`, {
+      .get(`api/tower/v1/routing/${form_date}/${to_date}/${branchId}/${type}`, {
         headers: {
           Authorization: `bearer ${localStorage.getItem("authtoken")}`,
         },
@@ -36,7 +37,7 @@ export const get_routes_and_capacity = (
         let data = response.data;
         let message = response.message;
         if (response.code === 200) {
-          showSuccessMessage(message, dispatch);
+          //showSuccessMessage(message, dispatch);
           if (pageFor === "available_deliveries") {
             dispatch({
               type: GET_ROUTES_CAPACITY,

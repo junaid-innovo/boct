@@ -42,12 +42,12 @@ import {
   col1,
 } from "../Constants/Classes/BoostrapClassses";
 import RouteSummary from "../RoutesPlan/RouteSummary";
-import DateRangePicker from "@wojtekmaj/react-daterange-picker";
+/* import DateRangePicker from "@wojtekmaj/react-daterange-picker"; */
 import { ClipLoader } from "react-spinners";
 import { ToastContainer, toast, Zoom } from "react-toastify";
 import { LoadPropagateLoader } from "../Loaders/Loaders";
 import style from "./RoutesPlan.module.css";
-import DatePicker from "react-datepicker";
+//import DatePicker from "react-datepicker";
 import SampleData from "../SampleData/RoutesPlanData.json";
 import moment from "moment";
 import { Trans } from "../../i18n";
@@ -71,7 +71,8 @@ import {
   BALANCED_ALLOCATIONS,
 } from "../Constants/Other/Constants";
 import { SUCCESS_MESSAGE } from "../../store/actions/actionTypes";
-import TimePicker from "react-time-picker";
+//import TimePicker from "react-time-picker";
+import cookie from "js-cookie";
 class DynamicRoutesPlan extends PureComponent {
   constructor(props) {
     super(props);
@@ -139,7 +140,9 @@ class DynamicRoutesPlan extends PureComponent {
       selectedOrderId: [],
       selectedBranchId: null,
       forDataTableSelectedId: [],
-      mapUrl: `https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing,places&key=${process.env.REACT_APP_GOOGLE_KEY}&language=en}`,
+      mapUrl: `https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing,places&key=${cookie.get(
+        "Map_Key"
+      )}&language=en}`,
       isChanged: true,
       showBackdrop: true,
       selectedOrdersDetail: [],
@@ -333,29 +336,36 @@ class DynamicRoutesPlan extends PureComponent {
       showPlanSetting: true,
     });
   };
-  onChange = (date) => this.setState({ date });
+  onChange = (date) => {
+    console.log("onChange");
+    this.setState({ date });
+  };
   componentDidMount() {
     this._isMounted = true;
     // if (this.props.selectedBranch) {
 
     this._isMounted = true;
     if (this.props.selectedBranch) {
+      this.props.live.loading = true;
       this.props.getAvailableVehiclesApi(
         this.props.selectedBranch,
         moment(this.state.tripDate).format("YYYY-MM-DD")
       );
+      this.props.live.loading = true;
       this.props.getConstraintsApi(this.props.selectedBranch);
-      this.getRoutesandCapacity();
+      // this.getRoutesandCapacity();
     }
   }
   componentDidUpdate(prevProps, prevState) {
     if (this.props.selectedBranch !== prevProps.selectedBranch) {
+      this.props.live.loading = true;
       this.props.getAvailableVehiclesApi(
         this.props.selectedBranch,
         moment(this.state.tripDate).format("YYYY-MM-DD")
       );
+      this.props.live.loading = true;
       this.props.getConstraintsApi(this.props.selectedBranch);
-      this.getRoutesandCapacity();
+      //this.getRoutesandCapacity();
     }
     if (this.props.routesAndPlanData !== prevProps.routesAndPlanData) {
       let mapfeatures = { ...this.state.mapfeatures };
@@ -369,25 +379,34 @@ class DynamicRoutesPlan extends PureComponent {
       let summarystats = data.counters;
       let modifiedOrders = [];
       let getAreaList = [];
-      orders.map((val, key) => {
-        modifiedOrders.push({ order: val });
-        const { order } = val;
-        getAreaList.push(val.address.area_name[lang]);
-      });
+      let ordersWithGeoCoor = new Array();
+      if (orders != null && orders.length > 0) {
+        orders.map((val, key) => {
+          if (val.address.latitude != null && val.address.longitude != null) {
+            ordersWithGeoCoor.push(val);
+          }
+          modifiedOrders.push({ order: val });
+          const { order } = val;
+          getAreaList.push(val.address.area_name[lang]);
+        });
+        this.setState({
+          routeOrders: { deliveries: ordersWithGeoCoor },
+          orders: modifiedOrders,
+          allOrders: orders,
+          isActive: 1,
+          mapfeatures: mapfeatures,
+          isChanged: true,
+          // constraints: _.sortBy(constraints, "constraint_id"),
+          summarystats: summarystats,
+          pageloading: false,
+          areaList: _.uniq(getAreaList),
+          routes: data.Routes,
+          defaultMenuText: "All Orders",
+          defaultMenuText2: "Unassigned Orders",
+        });
+      }
       this.setState({
-        routeOrders: { deliveries: orders },
-        orders: modifiedOrders,
-        allOrders: orders,
-        isActive: 1,
-        mapfeatures: mapfeatures,
-        isChanged: true,
-        // constraints: _.sortBy(constraints, "constraint_id"),
-        summarystats: summarystats,
         pageloading: false,
-        areaList: _.uniq(getAreaList),
-        routes: data.Routes,
-        defaultMenuText: "All Orders",
-        defaultMenuText2: "Unassigned Orders",
       });
     }
     if (this.state.vehicleList !== this.props.vehicleList) {
@@ -569,12 +588,23 @@ class DynamicRoutesPlan extends PureComponent {
   componentWillUnmount() {
     this._isMounted = false;
   }
-  getRoutesandCapacity = () => {
-    this.props.getrouteandplanApi(
-      "2020-04-03",
-      "2020-04-03",
-      this.props.selectedBranch
-    );
+  getRoutesandCapacity = (sDate, eDate) => {
+    this.props.live.loading = true;
+    if (sDate != null && eDate != null) {
+      this.props.getrouteandplanApi(
+        sDate,
+        eDate,
+        this.props.selectedBranch,
+        "dynamic"
+      );
+    } else {
+      this.props.getrouteandplanApi(
+        "2020-04-03",
+        "2020-04-03",
+        this.props.selectedBranch,
+        "dynamic"
+      );
+    }
   };
   renderDataTable = () => {
     if (this.state.orders.length > 0) {
@@ -775,7 +805,7 @@ class DynamicRoutesPlan extends PureComponent {
         <FormGroup>
           <Form.Label>Plan Date: </Form.Label>
           <br></br>
-          <DatePicker
+          {/* <DatePicker
             selected={this.state.startDate}
             // onChange={(date) => setStartDate(date)}
             // customInput={<ExampleCustomInput />}
@@ -787,7 +817,8 @@ class DynamicRoutesPlan extends PureComponent {
             onChange={this.setStartDate}
             customInput={<CustomDatePickerInput />}
             className={`rounded-0 ${style.datePickerinputShadow}  textingred `}
-          ></DatePicker>
+          ></DatePicker> */}
+          <input type="date" id="date2" name="date2"></input>
           {/* <DatePicker
             className="form-control"
             selected={this.state.startDate}
@@ -825,6 +856,7 @@ class DynamicRoutesPlan extends PureComponent {
           showOrders: false,
         });
         let trip_date = moment(new Date()).format("YYYY-MM-DD");
+        this.props.live.loading = true;
         this.props.getTripsApi(trip_date, this.props.selectedBranch);
       }
     }
@@ -992,39 +1024,91 @@ class DynamicRoutesPlan extends PureComponent {
     //   set_now: "false",
     //   is_approved: "true",
     // };
-    let data = {
-      order_ids: this.state.selectedOrderId,
-      set_now: "true",
-      is_approved: "true",
-      trip_date: trip_date,
-      vehicle_ids: this.state.selectedVehicleIds,
-      constraints: {
-        Allocation: this.state.selectedBalancedAllocation,
-        Optmization: this.state.selectedTimeandFuelOptimization,
-        multiTrip: this.state.selectedMultiTrip,
-        sequence_order: {
-          order: this.state.selectedSequenceOrder,
-          values: this.state.selectedSequenceOrder
-            ? [...this.state.selectedsequenceOrders]
-            : [],
-        },
-      },
-    };
+    let startDate = new Date(document.getElementById("fromDate").value);
+    let endDate = new Date(document.getElementById("toDate").value);
+    if (startDate && endDate) {
+      let startDate2 = this.formatDate(startDate);
+      let endDate2 = this.formatDate(endDate);
 
-    this.props.createDynamicTrip(
-      this.props.selectedBranch,
-      JSON.stringify(data)
-    );
+      if (startDate <= endDate) {
+        let data = {
+          order_ids: this.state.selectedOrderId,
+          set_now: "true",
+          is_approved: "true",
+          trip_date: trip_date,
+          vehicle_ids: this.state.selectedVehicleIds,
+          constraints: {
+            Allocation: this.state.selectedBalancedAllocation,
+            Optmization: this.state.selectedTimeandFuelOptimization,
+            multiTrip: this.state.selectedMultiTrip,
+            sequence_order: {
+              order: this.state.selectedSequenceOrder,
+              values: this.state.selectedSequenceOrder
+                ? [...this.state.selectedsequenceOrders]
+                : [],
+            },
+          },
+          startDate: startDate2,
+          endDate: endDate2,
+        };
+
+        this.props.live.loading = true;
+        this.props.createDynamicTrip(
+          this.props.selectedBranch,
+          JSON.stringify(data)
+        );
+      } else {
+        this.showMessage("Invalid date range", "error");
+      }
+    } else {
+      this.showMessage("Please select desire date range first.", "error");
+    }
+
     // this.setState({
     //   advancemenu: false,
     //   selectedConstraintName: null,
     // });
   };
+
+  formatDate(date) {
+    let y = date.getFullYear();
+    let m = date.getMonth() + 1;
+    let d = date.getDate();
+    if (m < 10) {
+      m = "0" + m;
+    }
+    if (d < 10) {
+      d = "0" + d;
+    }
+    return y + "-" + m + "-" + d;
+  }
   onSearchClick = () => {
+    this.onOrderClick();
+    this.state.orders = [];
+    this.setState({
+      pageloading: true,
+    });
+    console.log(this.state.pageloading);
+    let startDate = new Date(document.getElementById("fromDate").value);
+    let endDate = new Date(document.getElementById("toDate").value);
+    console.log("startDate");
+    console.log(startDate);
+    if (startDate && endDate) {
+      let startDate2 = this.formatDate(startDate);
+      let endDate2 = this.formatDate(endDate);
+
+      if (startDate <= endDate) {
+        this.getRoutesandCapacity(startDate2, endDate2);
+      } else {
+        this.showMessage("Invalid date range", "error");
+      }
+    } else {
+      this.showMessage("Please select desire date range first.", "error");
+    }
+
     if (this.state.date) {
       let getDateRange = [...this.state.date];
-      let startDate = getDateRange[0].getTime();
-      let endDate = getDateRange[1].getTime();
+
       let orders = this.state.allOrders ? [...this.state.allOrders] : [];
       let deliveryTrips = this.state.deliveryTrips
         ? [...this.state.deliveryTrips]
@@ -1117,25 +1201,28 @@ class DynamicRoutesPlan extends PureComponent {
             draggable
             pauseOnHover
           />
-          <ClipLoader
-            css={`
-              position: fixed;
-              top: 40%;
-              left: 42%;
-              right: 40%;
-              bottom: 20%;
-              // opacity: 0.5;
-              z-index: 500;
-            `}
-            size={"200px"}
-            this
-            also
-            works
-            color={"#196633"}
-            height={200}
-            // margin={2}
-            loading={this.state.pageloading}
-          />
+          {this.state.pageloading ? (
+            <ClipLoader
+              css={`
+                position: fixed;
+                top: 40%;
+                left: 42%;
+                right: 40%;
+                bottom: 20%;
+                // opacity: 0.5;
+                z-index: 500;
+              `}
+              size={"200px"}
+              this
+              also
+              works
+              color={"#196633"}
+              height={200}
+              // margin={2}
+              loading={this.state.pageloading}
+            />
+          ) : null}
+
           {this.state.isChanged && (
             <div className={col12}>
               <div className="row mt-1 no-gutters">
@@ -1173,14 +1260,20 @@ class DynamicRoutesPlan extends PureComponent {
                 </div>
                 <div className="col-md-7 offset-1">
                   <div className="row">
-                    <div className="col-md-3 offset-3">
+                    <div className="col-md-3">
                       <InputGroup>
-                        <DateRangePicker
+                        {/* <DateRangePicker
                           className={style.inputShadow}
                           onChange={this.onChange}
                           value={this.state.date}
                           format="MM/dd/y"
-                        />
+                        /> */}
+                        <input
+                          type="datetime-local"
+                          id="fromDate"
+                          name="fromDate"
+                        ></input>
+
                         {/*<InputGroup.Prepend>
                       <InputGroup.Text
                         id="inputGroup-sizing-default"
@@ -1196,6 +1289,15 @@ class DynamicRoutesPlan extends PureComponent {
                         ></DateRangePicker>
                       </InputGroup.Text>
                     </InputGroup.Prepend>*/}
+                      </InputGroup>
+                    </div>
+                    <div className="col-md-3">
+                      <InputGroup>
+                        <input
+                          type="datetime-local"
+                          id="toDate"
+                          name="toDate"
+                        ></input>
                       </InputGroup>
                     </div>
                     <div className="col-md-3">
@@ -1264,22 +1366,24 @@ class DynamicRoutesPlan extends PureComponent {
                   <div className={`${this.state.listview ? col5 : col5}`}>
                     <div className="row" style={{ marginLeft: "-1.8rem" }}>
                       <div className={`${col12} w-auto h-auto test`}>
-                        <ClipLoader
-                          css={`
-                            position: fixed;
-                            top: 35%;
-                            left: 12%;
-                            right: 40%;
-                            bottom: 20%;
-                            z-index: 999999;
-                          `}
-                          size={200}
-                          this
-                          also
-                          works
-                          color={"#196633"}
-                          loading={this.state.dataTableloading}
-                        />
+                        {this.state.orders.length == 0 ? (
+                          <ClipLoader
+                            css={`
+                              position: fixed;
+                              top: 35%;
+                              left: 12%;
+                              right: 40%;
+                              bottom: 20%;
+                              z-index: 999999;
+                            `}
+                            size={200}
+                            this
+                            also
+                            works
+                            color={"#196633"}
+                            loading={this.state.pageloading ? true : false}
+                          />
+                        ) : null}
                         {this.state.showOrders && (
                           <BoostrapDataTable
                             sendSelectedOrderId={this.setDataTableSelectedId}
@@ -1377,6 +1481,8 @@ class DynamicRoutesPlan extends PureComponent {
                   <div className={this.state.showSummary ? col7 : col6}>
                     <RouteSummary
                       summary={this.state.summarystats}
+                      stateObj={this.state}
+                      warehouses={this.props.warehouses.warehouses}
                     ></RouteSummary>
                   </div>
                 ) : null}
@@ -1587,12 +1693,15 @@ class DynamicRoutesPlan extends PureComponent {
                             {" "}
                             Days and Time
                           </Form.Label>
-                          <TimePicker
+                          {/* <DatePicker
                             className={col4}
-                            format={"hh:mm"}
+                            dateFormat={"hh:mm"}
+                            selected={this.state.time}
+                            currentDate={this.state.time}
                             onChange={this.onTimeChange}
                             value={this.state.time}
-                          />
+                          /> */}
+                          <input type="time" id="appt" name="appt"></input>
                           {/* </Col> */}
                         </Form.Row>
                         {/* <Form.Check
@@ -1639,7 +1748,7 @@ class DynamicRoutesPlan extends PureComponent {
                     <FormGroup>
                       <Form.Label>Expire On: </Form.Label>
                       <br></br>
-                      <DatePicker
+                      {/*  <DatePicker
                         selected={this.state.startDate}
                         // onChange={(date) => setStartDate(date)}
                         // customInput={<ExampleCustomInput />}
@@ -1651,7 +1760,8 @@ class DynamicRoutesPlan extends PureComponent {
                         onChange={this.setStartDate}
                         customInput={<CustomDatePickerInput />}
                         className={`rounded-0 ${style.datePickerinputShadow}  textingred `}
-                      ></DatePicker>
+                      ></DatePicker> */}
+                      <input type="date" id="date1" name="date1"></input>
                     </FormGroup>
                     <FormGroup>
                       <Button
@@ -1737,6 +1847,7 @@ class DynamicRoutesPlan extends PureComponent {
 const mapStateToProps = (state) => {
   return {
     selectedBranch: state.navbar.selectedBranch,
+    warehouses: state.navbar,
     // apiLoaded: state.routesplan.routesPlanLoaded,
     vehicleList: state.routesplan.vehicleList,
     defaultCenter: state.navbar.defaultCenter,
@@ -1748,6 +1859,7 @@ const mapStateToProps = (state) => {
     constraints: state.routesplan.constraints,
     defaultCenter: state.navbar.defaultCenter,
     toastMessages: state.toastmessages,
+    live: state.live,
     // selectedBranch: state.navbar.selectedBranch,
     // vehicleList: state.routesplan.vehicleList,
     // constraints: state.routesplan.constraints,
@@ -1759,8 +1871,8 @@ const mapStateToProps = (state) => {
 };
 const mapDispatchToProps = (dispatch) => {
   return {
-    getrouteandplanApi: (from_date, to_date, store_id) =>
-      dispatch(get_routes_and_capacity(from_date, to_date, store_id)),
+    getrouteandplanApi: (from_date, to_date, store_id, type) =>
+      dispatch(get_routes_and_capacity(from_date, to_date, store_id, type)),
     getAvailableVehiclesApi: (branchId, date) =>
       dispatch(get_available_vehciles(branchId, date)),
     getTripsApi: (currentDate, id) => dispatch(get_trips_list(currentDate, id)),

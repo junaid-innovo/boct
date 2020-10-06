@@ -14,7 +14,7 @@ import {
 import { MAP } from "react-google-maps/lib/constants";
 import { ToastContainer, toast, Zoom } from "react-toastify";
 import { FOR_ROUTES_PALN_PAGE_MESSAGES } from "../Constants/Other/Constants";
-import _ from "lodash";
+import _, { map } from "lodash";
 import style from "./Map.module.css";
 import {
   Polyline,
@@ -1612,6 +1612,13 @@ class Map extends PureComponent {
   };
   OnMapLoad = (map) => {};
   render() {
+    let mapCenter = { lat: 23.8859, lng: 45.0792 };
+    if (this.props.defaultCenter) {
+      (mapCenter.lat = parseFloat(this.props.defaultCenter.lat)),
+        (mapCenter.lng = parseFloat(this.props.defaultCenter.lng));
+    } else {
+      (mapCenter.lat = 23.8859), (mapCenter.lng = 45.0792);
+    }
     const gmapError = (
       <React.Fragment>
         <div
@@ -1660,16 +1667,8 @@ class Map extends PureComponent {
             bottom: "0",
           }}
           zoom={this.props.zoom ? this.props.zoom : 11}
-          defaultZoom={11}
           language={this.props.language}
-          defaultCenter={{ lat: 23.8859, lng: 45.0792 }}
-          center={
-            this.state.polygoncenter
-              ? this.state.polygoncenter
-              : this.state.defaultCenter
-              ? this.state.defaultCenter
-              : { lat: 23.8859, lng: 45.0792 }
-          }
+          center={mapCenter}
           yesIWantToUseGoogleMapApiInternals
           onGoogleApiLoaded={({ map, maps }) => this.handleApiLoaded(map, maps)}
         >

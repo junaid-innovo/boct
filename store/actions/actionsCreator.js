@@ -7,8 +7,10 @@ import {
 } from "../../components/Constants/HTTP_STATUS/status";
 import { FOR_NAV_BAR_PAGE_MESSAGES } from "../../components/Constants/Other/Constants";
 import Router from "next/router";
-
+import store from "../store";
+let states = store.getState();
 export const get_defaults = () => {
+  states.live.loading = true;
   return (dispatch) => {
     axios
       .get("api/tower/v1/warehouses", {
@@ -17,6 +19,7 @@ export const get_defaults = () => {
         },
       })
       .then((response) => {
+        states.live.loading = false;
         let resp = response.data;
         let message = resp.message;
         if (resp.code === HTTP_STATUS_OK) {
@@ -43,6 +46,7 @@ export const get_defaults = () => {
         }
       })
       .catch((error) => {
+        states.live.loading = false;
         dispatch({
           type: ERROR_MESSAGE,
           payload: {

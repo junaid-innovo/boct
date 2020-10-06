@@ -34,6 +34,7 @@ import {
   ORDER_STATUS_CONFIRMED,
   ORDER_STATUS_READY_FOR_PICKUP,
 } from "../Constants/Order/Constants";
+import cookie from "js-cookie";
 class CustomRoutesPlan extends Component {
   constructor(props) {
     super(props);
@@ -76,7 +77,9 @@ class CustomRoutesPlan extends Component {
       selectedOrderId: [],
       selectedBranchId: null,
       forDataTableSelectedId: [],
-      mapUrl: `https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing,places&key=${process.env.REACT_APP_GOOGLE_KEY}&language=en}`,
+      mapUrl: `https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing,places&key=${cookie.get(
+        "Map_Key"
+      )}&language=en}`,
       isChanged: true,
       showBackdrop: true,
       selectedOrdersDetail: [],

@@ -1,20 +1,22 @@
-import React, {Component} from 'react';
-import {Card} from 'react-bootstrap';
-import axios from 'axios';
-import PieClass from '../D3Charts/PieClass';
-import Map from '../Map';
+import React, { Component } from "react";
+import { Card } from "react-bootstrap";
+import axios from "axios";
+import PieClass from "../D3Charts/PieClass";
+import Map from "../Map";
 // import Test from "../D3Charts/Test"
-import {LOCAL_API_URL} from '../Constants/Enviroment/Enviroment';
-import {ProgressBar, Button, FormControl, InputGroup} from 'react-bootstrap';
+import { LOCAL_API_URL } from "../Constants/Enviroment/Enviroment";
+import { ProgressBar, Button, FormControl, InputGroup } from "react-bootstrap";
 // import '../../css/ControlTower.css';
-import style from './ControlTower.module.css';
+import style from "./ControlTower.module.css";
+import cookie from "js-cookie";
 class Controltower extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      test: '',
+      test: "",
       chartData: null,
       vehicleRoutes: null,
+      mapKey: cookie.get("Map_Key"),
     };
     this.tdRef = React.createRef();
     this.oncRef = React.createRef();
@@ -25,7 +27,7 @@ class Controltower extends Component {
   }
   getData = () => {
     const data = {
-      date: '2020-03-19',
+      date: "2020-03-19",
     };
     axios
       .post(`${LOCAL_API_URL}controlTower`, JSON.stringify(data))
@@ -268,7 +270,7 @@ class Controltower extends Component {
                   <InputGroup.Prepend>
                     <Button
                       className="btn-primary text-light"
-                      style={{borderRadius: '0'}}
+                      style={{ borderRadius: "0" }}
                       variant="outline-secondary"
                     >
                       Delivery Resources
@@ -288,10 +290,10 @@ class Controltower extends Component {
               <div className="col-md-12 col-sm-12 col-xs-12 pl-0">
                 <Map
                   routelist={this.state.vehicleRoutes}
-                  googleMapURL={`https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing,places&key=${process.env.REACT_APP_GOOGLE_KEY}`}
-                  loadingElement={<div style={{height: '100vh'}} />}
-                  containerElement={<div style={{height: '100vh'}} />}
-                  mapElement={<div style={{height: '100vh'}} />}
+                  googleMapURL={`https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing,places&key=${this.state.mapKey}&language=en}`}
+                  loadingElement={<div style={{ height: "100vh" }} />}
+                  containerElement={<div style={{ height: "100vh" }} />}
+                  mapElement={<div style={{ height: "100vh" }} />}
                 />
               </div>
             </div>

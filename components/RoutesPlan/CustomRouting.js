@@ -54,7 +54,7 @@ import { OrderTableColumns } from "../Constants/TableColumns/OrderColumns";
 import { DeliveryTripColumns } from "../Constants/TableColumns/DeliveryTripColumns";
 import RouteSummary from "./RouteSummary";
 import CustomDatePickerInput from "../UI/Input/CustomDatePickerInput";
-import DateRangePicker from "@wojtekmaj/react-daterange-picker";
+//import DateRangePicker from "@wojtekmaj/react-daterange-picker";
 import { ToastContainer, toast, Zoom } from "react-toastify";
 import { LoadPropagateLoader } from "../Loaders/Loaders";
 import style from "./RoutesPlan.module.css";
@@ -80,6 +80,7 @@ import {
   SUCCESS_MESSAGE,
   CLEAR_ROUTES_PLAN,
 } from "../../store/actions/actionTypes";
+import cookie from "js-cookie";
 class CustomRoutesPlan extends Component {
   constructor(props) {
     super(props);
@@ -142,7 +143,9 @@ class CustomRoutesPlan extends Component {
       selectedOrdersDetail: [],
       generatedTripCode: null,
       AllFilter: "All Orders",
-      mapUrl: `https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing,places&key=${process.env.REACT_APP_GOOGLE_KEY}&language=en}`,
+      mapUrl: `https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing,places&key=${cookie.get(
+        "Map_Key"
+      )}&language=en}`,
     };
   }
   componentDidUpdate(prevProps, prevState) {
@@ -1498,7 +1501,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
   return {
     getrouteandplanApi: (from_date, to_date, store_id) =>
-      dispatch(get_routes_and_capacity(from_date, to_date, store_id)),
+      dispatch(get_routes_and_capacity(from_date, to_date, store_id, "custom")),
     getAvailableVehiclesApi: (branchId, date) =>
       dispatch(get_available_vehciles(branchId, date)),
     getTripsApi: (currentDate, id) => dispatch(get_trips_list(currentDate, id)),

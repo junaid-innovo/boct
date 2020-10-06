@@ -47,6 +47,7 @@ import {
   onConnectionLost,
   onMessageArrived,
 } from "paho-mqtt";
+import Link from "next/link";
 // import "react-toastify/dist/ReactToastify.css";
 import { withRouter } from "react-router-dom";
 import {
@@ -57,6 +58,7 @@ import {
   Tooltip,
   Popover,
   Form,
+  FormGroup,
 } from "react-bootstrap";
 // import 'react-datepicker/dist/react-datepicker.css'
 import {
@@ -90,6 +92,9 @@ import mdDeliveryTimeAnyTime from "../../public/images/Icons_custom/all_dayx30.p
 import smDeliveryTimeEvening from "../../public/images/Icons_custom/nightx15.png";
 import mdDeliveryTimeEvening from "../../public/images/Icons_custom/nightx30.png";
 import posIcon from "../../public/images/Icons_custom/POS x15.png";
+import clock from "../../public/images/clock.png";
+import distance from "../../public/images/distance.png";
+
 import { thresholdFreedmanDiaconis } from "d3";
 import {
   PAYMENT_TYPE_CASH_ON_DELIVERY,
@@ -114,6 +119,8 @@ import {
 } from "../../store/actions/live/actionCreator";
 import { FOR_LIVE_PAGE_MESSAGES } from "../Constants/Other/Constants";
 import { SUCCESS_MESSAGE } from "../../store/actions/actionTypes";
+import cookie from "js-cookie";
+import CustomDatePickerInput from "../UI/Input/CustomDatePickerInput";
 // import {Button} from 'semantic-ui-react';
 class Live extends PureComponent {
   constructor(props) {
@@ -164,6 +171,8 @@ class Live extends PureComponent {
       languageUpdate: true,
       mapUrl: null,
       renderMap: true,
+      mapKey: cookie.get("Map_Key"),
+      mapZoom: null,
     };
   }
   componentWillUnmount() {
@@ -182,6 +191,7 @@ class Live extends PureComponent {
   componentDidUpdate = (prevProps, prevState) => {
     if (this.props.selectedBranch !== this.state.selectedBranchId) {
       let trip_date = moment(new Date()).format("YYYY-MM-DD");
+      this.props.live.loading = true;
       this.props.getTripsApi(trip_date, this.props.selectedBranch);
       this.setState({
         selectedBranchId: this.props.selectedBranch,
@@ -264,11 +274,18 @@ class Live extends PureComponent {
         }
       }
     }
+    this.setState({
+      mapKey: localStorage.getItem("Map_Key"),
+    });
   };
 
   componentDidMount() {
+    this.setState({
+      mapKey: localStorage.getItem("Map_Key"),
+    });
     if (this.props.selectedBranch) {
       let trip_date = moment(new Date()).format("YYYY-MM-DD");
+      this.props.live.loading = true;
       this.props.getTripsApi(trip_date, this.props.selectedBranch);
       this.setState({
         selectedBranchId: this.props.selectedBranch,
@@ -318,8 +335,12 @@ class Live extends PureComponent {
           ))}
         </Dropdown.Menu>
       </Dropdown>
-    ) : (
+    ) : this.props.live.loading == true ? (
       <LoadFadeLoader height={2} size="5"></LoadFadeLoader>
+    ) : (
+      <div className="text-center text-dark bg-brown shadow p-3 mb-1 col-md-12 col-md-12">
+        <Trans i18nKey={"No Record Found"} />
+      </div>
     );
   };
 
@@ -380,10 +401,12 @@ class Live extends PureComponent {
   };
 
   getVehRoutesById = (e, dev_trip_id, veh_id) => {
+    console.log("got called");
     this.setState({
       activeTrip: dev_trip_id,
       routeloading: true,
     });
+    this.props.live.loading = true;
     this.props.getTripDeliveriesApi(dev_trip_id, this.state.selectedBranchId);
     // this.setState({
     //   vehicleTracking: [],
@@ -789,7 +812,7 @@ class Live extends PureComponent {
             <span className="text-left font-weight-bold">
               <Trans i18nKey={"Total Orders"} />:{" "}
             </span>{" "}
-            {tripdata.no_of_orders}
+            {tripdata.total_deliveries}
           </div>
           <div>
             <span className="text-left font-weight-bold">
@@ -820,6 +843,32 @@ class Live extends PureComponent {
               {tripdata.route_name}
             </div>
           )}
+
+          <div>
+            <span className="text-left font-weight-bold">
+              <Trans i18nKey={"Estimated Time"} />:{" "}
+            </span>{" "}
+            {tripdata.estimated_time} Min
+          </div>
+          <div>
+            <span className="text-left font-weight-bold">
+              <Trans i18nKey={"Estimated Distance"} />:{" "}
+            </span>{" "}
+            {tripdata.estimated_dist} Km
+          </div>
+          <div>
+            <span className="text-left font-weight-bold">
+              <Trans i18nKey={"Google Time"} />:{" "}
+            </span>{" "}
+            {tripdata.calculated_time} Min
+          </div>
+          <div>
+            <span className="text-left font-weight-bold">
+              <Trans i18nKey={"Google Distance"} />:{" "}
+            </span>{" "}
+            {tripdata.calculated_dist} Km
+          </div>
+
           {/* <div>Delivery Status: test </div> */}
         </Popover.Content>
         {/* ))} */}
@@ -840,6 +889,14 @@ class Live extends PureComponent {
     );
   };
 
+  handleChange = (date) => {
+    this.props.live.loading = true;
+    this.props.live.tempDate = date;
+    this.props.getTripsApi(
+      moment(new Date(this.props.live.tempDate)).format("YYYY-MM-DD"),
+      this.props.selectedBranch
+    );
+  };
   renderLeftSideBar = () => {
     return (
       <div className={`${col2} ${style.sideBar}`}>
@@ -870,6 +927,15 @@ class Live extends PureComponent {
         {/* </div> */}
         {/* </div> */}
         <div className="row">
+          <DatePicker
+            style={{ color: "black" }}
+            selected={new Date(this.props.live.tempDate)}
+            currentDate={new Date(this.props.live.tempDate)}
+            dateFormat="MM/dd/yyyy"
+            onChange={this.handleChange}
+            customInput={<CustomDatePickerInput />}
+          ></DatePicker>
+
           <div
             className={`${col12} text-center text-light  bg-purple shadow p-3 mb-1  `}
           >
@@ -1003,6 +1069,42 @@ class Live extends PureComponent {
                         {data.trip_status ? data.trip_status[lang] : null}
                       </span>
                     </div>
+                    {data.trip_type === "Dynamic" &&
+                    (data.calculated_time !== "" ||
+                      data.calculated_dist !== "") ? (
+                      <div>
+                        <table style={{ width: "100%" }}>
+                          <tbody>
+                            <tr>
+                              <td>
+                                <span
+                                  title="Google Time"
+                                  className="font-weight-bold pr-1"
+                                >
+                                  <i
+                                    className="fa fa-clock-o"
+                                    style={{ fontSize: "16px" }}
+                                  ></i>
+                                </span>
+                                <span>{data.calculated_time} Min</span>
+                              </td>
+                              <td>
+                                <span
+                                  title="Google Distance"
+                                  className="font-weight-bold pr-1"
+                                >
+                                  <i
+                                    className="fa fa-globe"
+                                    style={{ fontSize: "16px" }}
+                                  ></i>
+                                </span>
+                                <span>{data.calculated_dist} Km</span>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : null}
                     {Array.isArray(data.delivery_trip_id) &&
                     data.delivery_trip_id.length > 1
                       ? data.delivery_trip_id
@@ -1027,16 +1129,25 @@ class Live extends PureComponent {
                           ))
                       : null}
                   </div>
-                  <div>
-                    <OverlayTrigger
-                      key={"tripoverlay"}
-                      trigger="click"
-                      placement="right"
-                      rootClose={true}
-                      overlay={this.renderTripPopUp(data)}
-                    >
-                      <i className="fa fa-info-circle text-success"></i>
-                    </OverlayTrigger>
+                  <div className="row">
+                    <div className="col-6">
+                      <OverlayTrigger
+                        key={"tripoverlay"}
+                        trigger="click"
+                        placement="right"
+                        rootClose={true}
+                        overlay={this.renderTripPopUp(data)}
+                      >
+                        <i className="fa fa-info-circle text-success float-right"></i>
+                      </OverlayTrigger>
+                    </div>
+                    <div className="col-6">
+                      <Link href="#">
+                        <a>
+                          <i className="fa fa-eye float-left"></i>
+                        </a>
+                      </Link>
+                    </div>
                   </div>
                 </Card>
               </div>
@@ -1046,8 +1157,12 @@ class Live extends PureComponent {
           <div className="text-center text-light bg-brown shadow p-3 mb-1 col-md-12 col-md-12">
             <Trans i18nKey={"No Record Found"} />
           </div>
+        ) : this.props.live.loading == true ? (
+          <LoadFadeLoader height={2} size="5"></LoadFadeLoader>
         ) : (
-          <LoadFadeLoader />
+          <div className="text-center text-dark bg-brown shadow p-3 mb-1 col-md-12 col-md-12">
+            <Trans i18nKey={"No Record Found"} />
+          </div>
         )}
       </div>
     );
@@ -1124,6 +1239,7 @@ class Live extends PureComponent {
             routelist={
               this.state.vehicleRoutes ? this.state.vehicleRoutes : null
             }
+            zoom={this.state.mapZoom}
             getMapError={this.onMapLoadError}
             t={this.props.t}
             vehicleTrackingData={this.state.vehicleTracking}
@@ -1132,7 +1248,7 @@ class Live extends PureComponent {
             selectedOrderId={this.state.selectedOrderIds}
             mapfeatures={this.state.mapfeatures}
             language={this.state.language}
-            googleMapURL={`https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing,places&key=${process.env.REACT_APP_GOOGLE_KEY}&language=en}`}
+            googleMapURL={`https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing,places&key=${this.state.mapKey}&language=en}`}
             loadingElement={<div style={{ height: "86vh" }} />}
             containerElement={<div style={{ height: "86vh" }} />}
             mapElement={<div style={{ height: "86vh" }} />}
@@ -1273,6 +1389,7 @@ class Live extends PureComponent {
     });
   };
   onOrderCardClick = (order) => {
+    let mapCenter = {};
     let selectedOrderIds = [...this.state.selectedOrderIds];
     if (order) {
       if (order.order_id) {
@@ -1281,9 +1398,12 @@ class Live extends PureComponent {
         } else {
           _.remove(selectedOrderIds, (item) => item == order.order_id);
         }
-
+        this.props.defaultCenter.lat = parseFloat(order.address.latitude);
+        this.props.defaultCenter.lng = parseFloat(order.address.longitude);
         this.setState({
           selectedOrderIds: selectedOrderIds,
+          mapZoom: Math.floor(Math.random() * (15 - 13 + 1) + 13),
+          defaultCenter: this.props.defaultCenter,
           // selectedOrderCard: selectedOrderId,
           update: !this.state.update,
         });
@@ -1437,7 +1557,30 @@ class Live extends PureComponent {
                             : null}
                         </span>
                       </div>
+
+                      {key === 0 ? (
+                        <div>
+                          <span className="font-weight-bold pr-1">
+                            {t("Distance From Store")}:{" "}
+                          </span>
+                          <span>
+                            {(order.p2p.distance_p2p / 1000).toFixed(1)}
+                            {" Km"}
+                          </span>
+                        </div>
+                      ) : (
+                        <div>
+                          <span className="font-weight-bold pr-1">
+                            {t("Distance From Prv. Order")}:{" "}
+                          </span>
+                          <span>
+                            {(order.p2p.distance_p2p / 1000).toFixed(1)}
+                            {" Km"}
+                          </span>
+                        </div>
+                      )}
                     </div>
+
                     <div className="row">
                       <div
                         className="offset-3 col-6"
@@ -1483,8 +1626,12 @@ class Live extends PureComponent {
               <div className="text-center text-light bg-brown shadow p-3 mb-1 col-md-12 col-md-12">
                 <Trans i18nKey={"No Record Found"} />
               </div>
+            ) : this.props.live.loading == true ? (
+              <LoadFadeLoader height={2} size="5"></LoadFadeLoader>
             ) : (
-              <LoadFadeLoader />
+              <div className="text-center text-dark bg-brown shadow p-3 mb-1 col-md-12 col-md-12">
+                <Trans i18nKey={"No Record Found"} />
+              </div>
             )}
           </div>
         </div>
@@ -1626,34 +1773,49 @@ class Live extends PureComponent {
     };
   };
   render() {
-    return (
-      <React.Fragment>
-        <ClipLoader
-          css={`
-            position: fixed;
-            top: 40%;
-            left: 40%;
-            right: 40%;
-            bottom: 20%;
-            z-index: 999999;
-          `}
-          size={"200px"}
-          this
-          also
-          works
-          color={"#196633"}
-          height={100}
-          loading={this.state.routeloading}
-        />
-        <div
-          className={`row ${this.state.routeloading ? style.loadmain : null}`}
-        >
-          {this.renderLeftSideBar()}
-          {this.renderMainContent()}
-          {this.renderRightSideBar()}
-        </div>
-      </React.Fragment>
-    );
+    if (this.props.live.loading) {
+      return (
+        <React.Fragment>
+          <ClipLoader
+            css={`
+              position: fixed;
+              top: 40%;
+              left: 40%;
+              right: 40%;
+              bottom: 20%;
+              z-index: 999999;
+            `}
+            size={"200px"}
+            this
+            also
+            works
+            color={"#196633"}
+            height={100}
+            loading={this.state.routeloading}
+          />
+          <div
+            className={`row ${this.state.routeloading ? null : null}`}
+            style={{ overflow: "hidden" }}
+          >
+            {this.renderLeftSideBar()}
+            {this.renderMainContent()}
+            {this.renderRightSideBar()}
+          </div>
+        </React.Fragment>
+      );
+    } else {
+      return (
+        <React.Fragment>
+          <div
+            className={`row ${this.state.routeloading ? style.loadmain : null}`}
+          >
+            {this.renderLeftSideBar()}
+            {this.renderMainContent()}
+            {this.renderRightSideBar()}
+          </div>
+        </React.Fragment>
+      );
+    }
   }
 }
 const mapStateToProps = (state) => {
@@ -1666,6 +1828,7 @@ const mapStateToProps = (state) => {
     selectedBranch: state.navbar.selectedBranch,
     defaultCenter: state.navbar.defaultCenter,
     toastMessages: state.toastmessages,
+    live: state.live,
   };
 };
 const mapDispatchToProps = (dispatch) => {

@@ -27,6 +27,11 @@ export const get_login = (formData, language) => {
             let userName = jwtString.name[lang];
             localStorage.setItem("authtoken", response.token);
             localStorage.setItem("username", userName);
+            localStorage.setItem(
+              "Map_Key",
+              "AIzaSyDcSzOdZ7pBnnxG6_KyxLZZW88E5HJHErM"
+            );
+            cookie.set("Map_Key", "AIzaSyDcSzOdZ7pBnnxG6_KyxLZZW88E5HJHErM");
             cookie.set("authtoken", response.token);
             Router.push("/");
             dispatch({

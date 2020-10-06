@@ -15,7 +15,10 @@ import {
 import Cookies from "js-cookie";
 import { GET_TRIPS } from "../actionTypes";
 import { FOR_LIVE_PAGE_MESSAGES } from "../../../components/Constants/Other/Constants";
+import store from "../../store";
+let states = store.getState();
 export const get_trips_list = (currentDate, id, forPageType = null) => {
+  states.live.loading = true;
   return (dispatch) => {
     axios
       .get(`api/tower/v1/${currentDate}/${id}/trip-listing`, {
@@ -24,6 +27,7 @@ export const get_trips_list = (currentDate, id, forPageType = null) => {
         },
       })
       .then((res) => {
+        states.live.loading = false;
         let response = res.data;
         let message = response.message;
         if (response.code === 200) {
@@ -42,12 +46,14 @@ export const get_trips_list = (currentDate, id, forPageType = null) => {
         }
       })
       .catch((error) => {
+        states.live.loading = false;
         showErrorMessage(error.toString(), dispatch, forPageType);
       });
   };
 };
 
 export const get_trip_deliveries = (trip_id, store_id, forPage = null) => {
+  states.live.loading = true;
   return (dispatch) => {
     axios
       .get(`api/tower/v1/${trip_id}/trip-deliveries-listing/${store_id}`, {
@@ -86,6 +92,7 @@ export const get_trip_deliveries = (trip_id, store_id, forPage = null) => {
 };
 
 export const get_cancel_reasons = (order, store_id) => {
+  states.live.loading = true;
   return (dispatch) => {
     axios
       .get(`api/tower/v1/cancel-reasons/${store_id}`, {
@@ -125,6 +132,7 @@ export const get_cancel_reasons = (order, store_id) => {
   };
 };
 export const get_delivery_slots = (order, store_id) => {
+  states.live.loading = true;
   return (dispatch) => {
     axios
       .get(`api/tower/v1/delivery-slots/${store_id}`, {
@@ -166,6 +174,7 @@ export const get_delivery_slots = (order, store_id) => {
 };
 
 export const cancel_order = (data, store_id) => {
+  states.live.loading = true;
   return (dispatch) => {
     axios
       .post(`api/tower/v1/cancel-orders/${store_id}`, data, {
@@ -204,6 +213,7 @@ export const cancel_order = (data, store_id) => {
 };
 
 export const update_order_delivery_time = (data, store_id) => {
+  states.live.loading = true;
   return (dispatch) => {
     axios
       .post(`api/tower/v1/update-delivery-order/${store_id}`, data, {

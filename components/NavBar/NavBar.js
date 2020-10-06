@@ -211,6 +211,7 @@ class NavBar extends Component {
     this.setState({ selectedDate: date });
   };
   onBranchChange = (e) => {
+    this.props.live.loading = true;
     let warehouse_id = e.target.value;
     // console.log("CHeck WAREHOUSE ID", warehouse_id);
     // let formattedDate = moment(this.state.currentDate).format("YYYY-MM-DD");
@@ -300,10 +301,10 @@ class NavBar extends Component {
           )}
         </Form.Group>
       </Form>
-    ) : (
+    ) : this.props.loadding == true ? (
       // </SelectedStoreContext.Provider>
       <LoadFadeLoader height={2} size="5" css={""}></LoadFadeLoader>
-    );
+    ) : null;
   };
   showMessage = (message, type, autoClose = 2000) => {
     console.log("NAVBAR MESSSAGE");
@@ -323,6 +324,9 @@ class NavBar extends Component {
   onLanguageChange = () => {
     this.props.i18n.changeLanguage("en");
     // this.localStorage.setItem(LANGUAGE_STRING,"")
+  };
+  handleClickEvnt = (e) => {
+    this.props.live.loading = true;
   };
   render() {
     let lang = this.props.i18n.language;
@@ -408,18 +412,6 @@ class NavBar extends Component {
                   id="basic-nav-dropdown1"
                   className={`dropdown-menu-right logout-menu  ${style.dropDown}`}
                 >
-                  <Link href="/staticroute">
-                    <a
-                      className={`${
-                        this.props.router.asPath === "/staticroute"
-                          ? style.active
-                          : ""
-                      } dropdown-item ${style.dropdownItem} `}
-                    >
-                      {" "}
-                      <Trans i18nKey={"Static Route"} />
-                    </a>
-                  </Link>
                   <Link href="/dynamicroute">
                     <a
                       className={`${
@@ -430,6 +422,19 @@ class NavBar extends Component {
                     >
                       {" "}
                       <Trans i18nKey={"Dynamic Route"} />
+                    </a>
+                  </Link>
+                  <Link href="/staticroute">
+                    <a
+                      onClick={this.handleClickEvnt}
+                      className={`${
+                        this.props.router.asPath === "/staticroute"
+                          ? style.active
+                          : ""
+                      } dropdown-item ${style.dropdownItem} `}
+                    >
+                      {" "}
+                      <Trans i18nKey={"Static Route"} />
                     </a>
                   </Link>
                   <Link href="/customroute">
@@ -514,6 +519,8 @@ const mapStateToProps = (state) => {
     warehouses: state.navbar.warehouses,
     selectedBranchId: state.navbar.selectedBranch,
     toastMessages: state.toastmessages,
+    navbar: state.navbar,
+    live: state.live,
   };
 };
 const mapDispatchToProps = (dispatch) => {

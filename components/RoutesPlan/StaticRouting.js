@@ -45,7 +45,7 @@ import {
   col4,
 } from "../Constants/Classes/BoostrapClassses";
 import RouteSummary from "../RoutesPlan/RouteSummary";
-import DateRangePicker from "@wojtekmaj/react-daterange-picker";
+//import DateRangePicker from "@wojtekmaj/react-daterange-picker";
 import { ClipLoader } from "react-spinners";
 import { ToastContainer, toast, Zoom } from "react-toastify";
 import { LoadPropagateLoader } from "../Loaders/Loaders";
@@ -65,6 +65,7 @@ import {
   CLEAR_ROUTES_PLAN,
   SUCCESS_MESSAGE,
 } from "../../store/actions/actionTypes";
+import cookie from "js-cookie";
 import { FOR_ROUTES_PALN_PAGE_MESSAGES } from "../Constants/Other/Constants";
 class StaticRoutesPlan extends Component {
   constructor(props) {
@@ -119,7 +120,9 @@ class StaticRoutesPlan extends Component {
       selectedOrderId: [],
       selectedBranchId: null,
       forDataTableSelectedId: [],
-      mapUrl: `https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing,places&key=${process.env.REACT_APP_GOOGLE_KEY}&language=en}`,
+      mapUrl: `https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing,places&key=${cookie.get(
+        "Map_Key"
+      )}&language=en}`,
       isChanged: false,
       showBackdrop: true,
       selectedOrdersDetail: [],
@@ -143,6 +146,7 @@ class StaticRoutesPlan extends Component {
     let lang = this.props.i18n.language;
     this._isMounted = true;
     if (this.props.selectedBranch) {
+      this.props.live.loading = true;
       this.props.getAvailableVehiclesApi(
         this.props.selectedBranch,
         moment(this.state.tripDate).format("YYYY-MM-DD")
@@ -166,6 +170,7 @@ class StaticRoutesPlan extends Component {
         });
         // let trip_date = moment(new Date()).format("YYYY-MM-DD");
         let trip_date = "2020-09-01";
+        this.props.live.loading = true;
         this.props.getTripsApi(trip_date, this.props.selectedBranch);
       }
     }
@@ -187,6 +192,7 @@ class StaticRoutesPlan extends Component {
   componentDidUpdate(prevProps, prevState) {
     if (this.props.selectedBranch !== prevProps.selectedBranch) {
       if (this.props.selectedBranch) {
+        this.props.live.loading = true;
         this.props.getAvailableVehiclesApi(
           this.props.selectedBranch,
 
@@ -331,6 +337,7 @@ class StaticRoutesPlan extends Component {
     this.setState({
       pageloading: true,
     });
+    this.props.live.loading = true;
     this.props.getrouteandplanApi(
       startDate,
       endDate,
@@ -433,8 +440,9 @@ class StaticRoutesPlan extends Component {
     });
   };
   onDateRangeChange = (date) => {
+    var datearr = [date];
     this.setState({
-      date: date,
+      date: datearr,
     });
   };
   getMapSelectedOrderId = (order_id, orders_in_detail) => {
@@ -500,12 +508,13 @@ class StaticRoutesPlan extends Component {
   handleRecurringOptions = () => {};
   //new
   onSearchClick = () => {
+    console.log(this.state.date);
     let getDateRange = [...this.state.date];
     let selectedRoute = this.state.selectedRoute
       ? parseInt(this.state.selectedRoute)
       : null;
     let startDate = getDateRange[0].getTime();
-    let endDate = getDateRange[1].getTime();
+    let endDate = new Date().getTime();
     if (this.state.showByOrder) {
       let orders = this.state.allOrders ? [...this.state.allOrders] : [];
       let deliveryTrips = this.state.deliveryTrips
@@ -613,6 +622,7 @@ class StaticRoutesPlan extends Component {
       polygonPaths: null,
       deliveryTrips: [],
     });
+    this.props.live.loading = true;
     this.props.resetRoutesandPlanApi();
     this.getRoutesandCapacity();
   };
@@ -876,25 +886,27 @@ class StaticRoutesPlan extends Component {
           draggable
           pauseOnHover
         /> */}
-        <ClipLoader
-          css={`
-            position: fixed;
-            top: 40%;
-            left: 42%;
-            right: 40%;
-            bottom: 20%;
-            // opacity: 0.5;
-            z-index: 500;
-          `}
-          size={"200px"}
-          this
-          also
-          works
-          color={"#196633"}
-          height={200}
-          // margin={2}
-          loading={this.state.pageloading}
-        />
+        {this.state.allOrders.length == 0 ? (
+          <ClipLoader
+            css={`
+              position: fixed;
+              top: 40%;
+              left: 42%;
+              right: 40%;
+              bottom: 20%;
+              // opacity: 0.5;
+              z-index: 500;
+            `}
+            size={"200px"}
+            this
+            also
+            works
+            color={"#196633"}
+            height={200}
+            // margin={2}
+            loading={this.state.allOrders.length == 0 ? true : false}
+          />
+        ) : null}
         <div
           className={`${this.state.pageloading ? style.loadmain : null} row`}
         >
@@ -1010,11 +1022,13 @@ class StaticRoutesPlan extends Component {
                     )}
                     <div className={col2}>
                       <InputGroup>
-                        <DateRangePicker
+                        <DatePicker
                           className={style.inputShadow}
                           onChange={this.onDateRangeChange}
                           value={this.state.date}
-                          format="MM/dd/y"
+                          selected={this.state.date[0]}
+                          currentDate={this.state.date[0]}
+                          dateFormat="MM/dd/yyyy"
                         />
                       </InputGroup>
                     </div>
@@ -1173,10 +1187,6 @@ class StaticRoutesPlan extends Component {
                         </div>
                       ) : null}
                     </div>
-                  ) : this.state.generatedTripCode && !this.state.createTrip ? (
-                    <b>
-                      Trip {this.state.generatedTripCode} Created Successfully
-                    </b>
                   ) : null}
                 </div>
               </div>
@@ -1200,7 +1210,9 @@ class StaticRoutesPlan extends Component {
                           also
                           works
                           color={"#196633"}
-                          loading={this.state.dataTableloading}
+                          loading={
+                            this.state.allOrders.length == 0 ? true : false
+                          }
                         />
                         {this.state.showOrders && (
                           <BoostrapDataTable
@@ -1333,12 +1345,13 @@ const mapStateToProps = (state) => {
     tripData: state.routesplan.staticTripData,
     routesAndPlanData: state.routesplan.routesAndPlanData,
     toastMessages: state.toastmessages,
+    live: state.live,
   };
 };
 const mapDispatchToProps = (dispatch) => {
   return {
     getrouteandplanApi: (from_date, to_date, store_id) =>
-      dispatch(get_routes_and_capacity(from_date, to_date, store_id)),
+      dispatch(get_routes_and_capacity(from_date, to_date, store_id, "static")),
     getAvailableVehiclesApi: (branchId, date) =>
       dispatch(get_available_vehciles(branchId, date)),
     getTripsApi: (currentDate, id) =>

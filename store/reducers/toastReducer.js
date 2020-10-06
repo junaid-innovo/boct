@@ -18,6 +18,7 @@ const initialState = {
   messageId: null,
   message: null,
   forPage: null,
+  loadding: true,
 };
 
 const toastReducers = (state = initialState, action) => {
@@ -28,6 +29,7 @@ const toastReducers = (state = initialState, action) => {
       currSuccessState.type = action.type;
       currSuccessState.message = action.payload.message;
       currSuccessState.forPage = action.payload.forPage;
+      currSuccessState.loadding = false;
       return currSuccessState;
     case ERROR_MESSAGE:
       let currState = { ...state };
@@ -35,6 +37,7 @@ const toastReducers = (state = initialState, action) => {
       currState.type = action.type;
       currState.message = action.payload.message;
       currState.forPage = action.payload.forPage;
+      currState.loadding = false;
       return currState;
   }
   return state;

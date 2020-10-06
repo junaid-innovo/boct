@@ -27,7 +27,9 @@ const combinedReducer = combineReducers({
   authorization: authorizationReducer,
 });
 
-export const store =  createStore(
+const store = createStore(
   combinedReducer,
   composeEnhancers(applyMiddleware(logger, thunkMiddleware))
 );
+
+export default store;

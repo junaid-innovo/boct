@@ -11,6 +11,7 @@ class RoutesSummary extends Component {
       routes: null,
       summarystats: null,
     };
+    this.summaryObj = {};
   }
   static getDerivedStateFromProps = (props, state) => {
     if (props.summary) {
@@ -20,6 +21,77 @@ class RoutesSummary extends Component {
     }
     return state;
   };
+  countSummary(selectedOrders) {
+    let ttemp;
+    let unique_cust = new Array();
+    let dates = new Array();
+    let countOfSelectedordersWithCoor = 0;
+    let countOfSelectedordersWithOutCoor = 0;
+    let areas = new Array();
+    let RentedVehicles = 0;
+    for (let i = 0; i < selectedOrders.length; i++) {
+      for (let j = 0; j < this.props.stateObj.allOrders.length; j++) {
+        if (selectedOrders[i] == this.props.stateObj.allOrders[j].order_id) {
+          if (
+            !unique_cust.includes(
+              this.props.stateObj.allOrders[j].customer.phone
+            )
+          ) {
+            unique_cust.push(this.props.stateObj.allOrders[j].customer.phone);
+          }
+          if (!dates.includes(this.props.stateObj.allOrders[j].created_at)) {
+            dates.push(this.props.stateObj.allOrders[j].created_at);
+          }
+          console.log(this.props.stateObj.allOrders[j].address);
+          if (
+            this.props.stateObj.allOrders[j].address.latitude != null &&
+            this.props.stateObj.allOrders[j].address.longitude != null
+          ) {
+            countOfSelectedordersWithCoor = countOfSelectedordersWithCoor + 1;
+          } else {
+            countOfSelectedordersWithOutCoor =
+              countOfSelectedordersWithOutCoor + 1;
+          }
+          if (
+            !areas.includes(
+              this.props.stateObj.allOrders[j].address.area_name.en
+            )
+          ) {
+            areas.push(this.props.stateObj.allOrders[j].address.area_name.en);
+          }
+        }
+        //selectedOrders[i];
+      }
+    }
+    let sorted_selectedOrders = dates.sort(function (a, b) {
+      return a - b;
+    });
+    this.summaryObj.unique_cust = unique_cust.length;
+    if (sorted_selectedOrders.length <= 0) {
+      this.summaryObj.dateRange = "No order selected.";
+    } else {
+      this.summaryObj.dateRange =
+        sorted_selectedOrders[0] +
+        " TO " +
+        sorted_selectedOrders[sorted_selectedOrders.length - 1];
+    }
+    if (selectedOrders.length > 0) {
+      this.summaryObj.countOfSelectedordersWithOutCoor =
+        (countOfSelectedordersWithOutCoor * 100) / selectedOrders.length;
+    } else {
+      this.summaryObj.countOfSelectedordersWithOutCoor = 0;
+    }
+    this.summaryObj.areas = areas.length;
+    for (let i = 0; i < this.props.stateObj.vehicleList.length; i++) {
+      if (
+        this.props.stateObj.vehicleList[i].vehicle_category_name.en == "Rent"
+      ) {
+        RentedVehicles = RentedVehicles + 1;
+      }
+    }
+    this.summaryObj.RentedVehicles = RentedVehicles;
+    return this.summaryObj;
+  }
   render() {
     return (
       <React.Fragment>
@@ -44,9 +116,7 @@ class RoutesSummary extends Component {
                     <Card.Body className={style.cardBody}>
                       <div className="row">
                         <div className={`${col12}`}>
-                          <small>
-                            04/15/2020 05:35 PM -04/28/2020 05:35 PM
-                          </small>
+                          <small>{this.summaryObj.dateRange}</small>
                         </div>
                       </div>
                     </Card.Body>
@@ -69,7 +139,9 @@ class RoutesSummary extends Component {
                     <Card.Body className={style.cardBody}>
                       <div className="row">
                         <div className={`${col12} text-center`}>
-                          <small>50</small>
+                          <small>
+                            {this.props.stateObj.selectedOrderId.length}
+                          </small>
                         </div>
                       </div>
                     </Card.Body>
@@ -85,16 +157,29 @@ class RoutesSummary extends Component {
                       </div>
                       <div className="row">
                         <div className="col-md-12 col-sm-12 col-xs-12 text-center">
-                          <small>Percentage Of Order GeoCoded</small>
+                          <small>
+                            <span
+                              className="font-weight-bold"
+                              style={{
+                                color: "red",
+                              }}
+                            >
+                              * &nbsp;
+                            </span>
+                            Missing coordinates:
+                          </small>
                         </div>
                       </div>
                     </Card.Header>
                     <Card.Body className={style.cardBody}>
                       <div className="row">
                         <div className={`${col12} text-center`}>
-                          {this.state.summarystats && (
-                            <small>{`${this.state.summarystats.geoEncodedOrdersPercentage}%`}</small>
-                          )}
+                          <small>
+                            {this.countSummary(
+                              this.props.stateObj.selectedOrderId
+                            ).countOfSelectedordersWithOutCoor.toFixed(1)}{" "}
+                            %
+                          </small>
                         </div>
                       </div>
                     </Card.Body>
@@ -110,18 +195,14 @@ class RoutesSummary extends Component {
                       </div>
                       <div className="row">
                         <div className="col-md-12 col-sm-12 col-xs-12 text-center">
-                          <small>No Of OutSourced Fleet:</small>
+                          <small>No Of Rented Fleet:</small>
                         </div>
                       </div>
                     </Card.Header>
                     <Card.Body className={style.cardBody}>
                       <div className="row">
                         <div className={`${col12} text-center`}>
-                          {this.state.summarystats && (
-                            <small>
-                              {this.state.summarystats.numberOfOutSourcedFleet}
-                            </small>
-                          )}
+                          <small>{this.summaryObj.RentedVehicles}</small>
                         </div>
                       </div>
                     </Card.Body>
@@ -146,9 +227,7 @@ class RoutesSummary extends Component {
                     <Card.Body className={style.cardBody}>
                       <div className="row">
                         <div className={`${col12} text-center`}>
-                          {this.state.summarystats && (
-                            <small>{this.state.summarystats.branches}</small>
-                          )}
+                          <small>{this.props.warehouses.length}</small>
                         </div>
                       </div>
                     </Card.Body>
@@ -164,16 +243,14 @@ class RoutesSummary extends Component {
                       </div>
                       <div className="row">
                         <div className="col-md-12 col-sm-12 col-xs-12 text-center">
-                          <small>Number Of Territories</small>
+                          <small>Number Of Areas:</small>
                         </div>
                       </div>
                     </Card.Header>
                     <Card.Body className={style.cardBody}>
                       <div className="row">
                         <div className={`${col12} text-center`}>
-                          {this.state.summarystats && (
-                            <small>{this.state.summarystats.territories}</small>
-                          )}
+                          <small>{this.summaryObj.areas}</small>
                         </div>
                       </div>
                     </Card.Body>
@@ -196,39 +273,15 @@ class RoutesSummary extends Component {
                     <Card.Body className={style.cardBody}>
                       <div className="row">
                         <div className={`${col12} text-center`}>
-                          {this.state.summarystats && (
+                          {/* {this.state.summarystats && (
                             <small>{this.state.summarystats.customers}</small>
-                          )}
+                          )} */}
+                          <small>{this.summaryObj.unique_cust}</small>
                         </div>
                       </div>
                     </Card.Body>
                   </Card>
                 </div>
-                <div className="col-3">
-                  <Card className={style.card}>
-                    <Card.Header className="h-60">
-                      <div className="row">
-                        <div className="col-md-12 col-sm-12 col-xs-12 text-center">
-                          <i className="fa fa-clock-o  fa-1x"></i>
-                        </div>
-                      </div>
-                      <div className="row">
-                        <div className="col-md-12 col-sm-12 col-xs-12 text-center">
-                          <small>Average Loaging Time:</small>
-                        </div>
-                      </div>
-                    </Card.Header>
-                    <Card.Body className={style.cardBody}>
-                      <div className="row">
-                        <div className={`${col12} text-center`}>
-                          <small>0 Seconds</small>
-                        </div>
-                      </div>
-                    </Card.Body>
-                  </Card>
-                </div>
-              </div>
-              <div className="row">
                 <div className="col-3">
                   <Card className={style.card}>
                     <Card.Header className="h-60">
@@ -239,21 +292,37 @@ class RoutesSummary extends Component {
                       </div>
                       <div className="row">
                         <div className="col-md-12 col-sm-12 col-xs-12 text-center">
-                          <small>Default Service Time:</small>
+                          <small>Average Service Time:</small>
                         </div>
                       </div>
                     </Card.Header>
                     <Card.Body className={style.cardBody}>
                       <div className="row">
                         <div className={`${col12} text-center`}>
-                          <small>5 minutes</small>
+                          <small>15 minutes</small>
                         </div>
                       </div>
                     </Card.Body>
                   </Card>
                 </div>
               </div>
+              {/* <div className="row">
+                <div className="col-3">
+                  
+                </div>
+              </div> */}
             </div>
+          </div>
+          <div class="row text-center">
+            <span
+              className="offset-4"
+              style={{
+                color: "red",
+                fontSize: "10px",
+              }}
+            >
+              *The higher number may reduce trip accuracy.{" "}
+            </span>
           </div>
         </div>
       </React.Fragment>

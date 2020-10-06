@@ -1,13 +1,13 @@
-import React, {Component} from 'react';
-import NavBar from '../NavBar/NavBar';
-import '../../css/mapstyling.css';
-import {useLocation} from 'react-router-dom';
-import NotFound from '../Exceptions/NotFound';
-import Live from '../Live/Live';
-import ControlTower from '../ControlTower/Controltower';
-import RoutePlan from '../RoutesPlan/RoutesPlan';
-import {withRouter} from 'react-router-dom';
-import PieceSign from '../D3Charts/pie-sign2';
+import React, { Component } from "react";
+import NavBar from "../NavBar/NavBar";
+import "../../css/mapstyling.css";
+import { useLocation } from "react-router-dom";
+import NotFound from "../Exceptions/NotFound";
+import Live from "../Live/Live";
+import ControlTower from "../ControlTower/Controltower";
+import RoutePlan from "../RoutesPlan/RoutesPlan";
+import { withRouter } from "react-router-dom";
+import PieceSign from "../D3Charts/pie-sign2";
 import {
   BrowserRouter as Router,
   Switch,
@@ -15,14 +15,14 @@ import {
   Link,
   NavLink,
   Redirect,
-} from 'react-router-dom';
-import Login from './Login';
+} from "react-router-dom";
+import Login from "./Login";
 // import 'bootstrap/dist/css/bootstrap.min.css';
-import '../../App.css';
+import "../../App.css";
 class App extends Component {
   constructor(props) {
     super(props);
-    this.myRef=React.createRef();
+    this.myRef = React.createRef();
     this.state = {
       timeSlots: null,
       cancalReasons: null,
@@ -37,7 +37,7 @@ class App extends Component {
     return <NavBar></NavBar>;
   };
   callbackFunction = (childData, date) => {
-    this.setState({storeList: childData});
+    this.setState({ storeList: childData });
   };
   // checkLogin = (isLoggedIn) => {
   //   this.setState({isLoggedIn: isLoggedIn});
@@ -49,7 +49,7 @@ class App extends Component {
     });
   };
   getVehiclesList = (vehicles) => {
-    console.log('[app.js] vehciles', vehicles);
+    console.log("[app.js] vehciles", vehicles);
     this.setState({
       vehicles: vehicles,
     });
@@ -61,11 +61,11 @@ class App extends Component {
       });
     }
     if (prevState.vehicles !== this.state.vehicles) {
-      this.setState({vehiclesdata: this.state.vehicles});
+      this.setState({ vehiclesdata: this.state.vehicles });
     }
   }
   static getDerivedStateFromProps(props, state) {
-    console.log('getDerived app.js props', props);
+    console.log("getDerived app.js props", props);
     let location = props.location.pathname;
     return {
       currentlocation: location,
@@ -77,22 +77,22 @@ class App extends Component {
   //   // if(this.state.lang !== newLang) {
   //   //     // this.setState({lang: newLang});
   //   // }
-  // 
+  //
   //<Route exact path="/test">
-//   <div className="mt-4">
-//     <PieceSign {...this.props} legref={this.myRef} />
-//   </div>
- 
-// </Route>
-// }
+  //   <div className="mt-4">
+  //     <PieceSign {...this.props} legref={this.myRef} />
+  //   </div>
+
+  // </Route>
+  // }
   render() {
     return (
-      <div className="container-fluid">
+      <div className="container-fluid" style="overflow: hidden;">
         <Switch>
           <Route exact path="/login">
             <Login />
           </Route>
-         
+
           <Route exact path="/">
             <NavBar
               storeList={this.state.storeList}
@@ -113,6 +113,10 @@ class App extends Component {
           <Route path="/routesplan">
             <NavBar></NavBar>
             <RoutePlan />
+          </Route>
+
+          <Route exact path="/detailed-triplist">
+            <h1>HOLA</h1>
           </Route>
           <Route>
             <NotFound />

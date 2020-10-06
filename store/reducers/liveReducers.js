@@ -23,6 +23,8 @@ const initialState = {
   updateOrderDeliveryResponse: null,
   updateOrderDeliveryData: null,
   message: null,
+  loading: true,
+  tempDate: new Date(),
 };
 const reducers = (state = initialState, action) => {
   if (action.type === GET_LIVE) {
@@ -32,6 +34,7 @@ const reducers = (state = initialState, action) => {
     let livestate = { ...state };
     livestate.tripList = action.payload.tripList;
     livestate.selectedBranch = action.payload.selectedBranchId;
+    livestate.loading = false;
     return { ...livestate };
   }
   if (action.type === GET_TRIP_DELIVERIES) {
