@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 46223",
+    "dev": "next dev",
     "build": "next build",
-    "start": "next start -p 46223"
+    "start": "next start"
   },
   "dependencies": {
     "@emotion/core": "^10.0.28",
